@@ -430,8 +430,8 @@ export const AppProvider = ({ children }) => {
   }
 
   const resetPassword = async (email) => {
-    const { resetPassword: authResetPassword } = await import('../services/authService')
-    return authResetPassword(email)
+    const { sendPasswordResetEmail } = await import('../services/authService')
+    return sendPasswordResetEmail(email)
   }
 
   const services = useMemo(() => products.filter(p => p.type === 'service'), [products])

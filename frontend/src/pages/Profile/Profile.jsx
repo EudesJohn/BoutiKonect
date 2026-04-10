@@ -184,10 +184,15 @@ export default function Profile() {
       setIsMfaLoading(true)
       try {
         const result = await resetPassword(currentUser.email)
-        alert("E-mail de réinitialisation envoyé avec succès !")
-        setShowPasswordChange(false)
+        if (result.success) {
+          alert("E-mail de réinitialisation envoyé avec succès !")
+          setShowPasswordChange(false)
+        } else {
+          alert(result.error || "Erreur lors de l'envoi de l'email.")
+        }
       } catch (error) {
-        alert("Erreur lors de l'envoi de l'email.")
+        console.error("Reset error:", error);
+        alert("Une erreur technique est survenue lors de l'envoi.")
       } finally {
         setIsMfaLoading(false)
       }
