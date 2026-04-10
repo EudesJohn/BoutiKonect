@@ -193,7 +193,7 @@ const getErrorMessage = (message) => {
   if (msg.includes('lock') && msg.includes('released')) return 'Une action est déjà en cours. Veuillez patienter une seconde.'
   if (msg.includes('refresh_token_not_found')) return 'Votre session a expiré. Veuillez vous reconnecter.'
   if (msg.includes('network error')) return 'Problème de connexion internet. Vérifiez votre réseau.'
-  if (msg.includes('password should be different')) return 'Le nouveau mot de passe doit être différent de l\'ancien.'
+  if (msg.includes('password should be different')) return 'Désolé, vous ne pouvez pas utiliser le même mot de passe que l\'ancien. Veuillez en choisir un différent !'
   if (msg.includes('invalid format')) return 'Le format de l\'e-mail n\'est pas valide.'
   if (msg.includes('database error')) return 'Problème technique côté serveur. Nos équipes travaillent dessus.'
 

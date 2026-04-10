@@ -6,6 +6,8 @@ import { motion } from 'framer-motion'
 import { Lock, CheckCircle, AlertCircle, RefreshCw, Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import './ResetPassword.css'
 
+import authService from '../../services/authService'
+
 export default function ResetPassword() {
   const navigate = useNavigate()
   const { user, seller, authLoading } = useContext(AppContext)
@@ -52,7 +54,7 @@ export default function ResetPassword() {
       setSuccess(true)
     } catch (err) {
       console.error("Erreur reset password:", err)
-      setError(err.message || 'Une erreur est survenue lors du changement de mot de passe.')
+      setError(authService.getErrorMessage(err.message))
     } finally {
       setSubmitting(false)
     }
