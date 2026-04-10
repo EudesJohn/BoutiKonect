@@ -89,5 +89,17 @@ Le site intègre un assistant IA (Chatbot) pour répondre aux questions fréquen
 
 ---
 
-*Documentation mise à jour le 19 Mars 2026*
+## 🔧 Configuration Supabase Additionnelle
+
+### Changement d'E-mail
+Par défaut, Supabase exige la validation sur l'ancienne ET la nouvelle adresse.
+Pour simplifier ce processus :
+1. Allez sur le **Dashboard Supabase** > **Authentication** > **Providers** > **Email**.
+2. Décochez **"Secure email change"**.
+3. Sauvegardez. 
+Désormais, seule la validation sur la nouvelle adresse sera requise.
+
+---
+
+*Documentation mise à jour le 10 Avril 2026*
 *BoutiKonect - La proximité avant tout.*

@@ -159,7 +159,7 @@ export default function Profile() {
       if (editForm.email !== currentUser.email && !currentUser.isGoogle) {
         const result = await updateEmailWithVerification(editForm.email);
         if (result.success) {
-          showToast("Un e-mail de confirmation a été envoyé à " + editForm.email + ". Le changement sera effectif après validation.", 'success');
+          showToast("IMPORTANT : Vous devez valider le lien envoyé sur votre ANCIENNE email ET sur la NOUVELLE (" + editForm.email + ") pour confirmer le changement.", 'info', 10000);
         } else {
           showToast(result.error || "Erreur lors du changement d'email.", 'error');
         }
