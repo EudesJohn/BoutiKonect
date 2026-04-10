@@ -1,37 +1,34 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useContext } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../../supabase/client'
+import { AppContext } from '../../context/AppContext'
 import { motion } from 'framer-motion'
 import { Lock, CheckCircle, AlertCircle, RefreshCw, Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import './ResetPassword.css'
 
 export default function ResetPassword() {
   const navigate = useNavigate()
+  const { user, seller, authLoading } = useContext(AppContext)
   
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   
-  const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
+  const currentUser = user || seller
+
   useEffect(() => {
-    // Supabase gère la session automatiquement après le clic sur le lien de récupération.
-    // On vérifie juste si on a une session ou si on vient d'un flux de récupération.
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
+    if (!authLoading) {
+      if (!currentUser) {
         setError('Session invalide ou expirée. Veuillez faire une nouvelle demande.')
-      } else {
-        setEmail(session.user.email)
       }
       setLoading(false)
     }
-    checkSession()
-  }, [])
+  }, [authLoading, currentUser])
 
   const handleResetPassword = async (e) => {
     e.preventDefault()
@@ -113,7 +110,7 @@ export default function ResetPassword() {
               <Lock size={28} />
             </div>
             <h1>Nouveau mot de passe</h1>
-            {email && <p>Réinitialisation pour : <strong>{email}</strong></p>}
+            {currentUser?.email && <p>Réinitialisation pour : <strong>{currentUser.email}</strong></p>}
           </div>
 
           {error && (
