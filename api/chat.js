@@ -4,7 +4,12 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
  * Endpoint Serverless pour l'assistant IA Gemini (Root Level)
  */
 export default async function handler(request, response) {
-  // Sécurité: Vérifier la méthode
+  // Support pour diagnostic GET
+  if (request.method === 'GET') {
+    return response.status(200).json({ status: 'BoutiKonect AI API is Active', timestamp: new Date().toISOString() });
+  }
+
+  // Sécurité: Vérifier la méthode POST pour le chat
   if (request.method !== 'POST') {
     return response.status(405).json({ error: 'Method Not Allowed' });
   }
