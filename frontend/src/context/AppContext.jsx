@@ -62,8 +62,18 @@ export const AppProvider = ({ children }) => {
       
       // Éviter de traiter plusieurs événements identiques ou concurrents
       const currentUserId = session?.user?.id || null
+      const isResetPage = window.location.pathname === '/reset-password'
+
       if (authProcessing.current || (event === 'SIGNED_IN' && lastSessionId.current === currentUserId)) {
         if (event === 'INITIAL_SESSION') setAuthLoading(false)
+        return
+      }
+
+      // ISOLATION: Si on est sur la page de reset, on laisse la page gérer sa session 
+      // pour éviter les conflits de "Lock" avec les chargements de profil de l'App.
+      if (isResetPage && (event === 'PASSWORD_RECOVERY' || event === 'USER_UPDATED')) {
+        console.log('Isolation active: ResetPassword gère la session.')
+        setAuthLoading(false)
         return
       }
 

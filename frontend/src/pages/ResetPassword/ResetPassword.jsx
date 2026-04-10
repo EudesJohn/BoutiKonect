@@ -48,6 +48,10 @@ export default function ResetPassword() {
     setSubmitting(true)
     setError('')
 
+    // TACTICAL DELAY: Attendre que toutes les opérations de session de fond 
+    // (localStorage lock) soient stabilisées avant de lancer l'update.
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword })
       if (error) throw error
