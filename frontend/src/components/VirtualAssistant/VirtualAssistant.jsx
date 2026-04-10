@@ -167,7 +167,7 @@ const VirtualAssistant = () => {
               {messages.map((msg) => (
                 <div key={msg.id} className={`va-message-row ${msg.sender}`}>
                   {msg.sender === 'bot' && (
-                    <div className="message-avatar bot-avatar">
+                    <div className="va-msg-avatar bot">
                       <img src={assistantAvatar} alt="AI" className="assistant-sticker-avatar" />
                     </div>
                   )}
@@ -244,7 +244,16 @@ const VirtualAssistant = () => {
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.5, type: "spring" }}
       >
-        {isOpen ? <X size={24} /> : <MessageCircle size={28} />}
+        {isOpen ? (
+          <X size={24} />
+        ) : (
+          <div className="va-toggle-avatar-container">
+            <img src={assistantAvatar} alt="Assistant" className="va-toggle-avatar" />
+            <div className="va-toggle-badge">
+              <MessageCircle size={14} />
+            </div>
+          </div>
+        )}
       </motion.button>
     </div>
   );
