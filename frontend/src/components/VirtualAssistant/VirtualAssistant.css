@@ -1,0 +1,398 @@
+.virtual-assistant-wrapper {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+.virtual-assistant-wrapper > * {
+  pointer-events: auto;
+}
+
+/* Chat Window */
+.va-window {
+  width: 350px;
+  height: 500px;
+  max-height: calc(100vh - 100px);
+  background: rgba(27, 38, 59, 0.95); /* Semi-transparent dark blue */
+  backdrop-filter: blur(10px); /* Glassmorphism effect */
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4); /* Stronger shadow for dark bg */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Header */
+.header-avatar {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background: white;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-right: 10px;
+}
+
+.header-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.assistant-sticker-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.va-header {
+  background: var(--primary-color);
+  color: white;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 16px 16px 0 0;
+}
+
+.va-header-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.va-avatar {
+  background: rgba(255, 255, 255, 0.2);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.va-status-dot {
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+  width: 10px;
+  height: 10px;
+  background-color: #4CAF50;
+  border-radius: 50%;
+  border: 2px solid var(--primary-color);
+}
+
+.va-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 2px 0;
+  color: var(--primary); /* Force text to be orange */
+}
+
+.va-status-text {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.va-close-btn {
+  background: transparent;
+  border: none;
+  color: white;
+  opacity: 0.8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  transition: all 0.2s ease;
+}
+
+.va-close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  opacity: 1;
+}
+
+/* Messages Area */
+.va-messages-container {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: transparent; /* Fully transparent */
+}
+
+/* Scrollbar styling */
+.va-messages-container::-webkit-scrollbar {
+  width: 6px;
+}
+.va-messages-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+.va-messages-container::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+/* Message Rows */
+.va-message-row {
+  display: flex;
+  gap: 10px;
+  max-width: 85%;
+}
+
+.va-message-row.bot {
+  align-self: flex-start;
+}
+
+.va-message-row.user {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.va-msg-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.va-message-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.va-message-row.user .va-message-content {
+  align-items: flex-end;
+}
+
+.va-message-row.bot .va-message-content {
+  align-items: flex-start;
+}
+
+.va-bubble {
+  padding: 12px 16px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.va-bubble.bot {
+  background: #1e3a5f; /* Dark blue variant */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff; /* Readable text color */
+  border-top-left-radius: 4px;
+}
+
+.va-bubble.user {
+  background: var(--primary-color);
+  color: white;
+  border-top-right-radius: 4px;
+}
+
+.va-time {
+  font-size: 11px;
+  color: var(--text-light);
+  margin: 0 4px;
+}
+
+/* Suggested FAQs */
+.va-suggestions-wrapper {
+  padding: 0 16px;
+  background: transparent; /* Full transparency */
+}
+
+.va-suggestions-title {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.va-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 16px;
+}
+
+.va-suggestion-btn {
+  background: transparent; /* Transparent background */
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.va-suggestion-btn:hover {
+  background: var(--primary-color);
+  color: white;
+}
+
+/* Input Area */
+.va-input-area {
+  display: flex;
+  padding: 12px;
+  gap: 8px;
+  background: transparent; /* Match transparency */
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  align-items: center;
+}
+
+.va-input {
+  flex: 1;
+  padding: 12px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.2);
+  color: white;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.va-input:focus {
+  border-color: var(--primary-color);
+}
+
+.va-send-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.va-send-btn:disabled {
+  background: var(--border-color);
+  color: var(--text-light);
+  cursor: not-allowed;
+}
+
+.va-send-btn:not(:disabled):hover {
+  transform: scale(1.05);
+  background: var(--secondary-color);
+}
+
+/* Toggle Button */
+.va-toggle-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(255, 106, 0, 0.4);
+  z-index: 1001;
+  transition: background 0.3s ease;
+}
+
+.va-toggle-btn:hover {
+  background: var(--secondary-color);
+}
+
+/* Typing Indicator Animation */
+.typing-indicator {
+  display: flex;
+  gap: 4px;
+  padding: 12px 16px;
+  align-items: center;
+  justify-content: center;
+  min-width: 60px;
+}
+
+.typing-indicator span {
+  width: 6px;
+  height: 6px;
+  background-color: var(--text-light);
+  border-radius: 50%;
+  animation: typing 1.4s infinite ease-in-out both;
+}
+
+.typing-indicator span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes typing {
+  0%, 80%, 100% { 
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% { 
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Dark Mode Support */
+[data-theme='dark'] .va-bubble.bot {
+  background: #2a2a2a; /* Changed from var(--bg-card) */
+  color: white; /* Forced text color for dark mode */
+}
+[data-theme='dark'] .va-window,
+[data-theme='dark'] .va-messages-container,
+[data-theme='dark'] .va-suggestions-wrapper,
+[data-theme='dark'] .va-input-area,
+[data-theme='dark'] .va-suggestion-btn {
+  background: #1e1e1e; /* Dark theme backgrounds */
+}
+[data-theme='dark'] .va-input {
+  background: #2a2a2a;
+  color: white;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 480px) {
+  .virtual-assistant-wrapper {
+    bottom: 16px;
+    right: 16px;
+  }
+
+  .va-window {
+    width: calc(100vw - 32px);
+    height: 450px;
+    bottom: 80px;
+    position: fixed;
+    right: 16px;
+  }
+}

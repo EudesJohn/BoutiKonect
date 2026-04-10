@@ -1,0 +1,201 @@
+.service-card {
+  background: linear-gradient(145deg, #1e2a4a 0%, #152238 100%);
+  border: 2px solid #00C853; /* Use green for services to distinguish but keep same shape */
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: var(--transition-normal);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.service-card.promoted {
+  border-color: #FFD700;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+}
+
+.service-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 25px 50px -12px rgba(0, 200, 83, 0.3);
+}
+
+.service-image {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+  background: #0d1b2a;
+}
+
+.service-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: var(--transition-normal);
+}
+
+.service-card:hover .service-image img {
+  transform: scale(1.08);
+}
+
+.service-badges {
+  position: absolute;
+  top: var(--space-sm);
+  left: var(--space-sm);
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.service-content {
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.service-category {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #00C853;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--space-xs);
+}
+
+.service-title {
+  display: block;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin-bottom: var(--space-xs);
+  line-height: 1.3;
+  transition: var(--transition-fast);
+  text-decoration: none;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.service-title:hover {
+  color: #FFD700;
+  transform: translateX(4px);
+}
+
+.service-rating-display {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  color: #FFD700;
+}
+
+.service-description {
+  font-size: 0.85rem;
+  color: #8fa3bf;
+  line-height: 1.5;
+  margin-bottom: var(--space-sm);
+}
+
+.service-location {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: 0.8rem;
+  color: #8fa3bf;
+  margin-bottom: var(--space-sm);
+}
+
+.service-location svg {
+  color: #00C853;
+}
+
+.service-price {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #00C853;
+  margin-bottom: var(--space-md);
+  text-shadow: 0 0 10px rgba(0, 200, 83, 0.2);
+  margin-top: auto;
+}
+
+.price-devis {
+  color: #00A2E8;
+  font-size: 1.1rem;
+}
+
+.price-unit {
+  font-size: 0.9rem;
+  color: #8fa3bf;
+  margin-left: 2px;
+}
+
+.service-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.service-actions .btn {
+  flex: 1;
+  justify-content: center;
+}
+
+.service-actions .btn-outline {
+  border-color: #00C853;
+  color: #00C853;
+  background: transparent;
+}
+
+.service-actions .btn-outline:hover {
+  background: rgba(0, 200, 83, 0.15);
+}
+
+/* Inherit ProductCard components like wishlist-btn and badges from global or shared CSS if possible, 
+   but redefined here for safety if they are card-specific */
+
+.wishlist-btn {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0d1b2a;
+  border: 2px solid #00C853;
+  border-radius: var(--radius-full);
+  color: #8fa3bf;
+  transition: var(--transition-fast);
+  cursor: pointer;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.badge-service {
+  background: linear-gradient(135deg, #00C853, #64DD17);
+  color: white;
+}
+
+.badge-promoted {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #1e2a4a;
+}
+
+@media (max-width: 480px) {
+  .service-image {
+    height: 180px;
+  }
+  .service-actions {
+    flex-direction: column;
+  }
+}

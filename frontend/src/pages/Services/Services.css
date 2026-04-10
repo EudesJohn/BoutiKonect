@@ -1,0 +1,9 @@
+/* Ce fichier réutilise les styles de Products.css en grande partie via la classe `.products-page`. */
+/* On peut y rajouter des spécificités aux Services si besoin. */
+
+.services-page .no-products-icon {
+  font-size: 48px;
+  opacity: 0.8;
+  margin-bottom: var(--space-sm);
+  filter: grayscale(100%);
+}
