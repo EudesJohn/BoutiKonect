@@ -70,6 +70,12 @@ export const AppProvider = ({ children }) => {
       authProcessing.current = true
       lastSessionId.current = currentUserId
 
+      // Pour les mises à jour (ex: changement email), on attend un peu 
+      // que le trigger SQL finisse son travail avant de recharger le profil
+      if (event === 'USER_UPDATED') {
+        await new Promise(resolve => setTimeout(resolve, 800));
+      }
+
       if (session?.user) {
         initSecureStorage(session.user.id)
         
