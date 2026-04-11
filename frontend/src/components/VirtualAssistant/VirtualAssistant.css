@@ -44,15 +44,17 @@
 }
 
 .header-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 50% !important;
 }
 
 .assistant-sticker-avatar {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 50% !important;
 }
 
 .va-header {
@@ -182,9 +184,10 @@
 }
 
 .va-msg-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 50% !important;
 }
 
 .va-message-content {
@@ -346,11 +349,12 @@
 }
 
 .va-toggle-avatar {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  object-fit: cover;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
   border: 2px solid white;
+  display: block !important;
 }
 
 .va-toggle-badge {
