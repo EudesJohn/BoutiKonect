@@ -149,7 +149,7 @@ const VirtualAssistant = () => {
             {/* Header */}
             <div className="va-header">
               <div className="chat-header-info">
-                <div className="header-avatar" style={{ width: '32px', height: '32px', borderRadius: '50%', overflow: 'hidden', padding: '0', background: 'white' }}>
+                <div className="header-avatar" style={{ width: '32px', height: '100%', borderRadius: '50%', overflow: 'hidden', padding: '0', background: 'white' }}>
                   <img src={assistantAvatar} alt="AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
                 <div>
