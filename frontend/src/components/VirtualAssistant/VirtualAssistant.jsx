@@ -153,7 +153,7 @@ const VirtualAssistant = () => {
                   <img src={assistantAvatar} alt="AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
                 <div>
-                  <h3>Assistant BoutiKonect</h3>
+                  <h3 style={{ margin: 0 }}>Assistant BoutiKonect <small style={{ fontSize: '10px', opacity: 0.7 }}>v2.0</small></h3>
                   <span className="online-status">En ligne</span>
                 </div>
               </div>
@@ -167,8 +167,12 @@ const VirtualAssistant = () => {
               {messages.map((msg) => (
                 <div key={msg.id} className={`va-message-row ${msg.sender}`}>
                   {msg.sender === 'bot' && (
-                    <div className="va-msg-avatar bot" style={{ width: '32px', height: '32px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: '1px solid rgba(0,0,0,0.1)' }}>
-                      <img src={assistantAvatar} alt="AI" className="assistant-sticker-avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <div className="va-msg-avatar bot" style={{ width: '32px', height: '32px', borderRadius: '50% !important', overflow: 'hidden !important', flexShrink: 0, border: '1px solid rgba(0,0,0,0.1)', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {assistantAvatar ? (
+                        <img src={assistantAvatar} alt="AI" className="assistant-sticker-avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                      ) : (
+                        <Bot size={16} color="var(--primary-color)" />
+                      )}
                     </div>
                   )}
                   

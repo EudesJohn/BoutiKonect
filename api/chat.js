@@ -1,12 +1,12 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 /**
- * Endpoint Serverless pour l'assistant IA Gemini (Root)
+ * Endpoint Serverless pour l'assistant IA Gemini (Root v2.0)
  */
 export default async function handler(request, response) {
   if (request.method === 'GET') {
     return response.status(200).json({ 
-      status: 'BoutiKonect AI API is Active (Root Level)', 
+      status: 'BoutiKonect AI API is Active (Root Level v2.0)', 
       timestamp: new Date().toISOString()
     });
   }
