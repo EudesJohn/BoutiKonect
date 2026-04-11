@@ -6,18 +6,11 @@
     }
   },
   "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/frontend/$1",
-      "check": true
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/frontend/index.html"
-    }
+    { "source": "/api/chat", "destination": "/api/chat.js" },
+    { "source": "/api/health", "destination": "/api/health.js" },
+    { "source": "/api/admin", "destination": "/api/admin.js" },
+    { "source": "/api/collect", "destination": "/api/collect.js" },
+    { "source": "/(.*)", "destination": "/frontend/$1", "check": true },
+    { "source": "/(.*)", "destination": "/frontend/index.html" }
   ]
 }

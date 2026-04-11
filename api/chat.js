@@ -1,19 +1,16 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 /**
- * Endpoint Serverless pour l'assistant IA Gemini (Root Level)
+ * Endpoint Serverless pour l'assistant IA Gemini (Root)
  */
 export default async function handler(request, response) {
-  // Support pour diagnostic GET
   if (request.method === 'GET') {
     return response.status(200).json({ 
       status: 'BoutiKonect AI API is Active (Root Level)', 
-      timestamp: new Date().toISOString(),
-      env_check: process.env.GEMINI_API_KEY ? 'Key Present' : 'Key Missing'
+      timestamp: new Date().toISOString()
     });
   }
 
-  // Sécurité: Vérifier la méthode POST pour le chat
   if (request.method !== 'POST') {
     return response.status(405).json({ error: 'Method Not Allowed' });
   }
@@ -58,7 +55,6 @@ export default async function handler(request, response) {
     `;
 
     const fullPrompt = `${systemInstruction}\n\nUtilisateur: ${prompt}`;
-    
     const result = await model.generateContent(fullPrompt);
     const aiResponse = await result.response;
     const text = aiResponse.text();
@@ -66,9 +62,6 @@ export default async function handler(request, response) {
     return response.status(200).json({ response: text });
   } catch (error) {
     console.error("AI API Error:", error);
-    return response.status(500).json({ 
-      error: "Erreur lors de la génération de la réponse IA",
-      details: error.message 
-    });
+    return response.status(500).json({ error: error.message });
   }
 }
