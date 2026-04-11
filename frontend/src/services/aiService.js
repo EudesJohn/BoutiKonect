@@ -30,19 +30,16 @@ class AIService {
         })
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Erreur de l'assistant");
-      }
-
       const data = await response.json();
       return data.response;
     } catch (error) {
-      console.error("AI Assistant Error:", error);
+      console.error("AI Assistant Critical Error:", error);
       
       let userFriendlyMessage = "Désolé, je rencontre une petite difficulté technique.";
       
-      if (error.message?.includes('Configuration')) {
+      if (error.message?.includes('404')) {
+        userFriendlyMessage = "L'assistant n'est pas encore connecté au service (404).";
+      } else if (error.message?.includes('Configuration')) {
         userFriendlyMessage = "L'assistant n'est pas encore configuré sur le serveur.";
       } else if (error.message?.includes('quota')) {
         userFriendlyMessage = "Quota d'utilisation dépassé. Réessayez plus tard.";

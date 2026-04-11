@@ -149,8 +149,8 @@ const VirtualAssistant = () => {
             {/* Header */}
             <div className="va-header">
               <div className="chat-header-info">
-                <div className="header-avatar">
-                  <img src={assistantAvatar} alt="AI" />
+                <div className="header-avatar" style={{ width: '32px', height: '32px', borderRadius: '50%', overflow: 'hidden', padding: '0', background: 'white' }}>
+                  <img src={assistantAvatar} alt="AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
                 <div>
                   <h3>Assistant BoutiKonect</h3>
@@ -167,8 +167,8 @@ const VirtualAssistant = () => {
               {messages.map((msg) => (
                 <div key={msg.id} className={`va-message-row ${msg.sender}`}>
                   {msg.sender === 'bot' && (
-                    <div className="va-msg-avatar bot">
-                      <img src={assistantAvatar} alt="AI" className="assistant-sticker-avatar" />
+                    <div className="va-msg-avatar bot" style={{ width: '32px', height: '32px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: '1px solid rgba(0,0,0,0.1)' }}>
+                      <img src={assistantAvatar} alt="AI" className="assistant-sticker-avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
                   )}
                   
@@ -247,10 +247,10 @@ const VirtualAssistant = () => {
         {isOpen ? (
           <X size={24} />
         ) : (
-          <div className="va-toggle-avatar-container">
-            <img src={assistantAvatar} alt="Assistant" className="va-toggle-avatar" />
-            <div className="va-toggle-badge">
-              <MessageCircle size={14} />
+          <div className="va-toggle-avatar-container" style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', position: 'relative' }}>
+            <img src={assistantAvatar} alt="Assistant" className="va-toggle-avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+            <div className="va-toggle-badge" style={{ position: 'absolute', bottom: '0', right: '0', background: 'var(--primary-color)', color: 'white', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid white' }}>
+              <MessageCircle size={10} />
             </div>
           </div>
         )}

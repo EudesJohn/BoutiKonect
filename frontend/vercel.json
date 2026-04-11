@@ -6,27 +6,12 @@
     }
   },
   "rewrites": [
-    {
-      "source": "/api/chat",
-      "destination": "/api/chat.js"
-    },
-    {
-      "source": "/api/admin",
-      "destination": "/api/admin.js"
-    },
-    {
-      "source": "/api/collect",
-      "destination": "/api/collect.js"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/$1",
-      "check": true
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
+    { "source": "/api/chat", "destination": "/api/chat.js" },
+    { "source": "/api/health", "destination": "/api/health.js" },
+    { "source": "/api/admin", "destination": "/api/admin.js" },
+    { "source": "/api/collect", "destination": "/api/collect.js" },
+    { "source": "/(.*)", "destination": "/$1", "check": true },
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "crons": [
     {
