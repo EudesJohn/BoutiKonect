@@ -110,10 +110,27 @@
 }
 
 .step-line {
-  width: 40px;
+  width: 30px;
   height: 2px;
   background: #2a3f5f;
   margin-bottom: 20px;
+}
+
+@media (max-width: 480px) {
+  .step-line {
+    width: 20px;
+  }
+  
+  .register-steps {
+    gap: 4px;
+    margin-bottom: 24px;
+  }
+  
+  .step-number {
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
+  }
 }
 
 .register-header h1 {
@@ -347,18 +364,30 @@
 
 @media (max-width: 480px) {
   .register-card {
-    padding: 32px 24px;
+    padding: 28px 20px;
+    border-radius: 20px;
   }
 
   .form-row {
     grid-template-columns: 1fr;
+    gap: 15px;
   }
 
   .register-header h1 {
-    font-size: 24px;
+    font-size: 22px;
   }
   
-  .account-type-selector {
-    flex-direction: column;
+  .register-header p {
+    font-size: 13px;
+  }
+  
+  .form-input, .form-select {
+    padding: 12px 14px;
+    font-size: 14px;
+  }
+  
+  .btn-large {
+    padding: 14px 24px;
+    font-size: 15px;
   }
 }

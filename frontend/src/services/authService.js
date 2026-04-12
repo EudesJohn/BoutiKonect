@@ -70,6 +70,7 @@ export const registerUser = async (userData) => {
  */
 export const loginUser = async (email, password, rememberMe = true) => {
   try {
+    console.log(`🔑 Tentative de connexion pour: ${email}`)
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -97,8 +98,9 @@ export const loginUser = async (email, password, rememberMe = true) => {
  * Déconnecte l'utilisateur
  */
 export const logoutUser = async () => {
+  console.log('🚪 Déconnexion demandée...')
   const { error } = await supabase.auth.signOut()
-  if (error) console.error('Error logging out:', error)
+  if (error) console.error('❌ Erreur lors de la déconnexion:', error)
 }
 
 /**

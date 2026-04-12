@@ -57,39 +57,41 @@ export const AppProvider = ({ children }) => {
 
   // GESTION DE LA SESSION SUPABASE
   useEffect(() => {
+    console.log('🏗️ Registering auth state listener');
+
+    // Timeout de sécurité pour éviter de rester bloqué sur authLoading
+    const authTimeout = setTimeout(() => {
+      setAuthLoading(false);
+    }, 6000);
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, !!session)
+      console.log('🔄 Auth Event:', event, 'Session:', !!session)
       
-      // Éviter de traiter plusieurs événements identiques ou concurrents
       const currentUserId = session?.user?.id || null
       const isResetPage = window.location.pathname === '/reset-password'
 
-      if (authProcessing.current || (event === 'SIGNED_IN' && lastSessionId.current === currentUserId)) {
-        if (event === 'INITIAL_SESSION') setAuthLoading(false)
-        return
-      }
-
-      // ISOLATION: Si on est sur la page de reset, on laisse la page gérer sa session 
-      // pour éviter les conflits de "Lock" avec les chargements de profil de l'App.
-      if (isResetPage && (event === 'PASSWORD_RECOVERY' || event === 'USER_UPDATED')) {
-        console.log('Isolation active: ResetPassword gère la session.')
+      // PROTECTION: Ne pas bloquer INITIAL_SESSION même si authProcessing est vrai
+      if (event === 'INITIAL_SESSION') {
         setAuthLoading(false)
+        clearTimeout(authTimeout);
+        // On continue quand même le traitement pour charger le profil si session existe
+      } else if (authProcessing.current || (event === 'SIGNED_IN' && lastSessionId.current === currentUserId)) {
         return
       }
 
       authProcessing.current = true
       lastSessionId.current = currentUserId
 
-      // Pour les mises à jour (ex: changement email), on attend un peu 
-      // que le trigger SQL finisse son travail avant de recharger le profil
-      if (event === 'USER_UPDATED') {
-        await new Promise(resolve => setTimeout(resolve, 800));
+      // ISOLATION: Si on est sur la page de reset
+      if (isResetPage && (event === 'PASSWORD_RECOVERY' || event === 'USER_UPDATED')) {
+        setAuthLoading(false)
+        clearTimeout(authTimeout);
+        authProcessing.current = false
+        return
       }
 
-      if (session?.user) {
-        initSecureStorage(session.user.id)
-        
-        try {
+      try {
+        if (session?.user) {
           const { data: profile, error } = await supabase
             .from('profiles')
             .select('*')
@@ -97,7 +99,6 @@ export const AppProvider = ({ children }) => {
             .single()
 
           if (profile) {
-            console.log('Profile loaded:', profile.name)
             if (profile.is_seller) {
               setSeller(profile)
               setUser(null)
@@ -107,22 +108,26 @@ export const AppProvider = ({ children }) => {
             }
             saveSecureUser(profile)
           }
-        } catch (err) {
-          console.error('Error fetching profile:', err)
+        } else {
+          setSeller(null)
+          setUser(null)
+          secureRemoveItem('BoutiKonect_user')
+          secureRemoveItem('BoutiKonect_seller')
         }
-      } else {
-        setSeller(null)
-        setUser(null)
-        secureRemoveItem('BoutiKonect_user')
-        secureRemoveItem('BoutiKonect_seller')
+      } catch (err) {
+        console.error('❌ Profile Load Error:', err)
+      } finally {
+        setAuthLoading(false)
+        clearTimeout(authTimeout);
+        authProcessing.current = false
       }
-      
-      setAuthLoading(false)
-      authProcessing.current = false
     })
 
-    return () => subscription.unsubscribe()
-  }, [])
+    return () => {
+      clearTimeout(authTimeout);
+      subscription.unsubscribe();
+    }
+  }, []) // AUCUNE DÉPENDANCE: l'écouteur tourne pendant toute la vie de l'app
 
   // === DATA LOADING ===
   const [products, setProducts] = useState([])
