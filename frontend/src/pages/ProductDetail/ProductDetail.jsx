@@ -113,6 +113,11 @@ export default function ProductDetail() {
   const handleOrder = async (e) => {
     e.preventDefault()
     
+    if (!user && !seller) {
+      alert("Vous devez être connecté pour passer une commande.")
+      return
+    }
+    
     if (product.stock !== undefined && product.stock < 1) {
       alert("Désolé, ce produit est actuellement en rupture de stock.")
       return

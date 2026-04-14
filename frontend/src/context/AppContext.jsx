@@ -250,6 +250,8 @@ export const AppProvider = ({ children }) => {
       buyer_name: buyerName,
       buyer_phone: buyerPhone,
       buyer_address: buyerAddress,
+      location: buyerAddress, // Redundancy for different table versions
+      delivery_address: buyerAddress, // Redundancy for different table versions
       payment_id: paymentId,
       payment_status: paymentStatus,
       payment_method: paymentMethod
@@ -420,10 +422,18 @@ export const AppProvider = ({ children }) => {
       const dbOrder = mapOrderToDB(orderData)
       console.log('📦 Sending order to Supabase:', dbOrder)
       const { data, error } = await supabase.from('orders').insert([dbOrder]).select()
-      if (error) throw error
+      
+      if (error) {
+        console.error("❌ Supabase Insert Error:", error)
+        console.error("Error Details:", error.details)
+        console.error("Error Hint:", error.hint)
+        throw error
+      }
+      
       return { success: true, data: data[0] }
     } catch (error) {
-      return { success: false, error: error.message }
+      console.error("❌ createOrder Exception:", error)
+      return { success: false, error: error.message || "Une erreur inconnue est survenue" }
     }
   }
 
