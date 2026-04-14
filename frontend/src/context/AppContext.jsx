@@ -204,30 +204,46 @@ export const AppProvider = ({ children }) => {
   })
 
   const mapItemToDB = (item) => {
-    const mapped = { ...item }
-    if (item.sellerId) { mapped.seller_id = item.sellerId; delete mapped.sellerId; }
-    if (item.sellerName) { mapped.seller_name = item.sellerName; delete mapped.sellerName; }
-    if (item.sellerCity) { mapped.seller_city = item.sellerCity; delete mapped.sellerCity; }
-    if (item.sellerNeighborhood) { mapped.seller_neighborhood = item.sellerNeighborhood; delete mapped.sellerNeighborhood; }
-    if (item.sellerAvatar) { mapped.seller_avatar = item.sellerAvatar; delete mapped.sellerAvatar; }
-    if (item.priceType) { mapped.price_type = item.priceType; delete mapped.priceType; }
-    if (item.isPromoted !== undefined) { mapped.is_promoted = item.isPromoted; delete mapped.isPromoted; }
-    if (item.promotionEndDate) { mapped.promotion_end_date = item.promotionEndDate; delete mapped.promotionEndDate; }
-    return mapped
+    const { 
+      sellerId, sellerName, sellerCity, sellerNeighborhood, sellerAvatar,
+      priceType, isPromoted, promotionEndDate, ...rest 
+    } = item;
+
+    return {
+      ...rest,
+      seller_id: sellerId,
+      seller_name: sellerName,
+      seller_city: sellerCity,
+      seller_neighborhood: sellerNeighborhood,
+      seller_avatar: sellerAvatar,
+      price_type: priceType,
+      is_promoted: isPromoted,
+      promotion_end_date: promotionEndDate
+    }
   }
 
   const mapOrderToDB = (order) => {
-    const mapped = { ...order }
-    if (order.productId) { mapped.product_id = order.productId; delete mapped.productId; }
-    if (order.productTitle) { mapped.product_title = order.productTitle; delete mapped.productTitle; }
-    if (order.productImage) { mapped.product_image = order.productImage; delete mapped.productImage; }
-    if (order.sellerId) { mapped.seller_id = order.sellerId; delete mapped.sellerId; }
-    if (order.sellerName) { mapped.seller_name = order.sellerName; delete mapped.sellerName; }
-    if (order.buyerId) { mapped.buyer_id = order.buyerId; delete mapped.buyerId; }
-    if (order.buyerName) { mapped.buyer_name = order.buyerName; delete mapped.buyerName; }
-    if (order.buyerPhone) { mapped.buyer_phone = order.buyerPhone; delete mapped.buyerPhone; }
-    if (order.buyerAddress) { mapped.buyer_address = order.buyerAddress; delete mapped.buyerAddress; }
-    return mapped
+    const {
+      productId, productTitle, productImage, serviceId, serviceTitle,
+      sellerId, sellerName, buyerId, buyerName, buyerPhone, buyerAddress,
+      paymentId, paymentStatus, paymentMethod, ...rest
+    } = order;
+
+    return {
+      ...rest,
+      product_id: productId || serviceId,
+      product_title: productTitle || serviceTitle,
+      product_image: productImage,
+      seller_id: sellerId,
+      seller_name: sellerName,
+      buyer_id: buyerId,
+      buyer_name: buyerName,
+      buyer_phone: buyerPhone,
+      buyer_address: buyerAddress,
+      payment_id: paymentId,
+      payment_status: paymentStatus,
+      payment_method: paymentMethod
+    }
   }
 
   useEffect(() => {
@@ -392,6 +408,7 @@ export const AppProvider = ({ children }) => {
   const createOrder = async (orderData) => {
     try {
       const dbOrder = mapOrderToDB(orderData)
+      console.log('📦 Sending order to Supabase:', dbOrder)
       const { data, error } = await supabase.from('orders').insert([dbOrder]).select()
       if (error) throw error
       return { success: true, data: data[0] }
@@ -494,7 +511,10 @@ export const AppProvider = ({ children }) => {
     cities, categories, serviceCategories, PROMOTION_PRICES, filteredProducts,
     getFilteredProducts: () => filteredProducts.filter(p => p.type === 'product' || !p.type),
     getFilteredServices: () => filteredProducts.filter(p => p.type === 'service'),
-    getCartTotal: () => cart.reduce((total, item) => total + (item.price * (item.quantity || 1)), 0),
+    getCartTotal: () => {
+      if (!Array.isArray(cart)) return 0;
+      return cart.reduce((total, item) => total + (item.price * (item.quantity || 1)), 0);
+    },
     setFilters, addToCart, removeFromCart, clearCart, getProductById,
     addProduct, updateProduct, deleteProduct, createOrder,
     getCurrentLocation, formatPrice, parseDate, checkIsAdmin,
