@@ -23,8 +23,8 @@ export default function PaymentCallback() {
           const pendingData = JSON.parse(rawPendingData);
           
           // Créer toutes les commandes
-          pendingData.cart.forEach(item => {
-            createOrder({
+          for (const item of pendingData.cart) {
+            await createOrder({
               productId: item.id,
               productTitle: item.title,
               productImage: item.images[0],
@@ -37,7 +37,7 @@ export default function PaymentCallback() {
               paymentId: transactionId || `FEDA_${Date.now()}`,
               paymentStatus: 'paid'
             });
-          });
+          }
 
           clearCart();
           sessionStorage.removeItem('pending_order');

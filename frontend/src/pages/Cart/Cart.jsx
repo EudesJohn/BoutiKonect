@@ -91,6 +91,7 @@ export default function Cart() {
     
     try {
       // Create an order for each product in cart
+      const results = []
       for (const item of cart) {
         const order = {
           type: item.type || 'product',
@@ -112,7 +113,21 @@ export default function Cart() {
           price: item.price,
           total: item.price * item.quantity
         }
-        await createOrder(order)
+        const result = await createOrder(order)
+        results.push({ item, success: result?.success })
+      }
+      
+      const failures = results.filter(r => !r.success)
+      if (failures.length > 0) {
+        const failedTitles = failures.map(f => f.item.title).join(', ')
+        alert(`Certains articles n'ont pas pu être commandés : ${failedTitles}. Veuillez réessayer pour ces articles.`)
+        // Keep failed items in cart? For now, we clear the whole cart only if all succeeded
+        // or we can just proceed if at least some succeeded. 
+        // Best approach: If any failed, don't clear cart for those.
+        if (failures.length === cart.length) {
+          setIsSubmitting(false)
+          return
+        }
       }
       
       // WhatsApp Redirect for the first item's seller

@@ -65,7 +65,7 @@ export const AppProvider = ({ children }) => {
     }, 6000);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('🔄 Auth Event:', event, 'Session:', !!session)
+      console.log('Auth state changed:', event, !!session)
       
       const currentUserId = session?.user?.id || null
       const isResetPage = window.location.pathname === '/reset-password'
@@ -98,16 +98,17 @@ export const AppProvider = ({ children }) => {
             .eq('id', session.user.id)
             .single()
 
-          if (profile) {
-            if (profile.is_seller) {
-              setSeller(profile)
-              setUser(null)
-            } else {
-              setUser(profile)
-              setSeller(null)
+            if (profile) {
+              console.log('Profile loaded:', profile.full_name || profile.name)
+              if (profile.is_seller) {
+                setSeller(profile)
+                setUser(null)
+              } else {
+                setUser(profile)
+                setSeller(null)
+              }
+              await saveSecureUser(profile)
             }
-            saveSecureUser(profile)
-          }
         } else {
           setSeller(null)
           setUser(null)
@@ -149,12 +150,28 @@ export const AppProvider = ({ children }) => {
   }, [favorites])
 
   useEffect(() => {
-    const savedCart = loadSecureCart()
-    if (savedCart && savedCart.length > 0) setCart(savedCart)
+    const initCart = async () => {
+      try {
+        const savedCart = await loadSecureCart()
+        if (savedCart && Array.isArray(savedCart) && savedCart.length > 0) {
+          setCart(savedCart)
+        }
+      } catch (err) {
+        console.error('Error loading secure cart:', err)
+      }
+    }
+    initCart()
   }, [])
 
   useEffect(() => {
-    saveSecureCart(cart)
+    const persistCart = async () => {
+      try {
+        await saveSecureCart(cart)
+      } catch (err) {
+        console.error('Error saving secure cart:', err)
+      }
+    }
+    persistCart()
   }, [cart])
 
   // --- MAPPING HELPERS ---

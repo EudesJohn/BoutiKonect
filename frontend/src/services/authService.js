@@ -97,10 +97,17 @@ export const loginUser = async (email, password, rememberMe = true) => {
 /**
  * Déconnecte l'utilisateur
  */
+let isLoggingOut = false
 export const logoutUser = async () => {
-  console.log('🚪 Déconnexion demandée...')
-  const { error } = await supabase.auth.signOut()
-  if (error) console.error('❌ Erreur lors de la déconnexion:', error)
+  if (isLoggingOut) return
+  isLoggingOut = true
+  try {
+    console.log('🚪 Déconnexion demandée...')
+    const { error } = await supabase.auth.signOut()
+    if (error) console.error('❌ Erreur lors de la déconnexion:', error)
+  } finally {
+    isLoggingOut = false
+  }
 }
 
 /**

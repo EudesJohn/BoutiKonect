@@ -36,9 +36,8 @@ export default function Navbar() {
     setMobileMenuOpen(false)
   }
 
-  const handleLogout = () => {
-    logoutSeller()
-    logoutUser()
+  const handleLogout = async () => {
+    await logoutUser()
     navigate('/')
     setMobileMenuOpen(false)
     setDropdownOpen(false)

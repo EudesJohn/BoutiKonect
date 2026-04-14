@@ -71,7 +71,13 @@ export default function Payment() {
         })
       )
 
-      await Promise.all(orderPromises)
+      const results = await Promise.all(orderPromises)
+      const allSuccessful = results.every(res => res && res.success)
+      
+      if (!allSuccessful) {
+        console.warn("Certaines commandes n'ont pas pu être enregistrées dans la base de données, bien que le paiement ait réussi.")
+        // Note: In a real app, this should trigger a fallback or admin notification
+      }
 
       // 3. Vider le panier et afficher le succès
       clearCart()

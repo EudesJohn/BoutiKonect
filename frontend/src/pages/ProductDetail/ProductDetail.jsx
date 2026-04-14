@@ -133,7 +133,7 @@ export default function ProductDetail() {
       buyerAddress: orderForm.address
     })
     
-    if (orderResult) {
+    if (orderResult && orderResult.success) {
       // Décrémenter le stock si c'est un produit physique
       if (product.stock !== undefined) {
         decrementProductStock(product.id, 1)

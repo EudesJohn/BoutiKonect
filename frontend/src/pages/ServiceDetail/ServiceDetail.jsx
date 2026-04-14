@@ -181,7 +181,7 @@ export default function ServiceDetail() {
     const result = await createOrder(orderData)
     setSubmittingOrder(false)
     
-    if (result) {
+    if (result && result.success) {
       setOrderSuccess(true)
       
       // WhatsApp Redirect
