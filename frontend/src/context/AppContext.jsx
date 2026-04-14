@@ -174,7 +174,17 @@ export const AppProvider = ({ children }) => {
     persistCart()
   }, [cart])
 
-  // --- MAPPING HELPERS ---
+  // --- HELPERS ---
+  const cleanObject = (obj) => {
+    const newObj = { ...obj }
+    Object.keys(newObj).forEach(key => {
+      if (newObj[key] === undefined || newObj[key] === null) {
+        delete newObj[key]
+      }
+    })
+    return newObj
+  }
+
   const mapItemFromDB = (item) => ({
     ...item,
     sellerId: item.seller_id,
@@ -209,7 +219,7 @@ export const AppProvider = ({ children }) => {
       priceType, isPromoted, promotionEndDate, ...rest 
     } = item;
 
-    return {
+    return cleanObject({
       ...rest,
       seller_id: sellerId,
       seller_name: sellerName,
@@ -219,7 +229,7 @@ export const AppProvider = ({ children }) => {
       price_type: priceType,
       is_promoted: isPromoted,
       promotion_end_date: promotionEndDate
-    }
+    })
   }
 
   const mapOrderToDB = (order) => {
@@ -229,7 +239,7 @@ export const AppProvider = ({ children }) => {
       paymentId, paymentStatus, paymentMethod, ...rest
     } = order;
 
-    return {
+    return cleanObject({
       ...rest,
       product_id: productId || serviceId,
       product_title: productTitle || serviceTitle,
@@ -243,7 +253,7 @@ export const AppProvider = ({ children }) => {
       payment_id: paymentId,
       payment_status: paymentStatus,
       payment_method: paymentMethod
-    }
+    })
   }
 
   useEffect(() => {
@@ -509,8 +519,14 @@ export const AppProvider = ({ children }) => {
     seller, user, products, services, reviews: [], orders, allUsers, favorites, cart,
     filters, userLocation, locationError, authLoading, dataLoading, errors,
     cities, categories, serviceCategories, PROMOTION_PRICES, filteredProducts,
-    getFilteredProducts: () => filteredProducts.filter(p => p.type === 'product' || !p.type),
-    getFilteredServices: () => filteredProducts.filter(p => p.type === 'service'),
+    getFilteredProducts: () => {
+      if (!Array.isArray(filteredProducts)) return [];
+      return filteredProducts.filter(p => p.type === 'product' || !p.type);
+    },
+    getFilteredServices: () => {
+      if (!Array.isArray(filteredProducts)) return [];
+      return filteredProducts.filter(p => p.type === 'service');
+    },
     getCartTotal: () => {
       if (!Array.isArray(cart)) return 0;
       return cart.reduce((total, item) => total + (item.price * (item.quantity || 1)), 0);
