@@ -30,18 +30,27 @@ class AIService {
         })
       });
 
-      const data = await response.json();
+      const contentType = response.headers.get("content-type");
       
       if (!response.ok) {
         if (response.status === 503) {
           throw new Error("L'assistant est actuellement en maintenance (Configuration API manquante). Veuillez contacter l'administrateur.");
         }
-        throw new Error(data.error || "Erreur serveur");
+        const errorData = await response.json().catch(() => ({ error: "Erreur serveur inconnue" }));
+        throw new Error(errorData.error || `Erreur serveur (${response.status})`);
       }
 
-      return data.response;
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        const data = await response.json();
+        return data.response;
+      } else {
+        // Si on reçoit de l'HTML, c'est probablement une redirection SPA (Vercel rewrite fail)
+        const text = await response.text();
+        console.error("AI Assistant received non-JSON response:", text.substring(0, 100));
+        throw new Error("Erreur de routage : Le serveur a renvoyé une page HTML au lieu d'une réponse IA. Vérifiez la configuration Vercel.");
+      }
     } catch (error) {
-      console.error("AI Assistant Critical Error:", error);
+      console.error("AI Assistant Failure:", error);
       
       let userFriendlyMessage = error.message || "Désolé, je rencontre une petite difficulté technique.";
       

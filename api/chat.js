@@ -62,11 +62,20 @@ export default async function handler(request, response) {
     const fullPrompt = `${systemInstruction}\n\nUtilisateur: ${prompt}`;
     const result = await model.generateContent(fullPrompt);
     const aiResponse = await result.response;
-    const text = aiResponse.text();
+    
+    // Vérifier si la réponse a été bloquée par les filtres de sécurité
+    if (aiResponse.candidates && aiResponse.candidates[0]?.finishReason === 'SAFETY') {
+      return response.status(200).json({ response: "Désolé, je ne peux pas répondre à cette demande pour des raisons de sécurité. Veuillez poser une question sur les services de BoutiKonect." });
+    }
 
+    const text = aiResponse.text();
     return response.status(200).json({ response: text });
   } catch (error) {
-    console.error("AI API Error:", error);
-    return response.status(500).json({ error: error.message });
+    console.error("AI API ERROR DETAIL:", error);
+    let errorMessage = error.message;
+    if (errorMessage.includes("safety")) {
+      errorMessage = "La réponse a été bloquée par les filtres de sécurité.";
+    }
+    return response.status(500).json({ error: errorMessage });
   }
 }
