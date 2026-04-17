@@ -44,8 +44,8 @@ const VirtualAssistant = () => {
       return response;
     } catch (error) {
       console.error("AI Assistant Error:", error);
-      // Fallback logic
-      return "Je suis désolé, je rencontre une petite difficulté. Essayez d'être plus spécifique ou consultez notre FAQ.";
+      // Retourner le message d'erreur spécifique pour aider au diagnostic
+      return `[DIAGNOSTIC] ${error.message || "Erreur inconnue"}`;
     }
   };
 
