@@ -48,8 +48,9 @@ export default function Publish() {
   }, [seller, user, navigate])
 
   const isAdmin = checkIsAdmin(seller) || checkIsAdmin(user)
-  const sellerProducts = products.filter(p => p.sellerId === seller?.id).filter(p => p.type === 'product' || !p.type)
-  const sellerServices = services.filter(s => s.sellerId === seller?.id)
+  const currentId = seller?.id || user?.id
+  const sellerProducts = products.filter(p => p.sellerId === currentId).filter(p => p.type === 'product' || !p.type)
+  const sellerServices = services.filter(s => s.sellerId === currentId)
 
   const formatPhoneNumber = (phone) => {
     if (!phone) return ''
@@ -307,7 +308,9 @@ export default function Publish() {
   }
 
   const isLoggedIn = seller || user
-  const isOnlyUser = user && !seller
+  // On considère comme "Acheteur pur" seulement si pas de produits ET flag is_seller à false
+  const hasProducts = sellerProducts.length > 0 || sellerServices.length > 0
+  const isOnlyUser = user && !seller && !hasProducts
 
   if (!isLoggedIn) {
     return null

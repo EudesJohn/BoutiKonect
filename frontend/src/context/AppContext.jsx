@@ -109,14 +109,37 @@ export const AppProvider = ({ children }) => {
               }
             }
           } else if (profile) {
-            if (profile.is_seller) {
-              setSeller(profile)
+            // --- SÉCURITÉ : AUTO-RÉPARATION DU STATUT VENDEUR ---
+            let finalProfile = profile;
+            
+            // Vérifier s'il y a des produits associés à cet ID même si is_seller est false
+            const { count, error: countError } = await supabase
+              .from('products')
+              .select('*', { count: 'exact', head: true })
+              .eq('seller_id', session.user.id);
+            
+            if (!countError && count > 0 && !profile.is_seller) {
+              console.log(`🔧 Auto-repair: User ${session.user.id} has ${count} products but is_seller is false. Updating...`);
+              const { data: updatedProfile } = await supabase
+                .from('profiles')
+                .update({ is_seller: true })
+                .eq('id', session.user.id)
+                .select()
+                .single();
+              
+              if (updatedProfile) {
+                finalProfile = updatedProfile;
+              }
+            }
+
+            if (finalProfile.is_seller) {
+              setSeller(finalProfile)
               setUser(null)
             } else {
-              setUser(profile)
+              setUser(finalProfile)
               setSeller(null)
             }
-            await saveSecureUser(profile)
+            await saveSecureUser(finalProfile)
           }
         } else if (event === 'SIGNED_OUT') {
           setSeller(null)

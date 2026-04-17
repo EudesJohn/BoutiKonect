@@ -20,8 +20,9 @@ export default function MyProducts() {
     }
   }, [seller, user, navigate])
 
-  const isAdmin = checkIsAdmin(seller)
-  const sellerProducts = products.filter(p => p.sellerId === seller?.id)
+  const isAdmin = checkIsAdmin(seller) || checkIsAdmin(user)
+  const currentId = seller?.id || user?.id
+  const sellerProducts = products.filter(p => p.sellerId === currentId)
     .filter(p => p.type === 'product' || !p.type)
 
 
