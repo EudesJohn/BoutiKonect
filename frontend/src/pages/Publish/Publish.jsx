@@ -339,7 +339,6 @@ export default function Publish() {
               className="btn btn-primary btn-large"
               onClick={async () => {
                 await upgradeToSeller(user.id, {})
-                window.location.reload()
               }}
             >
               <Plus size={20} />

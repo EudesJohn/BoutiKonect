@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import { useContext } from 'react'
 import { AppContext } from './context/AppContext'
 import Navbar from './components/Navbar/Navbar'
@@ -6,6 +6,8 @@ import Footer from './components/Footer/Footer'
 import ScrollToTop from './components/ScrollToTop/ScrollToTop'
 import VirtualAssistant from './components/VirtualAssistant/VirtualAssistant'
 import PWAInstallPrompt from './components/PWAInstallPrompt/PWAInstallPrompt'
+import TopBarLoader from './components/TopBarLoader/TopBarLoader'
+import PageTransition from './components/PageTransition/PageTransition'
 import './App.css'
 
 import Home from './pages/Home/Home'
@@ -41,10 +43,12 @@ import './App.css'
 
 function App() {
   const { seller, user, toasts, removeToast } = useContext(AppContext)
+  const location = useLocation()
 
   return (
     <div className="app">
       <ScrollToTop />
+      <TopBarLoader />
       <Navbar />
       
       {/* Toasts Portal */}
@@ -61,31 +65,33 @@ function App() {
       </div>
 
       <main className="main-content">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/product/:id" element={<ProductDetail />} />
-          <Route path="/services" element={<Services />} />
-          <Route path="/service/:id" element={<ServiceDetail />} />
-          <Route path="/publish" element={<ProtectedRoute><Publish /></ProtectedRoute>} />
-          <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
-          <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/my-services" element={<ProtectedRoute><MyServices /></ProtectedRoute>} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/payment" element={<ProtectedRoute><Payment /></ProtectedRoute>} />
-          <Route path="/payment-callback" element={<ProtectedRoute><PaymentCallback /></ProtectedRoute>} />
-          <Route path="/promotion/success" element={<ProtectedRoute><PromotionCallback /></ProtectedRoute>} />
-          <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
-          <Route path="/seller/:sellerId" element={<SellerProfile />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/privacy" element={<Privacy />} />
-          <Route path="/my-products" element={<ProtectedRoute><MyProducts /></ProtectedRoute>} />
-          <Route path="/seller-dashboard" element={<ProtectedRoute><SellerDashboard /></ProtectedRoute>} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AnimatePresence mode="wait">
+          <Routes location={location} key={location.pathname}>
+            <Route path="/" element={<PageTransition><Home /></PageTransition>} />
+            <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
+            <Route path="/products" element={<PageTransition><Products /></PageTransition>} />
+            <Route path="/product/:id" element={<PageTransition><ProductDetail /></PageTransition>} />
+            <Route path="/services" element={<PageTransition><Services /></PageTransition>} />
+            <Route path="/service/:id" element={<PageTransition><ServiceDetail /></PageTransition>} />
+            <Route path="/publish" element={<ProtectedRoute><PageTransition><Publish /></PageTransition></ProtectedRoute>} />
+            <Route path="/register" element={<GuestRoute><PageTransition><Register /></PageTransition></GuestRoute>} />
+            <Route path="/login" element={<GuestRoute><PageTransition><Login /></PageTransition></GuestRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><PageTransition><Profile /></PageTransition></ProtectedRoute>} />
+            <Route path="/forgot-password" element={<PageTransition><ForgotPassword /></PageTransition>} />
+            <Route path="/my-services" element={<ProtectedRoute><PageTransition><MyServices /></PageTransition></ProtectedRoute>} />
+            <Route path="/cart" element={<PageTransition><Cart /></PageTransition>} />
+            <Route path="/payment" element={<ProtectedRoute><PageTransition><Payment /></PageTransition></ProtectedRoute>} />
+            <Route path="/payment-callback" element={<ProtectedRoute><PageTransition><PaymentCallback /></PageTransition></ProtectedRoute>} />
+            <Route path="/promotion/success" element={<ProtectedRoute><PageTransition><PromotionCallback /></PageTransition></ProtectedRoute>} />
+            <Route path="/admin" element={<AdminRoute><PageTransition><Admin /></PageTransition></AdminRoute>} />
+            <Route path="/seller/:sellerId" element={<PageTransition><SellerProfile /></PageTransition>} />
+            <Route path="/terms" element={<PageTransition><Terms /></PageTransition>} />
+            <Route path="/privacy" element={<PageTransition><Privacy /></PageTransition>} />
+            <Route path="/my-products" element={<ProtectedRoute><PageTransition><MyProducts /></PageTransition></ProtectedRoute>} />
+            <Route path="/seller-dashboard" element={<ProtectedRoute><PageTransition><SellerDashboard /></PageTransition></ProtectedRoute>} />
+            <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+          </Routes>
+        </AnimatePresence>
       </main>
       <Footer />
       <VirtualAssistant />
