@@ -16,16 +16,17 @@ export default async function handler(request, response) {
   }
 
   try {
-    const { prompt, context } = request.body;
-    const apiKey = process.env.GEMINI_API_KEY;
-
-    if (!apiKey) {
-      console.error("[AI ERROR] Clé GEMINI_API_KEY absente des variables d'environnement.");
-      return response.status(503).json({ 
-        error: 'Configuration IA manquante', 
-        details: 'La clé API Gemini n\'est pas configurée sur le serveur. Veuillez l\'ajouter dans les variables d\'environnement.' 
-      });
+    const { prompt, context = {} } = request.body;
+    
+    if (!prompt || typeof prompt !== 'string') {
+      return response.status(400).json({ error: 'Le message est vide ou invalide' });
     }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+...
+    // Sécurisation du contexte pour éviter les injections ou les erreurs de parse
+    const safeProducts = Array.isArray(context.products) ? context.products.slice(0, 10).map(p => ({ title: p.title, category: p.category, price: p.price })) : [];
+    const safeServices = Array.isArray(context.services) ? context.services.slice(0, 10).map(s => ({ title: s.title, category: s.category, price: s.price })) : [];
 
     console.log(`[AI INFO] Requête reçue pour prompt: "${prompt.substring(0, 50)}..."`);
     const genAI = new GoogleGenerativeAI(apiKey);
@@ -36,8 +37,8 @@ export default async function handler(request, response) {
       Ton but est d'accompagner l'utilisateur dans TOUTES ses démarches sur le site, sans exception.
       
       ### CONTEXTE MARCHÉ (DYNAMIQUE)
-      - Produits récents : ${JSON.stringify(context.products?.slice(0, 10) || [])}
-      - Services récents : ${JSON.stringify(context.services?.slice(0, 10) || [])}
+      - Produits récents : ${JSON.stringify(safeProducts)}
+      - Services récents : ${JSON.stringify(safeServices)}
       
       ### BASE DE CONNAISSANCE PLATEFORME (FAQ & RÈGLES)
       1. CONCEPT : BoutiKonect est un marché magique pour tout le Bénin. On y trouve habits, voitures, et services (réparations, etc.).

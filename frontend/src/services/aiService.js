@@ -1,11 +1,5 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
 /**
- * Service pour interagir avec les modèles d'IA de Google (Gemini)
- * Utilise le SDK standard @google/generative-ai pour une compatibilité maximale.
- */
-/**
- * Service pour interagir avec l'assistant IA de BoutiKonect via l'API interne
+ * Service pour interagir avec l'assistant IA de BoutiKonect via l'API interne (Vercel Serverless)
  */
 class AIService {
   /**

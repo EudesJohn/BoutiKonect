@@ -396,7 +396,7 @@ export default function Admin() {
                       </div>
                       <div className="detail-row">
                         <Calendar size={14} />
-                        <span>Inscrit: {targetUser.createdAt ? new Date(targetUser.createdAt).toLocaleDateString('fr-FR') : 'Non spécifié'}</span>
+                        <span>Inscrit: {targetUser.createdAt ? new Date(targetUser.createdAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }) : 'Non spécifié'}</span>
                       </div>
                     </div>
 
