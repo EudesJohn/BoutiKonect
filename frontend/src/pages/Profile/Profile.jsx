@@ -13,7 +13,17 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState('favorites')
   const [isEditing, setIsEditing] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
-  const [editForm, setEditForm] = useState({ name: '', email: '', phone: '', city: '', neighborhood: '', avatar: '', whatsapp: '', newPassword: '' })
+  const [editForm, setEditForm] = useState({ 
+    name: '', 
+    email: '', 
+    phone: '', 
+    city: '', 
+    neighborhood: '', 
+    customNeighborhood: '', // Nouveau champ pour le quartier libre
+    avatar: '', 
+    whatsapp: '', 
+    newPassword: '' 
+  })
   const [showPasswordChange, setShowPasswordChange] = useState(false)
   const [isMfaLoading, setIsMfaLoading] = useState(false)
   const fileInputRef = useRef(null)
@@ -108,12 +118,18 @@ export default function Profile() {
 
   const handleEditClick = () => {
     const currentUser = user || seller
+    
+    // Déterminer si le quartier actuel est dans la liste prédéfinie
+    const currentCityData = cities.find(c => c.name === currentUser?.city)
+    const isStandardNeighborhood = currentCityData?.neighborhoods.includes(currentUser?.neighborhood)
+    
     setEditForm({ 
       name: currentUser?.name || '', 
       email: currentUser?.email || '', 
       phone: currentUser?.phone || '', 
       city: currentUser?.city || '', 
-      neighborhood: currentUser?.neighborhood || '', 
+      neighborhood: isStandardNeighborhood ? (currentUser?.neighborhood || '') : (currentUser?.neighborhood ? 'AUTRE' : ''), 
+      customNeighborhood: isStandardNeighborhood ? '' : (currentUser?.neighborhood || ''),
       avatar: currentUser?.avatar || '', 
       whatsapp: currentUser?.whatsapp || '',
       newPassword: '' 
@@ -141,12 +157,17 @@ export default function Profile() {
     setIsMfaLoading(true);
     
     try {
+      // Préparer le quartier final (gérer l'option 'AUTRE')
+      const finalNeighborhood = editForm.neighborhood === 'AUTRE' 
+        ? editForm.customNeighborhood 
+        : editForm.neighborhood;
+
       // Update fields in profiles table
       const result = await updateProfile(currentUser.id, {
         name: editForm.name,
         phone: editForm.phone,
         city: editForm.city,
-        neighborhood: editForm.neighborhood,
+        neighborhood: finalNeighborhood,
         avatar: editForm.avatar,
         whatsapp: editForm.whatsapp
       });
@@ -257,8 +278,49 @@ export default function Profile() {
               <div className="edit-form-group"><label>Email</label><input type="email" value={editForm.email} onChange={(e) => setEditForm({...editForm, email: e.target.value})} className="edit-input" disabled={isGoogleUser} /></div>
               <div className="edit-form-group"><label>Téléphone</label><input type="tel" value={editForm.phone} onChange={(e) => setEditForm({...editForm, phone: e.target.value})} className="edit-input" /></div>
               <div className="edit-form-group"><label>WhatsApp</label><input type="tel" value={editForm.whatsapp} onChange={(e) => setEditForm({...editForm, whatsapp: e.target.value})} className="edit-input" placeholder="+229XXXXXXXX" /></div>
-              <div className="edit-form-group"><label>Villes et Zones</label><input type="text" value={editForm.city} onChange={(e) => setEditForm({...editForm, city: e.target.value})} className="edit-input" /></div>
-              <div className="edit-form-group"><label>Zone / Quartier</label><input type="text" value={editForm.neighborhood} onChange={(e) => setEditForm({...editForm, neighborhood: e.target.value})} className="edit-input" /></div>
+              <div className="edit-form-group">
+                <label>Villes et Zones</label>
+                <select 
+                  className="edit-input"
+                  value={editForm.city}
+                  onChange={(e) => setEditForm({...editForm, city: e.target.value, neighborhood: '', customNeighborhood: ''})}
+                >
+                  <option value="">Sélectionner une ville</option>
+                  {cities.map(city => (
+                    <option key={city.id} value={city.name}>{city.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {editForm.city && (
+                <div className="edit-form-group">
+                  <label>Quartier / Village</label>
+                  <select 
+                    className="edit-input"
+                    value={editForm.neighborhood}
+                    onChange={(e) => setEditForm({...editForm, neighborhood: e.target.value})}
+                  >
+                    <option value="">Sélectionner un quartier</option>
+                    {cities.find(c => c.name === editForm.city)?.neighborhoods.map(nh => (
+                      <option key={nh} value={nh}>{nh}</option>
+                    ))}
+                    <option value="AUTRE">+ Autre quartier</option>
+                  </select>
+                </div>
+              )}
+
+              {editForm.neighborhood === 'AUTRE' && (
+                <div className="edit-form-group">
+                  <label>Précisez votre quartier</label>
+                  <input 
+                    type="text" 
+                    className="edit-input" 
+                    placeholder="Nom du quartier"
+                    value={editForm.customNeighborhood}
+                    onChange={(e) => setEditForm({...editForm, customNeighborhood: e.target.value})} 
+                  />
+                </div>
+              )}
               <div className="edit-form-actions">
                 <button className="btn btn-primary btn-small" onClick={handleSaveProfile}><Save size={16} /> Enregistrer</button>
                 <button className="btn btn-outline btn-small" onClick={() => setIsEditing(false)}><X size={16} /> Annuler</button>
