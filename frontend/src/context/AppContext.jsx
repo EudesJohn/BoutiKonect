@@ -57,7 +57,7 @@ export const AppProvider = ({ children }) => {
 
   // ============ FONCTIONS UTILITAIRES ET MAPPAGE ============
   
-  const cleanObject = (obj) => {
+  function cleanObject(obj) {
     const newObj = {}
     Object.keys(obj).forEach(key => {
       if (obj[key] !== undefined && obj[key] !== null) {
@@ -70,7 +70,7 @@ export const AppProvider = ({ children }) => {
   /**
    * Fonction interne d'auto-réparation du statut vendeur
    */
-  const handleSellerAutoRepair = async (profile, userId) => {
+  async function handleSellerAutoRepair(profile, userId) {
     try {
       const { count, error } = await supabase
         .from('products')
@@ -94,23 +94,25 @@ export const AppProvider = ({ children }) => {
     return profile;
   }
 
-  const mapItemFromDB = (item) => ({
-    ...item,
-    sellerId: item.seller_id,
-    sellerName: item.seller_name,
-    sellerCity: item.seller_city,
-    sellerNeighborhood: item.seller_neighborhood,
-    sellerAvatar: item.seller_avatar,
-    priceType: item.price_type,
-    isPromoted: item.is_promoted,
-    promotionEndDate: item.promotion_end_date,
-    latitude: item.latitude,
-    longitude: item.longitude,
-    createdAt: item.created_at,
-    updatedAt: item.updated_at
-  })
+  function mapItemFromDB(item) {
+    return {
+      ...item,
+      sellerId: item.seller_id,
+      sellerName: item.seller_name,
+      sellerCity: item.seller_city,
+      sellerNeighborhood: item.seller_neighborhood,
+      sellerAvatar: item.seller_avatar,
+      priceType: item.price_type,
+      isPromoted: item.is_promoted,
+      promotionEndDate: item.promotion_end_date,
+      latitude: item.latitude,
+      longitude: item.longitude,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at
+    }
+  }
 
-  const getDistance = (lat1, lon1, lat2, lon2) => {
+  function getDistance(lat1, lon1, lat2, lon2) {
     if (!lat1 || !lon1 || !lat2 || !lon2) return null;
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -123,21 +125,23 @@ export const AppProvider = ({ children }) => {
     return R * c; 
   }
 
-  const mapOrderFromDB = (order) => ({
-    ...order,
-    productId: order.product_id,
-    productTitle: order.product_title,
-    productImage: order.product_image,
-    sellerId: order.seller_id,
-    sellerName: order.seller_name,
-    buyerId: order.buyer_id,
-    buyerName: order.buyer_name,
-    buyerPhone: order.buyer_phone,
-    buyerAddress: order.buyer_address,
-    createdAt: order.created_at
-  })
+  function mapOrderFromDB(order) {
+    return {
+      ...order,
+      productId: order.product_id,
+      productTitle: order.product_title,
+      productImage: order.product_image,
+      sellerId: order.seller_id,
+      sellerName: order.seller_name,
+      buyerId: order.buyer_id,
+      buyerName: order.buyer_name,
+      buyerPhone: order.buyer_phone,
+      buyerAddress: order.buyer_address,
+      createdAt: order.created_at
+    }
+  }
 
-  const mapItemToDB = (item) => {
+  function mapItemToDB(item) {
     const { 
       sellerId, sellerName, sellerCity, sellerNeighborhood, sellerAvatar,
       priceType, isPromoted, promotionEndDate, ...rest 
@@ -158,7 +162,7 @@ export const AppProvider = ({ children }) => {
     })
   }
 
-  const mapOrderToDB = (order) => {
+  function mapOrderToDB(order) {
     const {
       productId, productTitle, productImage, serviceId, serviceTitle,
       sellerId, sellerName, buyerId, buyerName, buyerPhone, buyerAddress,
