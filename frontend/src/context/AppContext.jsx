@@ -109,28 +109,8 @@ export const AppProvider = ({ children }) => {
               }
             }
           } else if (profile) {
-            // --- SÉCURITÉ : AUTO-RÉPARATION DU STATUT VENDEUR ---
-            let finalProfile = profile;
-            
-            // Vérifier s'il y a des produits associés à cet ID même si is_seller est false
-            const { count, error: countError } = await supabase
-              .from('products')
-              .select('*', { count: 'exact', head: true })
-              .eq('seller_id', session.user.id);
-            
-            if (!countError && count > 0 && !profile.is_seller) {
-              console.log(`🔧 Auto-repair: User ${session.user.id} has ${count} products but is_seller is false. Updating...`);
-              const { data: updatedProfile } = await supabase
-                .from('profiles')
-                .update({ is_seller: true })
-                .eq('id', session.user.id)
-                .select()
-                .single();
-              
-              if (updatedProfile) {
-                finalProfile = updatedProfile;
-              }
-            }
+            // Utilisation d'une fonction séparée pour l'auto-réparation afin d'éviter les TDZ lexiques
+            const finalProfile = await handleSellerAutoRepair(profile, session.user.id);
 
             if (finalProfile.is_seller) {
               setSeller(finalProfile)
@@ -139,24 +119,25 @@ export const AppProvider = ({ children }) => {
               setUser(finalProfile)
               setSeller(null)
             }
-            await saveSecureUser(finalProfile)
+            
+            saveSecureUser(finalProfile)
+            saveSecureSeller(finalProfile.is_seller ? finalProfile : null)
           }
-        } else if (event === 'SIGNED_OUT') {
-          setSeller(null)
+        } else {
           setUser(null)
-          secureRemoveItem('BoutiKonect_user')
-          secureRemoveItem('BoutiKonect_seller')
+          setSeller(null)
+          saveSecureUser(null)
+          saveSecureSeller(null)
+          secureClear()
         }
       } catch (err) {
-        console.error('❌ Critical error in auth listener:', err)
+        console.error('❌ Global auth listener error:', err)
       } finally {
-        if (!isInitialized) {
-          setAuthLoading(false)
-          isInitialized = true;
-          clearTimeout(authTimeout);
-        }
+        setAuthLoading(false)
+        isInitialized = true
+        clearTimeout(authTimeout)
       }
-    })
+    });
 
     const loadOptimisticUser = async () => {
       try {
@@ -250,6 +231,33 @@ export const AppProvider = ({ children }) => {
       }
     })
     return newObj
+  }
+
+  /**
+   * Fonction interne d'auto-réparation du statut vendeur
+   */
+  const handleSellerAutoRepair = async (profile, userId) => {
+    try {
+      const { count, error } = await supabase
+        .from('products')
+        .select('*', { count: 'exact', head: true })
+        .eq('seller_id', userId);
+      
+      if (!error && count > 0 && !profile.is_seller) {
+        console.log(`🔧 Auto-repair: User ${userId} has ${count} products. Updating status...`);
+        const { data: updatedProfile } = await supabase
+          .from('profiles')
+          .update({ is_seller: true })
+          .eq('id', userId)
+          .select()
+          .single();
+        
+        return updatedProfile || profile;
+      }
+    } catch (e) {
+      console.error('Auto-repair failed:', e);
+    }
+    return profile;
   }
 
   const mapItemFromDB = (item) => ({
@@ -757,16 +765,16 @@ export const AppProvider = ({ children }) => {
     addService: addProduct, updateService: updateProduct, deleteService: deleteProduct,
     promoteProduct,
     registerUser: async (userData) => {
-      const { registerUser } = await import('../services/authService')
-      const result = await registerUser(userData)
+      const { registerUser: authRegFunc } = await import('../services/authService')
+      const result = await authRegFunc(userData)
       if (result.success) return { success: true, message: 'Un e-mail de confirmation a été envoyé.' }
       return result
     },
     logoutUser: authLogoutUser,
     logoutSeller: authLogoutUser,
     changePassword: async (current, next) => {
-      const { changePassword } = await import('../services/authService')
-      return changePassword(current, next)
+      const { changePassword: authPassFunc } = await import('../services/authService')
+      return authPassFunc(current, next)
     },
     getAllUsers: () => allUsers,
     getAllProducts: () => products,
