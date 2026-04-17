@@ -171,3 +171,24 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE TRIGGER on_auth_user_updated
   AFTER UPDATE OF email ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_user_update();
+
+-- 8. User History (for recommendations)
+CREATE TABLE user_history (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+  seller_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  category TEXT,
+  action_type TEXT DEFAULT 'view', -- 'view', 'order', 'click'
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS for user_history
+ALTER TABLE user_history ENABLE ROW LEVEL SECURITY;
+
+-- User History Policies
+CREATE POLICY "Users can insert their own history." ON user_history FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can see their own history." ON user_history FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Admins can see all history for analytics." ON user_history FOR SELECT USING (
+  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
+);

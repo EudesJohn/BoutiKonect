@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { AppContext } from '../../context/AppContext'
 import { getItemReviews, getItemRating, addReview } from '../../services/reviewsService'
+import { trackView } from '../../services/analyticsService'
 import { 
   MapPin, Clock, ShieldCheck, MessageCircle, Phone, 
   Share2, AlertTriangle, ArrowLeft, Star, ChevronLeft, ChevronRight, X, Heart, Send,
@@ -40,6 +41,13 @@ export default function ServiceDetail() {
     }, 60000)
     return () => clearInterval(timer)
   }, [])
+
+  // Tracking de la vue
+  useEffect(() => {
+    if (service?.id) {
+      trackView(service.id, user?.id || seller?.id, service.category, service.sellerId)
+    }
+  }, [service?.id, user?.id, seller?.id, service?.sellerId])
 
   const parseDate = (dateValue) => {
     if (!dateValue) return new Date();

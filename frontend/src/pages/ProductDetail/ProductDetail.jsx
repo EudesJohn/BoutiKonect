@@ -4,6 +4,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { AppContext } from '../../context/AppContext'
 import { getItemReviews, getItemRating, addReview } from '../../services/reviewsService'
+import { trackView } from '../../services/analyticsService'
 import { MapPin, ShoppingCart, MessageCircle, ArrowLeft, Share2, Heart, ChevronLeft, ChevronRight, X, Flag, Star, Send, Facebook, Copy } from 'lucide-react'
 import './ProductDetail.css'
 
@@ -47,6 +48,13 @@ export default function ProductDetail() {
     }, 60000)
     return () => clearInterval(timer)
   }, [])
+
+  // Tracking de la vue
+  useEffect(() => {
+    if (product?.id) {
+      trackView(product.id, user?.id || seller?.id, product.category, product.sellerId)
+    }
+  }, [product?.id, user?.id, seller?.id, product?.sellerId])
 
   const parseDate = (dateValue) => {
     if (!dateValue) return new Date();

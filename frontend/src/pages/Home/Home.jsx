@@ -27,7 +27,7 @@ import otherServiceImg from '../../assets/stickers/other_service.png'
 
 
 export default function Home() {
-  const { user, seller, products, services, dataLoading, parseDate } = useContext(AppContext)
+  const { user, seller, products, services, dataLoading, parseDate, recommendations } = useContext(AppContext)
 
   const now = new Date()
 
@@ -334,6 +334,42 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {/* Personalized Recommendations */}
+      {recommendations.length > 0 && (
+        <section className="featured-products recommendations-section" style={{ background: 'var(--bg-secondary)', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+          <div className="container">
+            <motion.div 
+              className="section-header"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              <div>
+                <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Sparkles size={24} color="#FFD700" />
+                  Sélection pour vous
+                </h2>
+                <p>Basé sur vos préférences et votre historique</p>
+              </div>
+            </motion.div>
+
+            <motion.div 
+              className="products-grid"
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+            >
+              {recommendations.map((product) => (
+                <motion.div key={`rec-${product.id}`} variants={itemVariants}>
+                  <ProductCard product={product} />
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
+        </section>
+      )}
 
       {/* Featured Services */}
       {/* Featured Services */}

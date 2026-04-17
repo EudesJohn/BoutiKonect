@@ -165,6 +165,7 @@ export const AppProvider = ({ children }) => {
   const [cart, setCart] = useState([])
   const [reports, setReports] = useState([])
   const [messages, setMessages] = useState([])
+  const [recommendations, setRecommendations] = useState([])
 
   useEffect(() => {
     const savedFavorites = localStorage.getItem('BoutiKonect_favorites')
@@ -351,6 +352,21 @@ export const AppProvider = ({ children }) => {
 
     return () => supabase.removeChannel(ordersSub)
   }, [seller, user])
+
+  // Recommandations
+  useEffect(() => {
+    const fetchRecs = async () => {
+      const currentUser = seller || user;
+      if (currentUser) {
+        const { getRecommendedProducts } = await import('../services/analyticsService');
+        const recs = await getRecommendedProducts(currentUser.id, 8);
+        setRecommendations(recs.map(mapItemFromDB));
+      } else {
+        setRecommendations([]);
+      }
+    };
+    fetchRecs();
+  }, [seller, user, products]);
 
   const [userLocation, setUserLocation] = useState(null)
   const [locationError, setLocationError] = useState(null)
@@ -603,7 +619,8 @@ export const AppProvider = ({ children }) => {
     },
     messages,
     deleteUser,
-    resolveReport
+    resolveReport,
+    recommendations
   }
 
   return (
