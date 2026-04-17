@@ -54,10 +54,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #FF6A00 0%, #FF8C00 100%);
+  background: #0d1b2a;
+  border: 1px solid #FF6A00;
   border-radius: var(--radius-md);
-  color: white;
-  box-shadow: 0 10px 30px rgba(255, 106, 0, 0.4);
+  color: #FF6A00;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  filter: drop-shadow(0 0 5px rgba(255, 106, 0, 0.4));
 }
 
 .footer-logo-text {

@@ -37,11 +37,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #FF6A00 0%, #FF8C00 100%);
+  background: #0d1b2a;
+  border: 2px solid #FF6A00;
   border-radius: var(--radius-md);
-  color: white;
-  box-shadow: 0 10px 30px rgba(255, 106, 0, 0.4);
-  animation: glow 3s ease-in-out infinite;
+  color: #FF6A00;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  /* Lueur plus subtile et plus longue pour faire moins "flashy" */
+  animation: glow-soft 5s ease-in-out infinite;
+}
+
+@keyframes glow-soft {
+  0% { filter: drop-shadow(0 0 5px rgba(255, 106, 0, 0.4)); box-shadow: 0 0 5px rgba(255, 106, 0, 0.1); }
+  50% { filter: drop-shadow(0 0 15px rgba(255, 106, 0, 0.7)); box-shadow: 0 0 20px rgba(255, 106, 0, 0.3); }
+  100% { filter: drop-shadow(0 0 5px rgba(255, 106, 0, 0.4)); box-shadow: 0 0 5px rgba(255, 106, 0, 0.1); }
 }
 
 .logo-text {

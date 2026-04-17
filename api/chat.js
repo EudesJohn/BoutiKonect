@@ -20,9 +20,14 @@ export default async function handler(request, response) {
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
-      return response.status(500).json({ error: 'Configuration IA manquante sur le serveur' });
+      console.error("[AI ERROR] Clé GEMINI_API_KEY absente des variables d'environnement.");
+      return response.status(503).json({ 
+        error: 'Configuration IA manquante', 
+        details: 'La clé API Gemini n\'est pas configurée sur le serveur. Veuillez l\'ajouter dans les variables d\'environnement.' 
+      });
     }
 
+    console.log(`[AI INFO] Requête reçue pour prompt: "${prompt.substring(0, 50)}..."`);
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
