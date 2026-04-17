@@ -234,9 +234,24 @@ export const AppProvider = ({ children }) => {
     priceType: item.price_type,
     isPromoted: item.is_promoted,
     promotionEndDate: item.promotion_end_date,
+    latitude: item.latitude,
+    longitude: item.longitude,
     createdAt: item.created_at,
     updatedAt: item.updated_at
   })
+
+  const getDistance = (lat1, lon1, lat2, lon2) => {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+    const R = 6371; // Radius of the earth in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c; // Distance in km
+  }
 
   const mapOrderFromDB = (order) => ({
     ...order,
@@ -267,7 +282,9 @@ export const AppProvider = ({ children }) => {
       seller_avatar: sellerAvatar,
       price_type: priceType,
       is_promoted: isPromoted,
-      promotion_end_date: promotionEndDate
+      promotion_end_date: promotionEndDate,
+      latitude: item.latitude,
+      longitude: item.longitude
     })
   }
 
@@ -640,9 +657,33 @@ export const AppProvider = ({ children }) => {
         const itemContent = normalize(`${item.title} ${item.description}`);
         if (!searchTerms.every(term => itemContent.includes(term))) return false;
       }
+
+      // Geolocation filter (Near Me - 50km)
+      if (filters.nearMe && userLocation) {
+        let itemLat = item.latitude;
+        let itemLng = item.longitude;
+
+        // Fallback to city coordinates if product has no coordinates
+        if (!itemLat || !itemLng) {
+          const cityData = cities.find(c => c.name === item.seller_city);
+          if (cityData) {
+            itemLat = cityData.lat;
+            itemLng = cityData.lng;
+          }
+        }
+
+        if (itemLat && itemLng) {
+          const distance = getDistance(userLocation.latitude, userLocation.longitude, itemLat, itemLng);
+          if (distance === null || distance > 50) return false;
+        } else {
+          // If we still have no coordinates, exclude it when "Near Me" is active
+          return false;
+        }
+      }
+
       return true;
     }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-  }, [products, filters]);
+  }, [products, filters, userLocation]);
 
   const value = {
     seller, user, products, services, reviews: [], orders, allUsers, favorites, cart,

@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { AppContext } from '../../context/AppContext'
 import { cities, serviceCategories } from '../../context/constants'
-import { Filter, X, ChevronLeft, ChevronRight, Star, MapPin } from 'lucide-react'
+import { Filter, X, ChevronLeft, ChevronRight, Star, MapPin, Loader2 } from 'lucide-react'
 import ProductCard from '../../components/ProductCard/ProductCard'
 import { ProductSkeletonGrid } from '../../components/Skeleton/Skeleton'
 import './Services.css'
@@ -16,6 +16,7 @@ export default function ServicesPage() {
   const [showFilters, setShowFilters] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
+  const [isLocating, setIsLocating] = useState(false)
   
   const filteredServices = useMemo(() => {
     return getFilteredServices()
@@ -224,16 +225,24 @@ export default function ServicesPage() {
                 <input
                   type="checkbox"
                   checked={filters.nearMe}
+                  disabled={isLocating}
                   onChange={async (e) => {
                     const checked = e.target.checked;
                     if (checked && !userLocation) {
-                      await getCurrentLocation();
+                      setIsLocating(true)
+                      try {
+                        await getCurrentLocation();
+                      } catch (err) {
+                        console.error("Loc error", err)
+                      } finally {
+                        setIsLocating(false)
+                      }
                     }
                     handleFilterChange('nearMe', checked);
                   }}
                 />
                 <span className="checkbox-custom"></span>
-                <MapPin size={16} className="star-icon" />
+                {isLocating ? <Loader2 size={16} className="animate-spin" /> : <MapPin size={16} className="star-icon" />}
                 <span>Près de moi (50km)</span>
               </label>
             </div>

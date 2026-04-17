@@ -279,9 +279,9 @@ export default function Profile() {
               <div className="edit-form-group"><label>Téléphone</label><input type="tel" value={editForm.phone} onChange={(e) => setEditForm({...editForm, phone: e.target.value})} className="edit-input" /></div>
               <div className="edit-form-group"><label>WhatsApp</label><input type="tel" value={editForm.whatsapp} onChange={(e) => setEditForm({...editForm, whatsapp: e.target.value})} className="edit-input" placeholder="+229XXXXXXXX" /></div>
               <div className="edit-form-group">
-                <label>Villes et Zones</label>
+                <label>Commune / Ville</label>
                 <select 
-                  className="edit-input"
+                  className="edit-input edit-select"
                   value={editForm.city}
                   onChange={(e) => setEditForm({...editForm, city: e.target.value, neighborhood: '', customNeighborhood: ''})}
                 >
@@ -296,7 +296,7 @@ export default function Profile() {
                 <div className="edit-form-group">
                   <label>Quartier / Village</label>
                   <select 
-                    className="edit-input"
+                    className="edit-input edit-select"
                     value={editForm.neighborhood}
                     onChange={(e) => setEditForm({...editForm, neighborhood: e.target.value})}
                   >

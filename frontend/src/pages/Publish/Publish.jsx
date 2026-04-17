@@ -12,7 +12,7 @@ export default function Publish() {
     seller, user, 
     addProduct, products, deleteProduct, updateProduct, 
     addService, services, deleteService, updateService,
-    upgradeToSeller, formatPrice, checkIsAdmin 
+    upgradeToSeller, formatPrice, checkIsAdmin, getCurrentLocation
   } = useContext(AppContext)
   const navigate = useNavigate()
   
@@ -29,8 +29,11 @@ export default function Publish() {
     duration: '', // Nouveauté pour les services: 1h, 4h, 1j, sem
     experience: '', // Nouveauté pour les services (ex: "5 ans")
     images: [],
-    whatsapp: seller?.whatsapp || ''
+    whatsapp: seller?.whatsapp || '',
+    latitude: null,
+    longitude: null
   })
+  const [isLocating, setIsLocating] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState({})
   const [success, setSuccess] = useState(false)
@@ -126,6 +129,8 @@ export default function Publish() {
         seller_city: seller.city || '',
         seller_neighborhood: seller.neighborhood || '',
         seller_avatar: seller.avatar || '',
+        latitude: formData.latitude,
+        longitude: formData.longitude,
       }
 
       // Add conditional fields and remove unwanted ones
@@ -191,7 +196,9 @@ export default function Publish() {
             experience: '',
             duration: '',
             images: [],
-            whatsapp: seller?.whatsapp || ''
+            whatsapp: seller?.whatsapp || '',
+            latitude: null,
+            longitude: null
           })
           window.scrollTo(0, 0)
           
@@ -229,26 +236,31 @@ export default function Publish() {
       experience: item.experience || '',
       duration: item.duration || '',
       images: item.images || [],
-      whatsapp: item.whatsapp || seller?.whatsapp || ''
+      whatsapp: item.whatsapp || seller?.whatsapp || '',
+      latitude: item.latitude || null,
+      longitude: item.longitude || null
     })
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const handleCancelEdit = () => {
-    setEditingProduct(null)
-    setFormData({
-      title: '',
-      description: '',
-      price: '',
-      priceType: 'Fixe',
-      category: '',
-      condition: 'Neuf',
-      stock: 1,
-      experience: '',
-      duration: '',
-      images: [],
-      whatsapp: seller?.whatsapp || ''
     })
+  }
+
+  const handleGetLocation = async () => {
+    setIsLocating(true)
+    try {
+      const location = await getCurrentLocation()
+      setFormData(prev => ({
+        ...prev,
+        latitude: location.latitude,
+        longitude: location.longitude
+      }))
+    } catch (err) {
+      console.error("Erreur localisation:", err)
+      setErrors(prev => ({ ...prev, general: "Impossible d'obtenir votre position. Vérifiez vos permissions." }))
+    } finally {
+      setIsLocating(false)
+    }
   }
 
   const handlePromoteClick = (product) => {
@@ -587,6 +599,34 @@ export default function Publish() {
                   {errors.images && (
                     <span className="error-text">{errors.images}</span>
                   )}
+
+                  <div className="location-selection" style={{ marginTop: '20px', padding: '15px', borderRadius: '12px', background: 'rgba(0, 162, 232, 0.05)', border: '1px dashed var(--primary-light)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <MapPin size={20} color="var(--primary)" />
+                        <span style={{ fontWeight: '600', color: 'var(--text-main)' }}>Localisation du produit</span>
+                      </div>
+                      <button 
+                        type="button" 
+                        className={`btn ${formData.latitude ? 'btn-outline' : 'btn-primary'} btn-small`}
+                        onClick={handleGetLocation}
+                        disabled={isLocating}
+                      >
+                        {isLocating ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
+                        {formData.latitude ? 'Mettre à jour ma position' : 'Utiliser ma position actuelle'}
+                      </button>
+                    </div>
+                    {formData.latitude ? (
+                      <div style={{ fontSize: '13px', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <CheckCircle size={14} />
+                        Position capturée : {formData.latitude.toFixed(4)}, {formData.longitude.toFixed(4)}
+                      </div>
+                    ) : (
+                      <p style={{ fontSize: '13px', color: 'var(--text-light)', margin: 0 }}>
+                        Ajouter votre position GPS permet aux acheteurs de vous trouver via le filtre "Près de moi".
+                      </p>
+                    )}
+                  </div>
 
                   {formData.images.length > 0 && (
                     <div className="image-previews">
