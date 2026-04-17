@@ -243,9 +243,6 @@ export default function Publish() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-    })
-  }
-
   const handleGetLocation = async () => {
     setIsLocating(true)
     try {

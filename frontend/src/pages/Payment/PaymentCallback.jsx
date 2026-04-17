@@ -13,51 +13,55 @@ export default function PaymentCallback() {
   const [message, setMessage] = useState('Vérification de votre paiement en cours...');
 
   useEffect(() => {
-    const fedapayStatus = searchParams.get('status');
-    const transactionId = searchParams.get('id');
+    const processPayment = async () => {
+      const fedapayStatus = searchParams.get('status');
+      const transactionId = searchParams.get('id');
 
-    if (fedapayStatus === 'approved' || fedapayStatus === 'successful') {
-      try {
-        const rawPendingData = sessionStorage.getItem('pending_order');
-        if (rawPendingData) {
-          const pendingData = JSON.parse(rawPendingData);
-          
-          // Créer toutes les commandes
-          for (const item of pendingData.cart) {
-            await createOrder({
-              productId: item.id,
-              productTitle: item.title,
-              productImage: item.images[0],
-              price: item.price,
-              quantity: item.quantity,
-              sellerId: item.sellerId,
-              buyerId: pendingData.buyerId,
-              buyerName: pendingData.buyerName,
-              buyerPhone: pendingData.phone,
-              paymentId: transactionId || `FEDA_${Date.now()}`,
-              paymentStatus: 'paid'
-            });
+      if (fedapayStatus === 'approved' || fedapayStatus === 'successful') {
+        try {
+          const rawPendingData = sessionStorage.getItem('pending_order');
+          if (rawPendingData) {
+            const pendingData = JSON.parse(rawPendingData);
+            
+            // Créer toutes les commandes
+            for (const item of pendingData.cart) {
+              await createOrder({
+                productId: item.id,
+                productTitle: item.title,
+                productImage: item.images[0],
+                price: item.price,
+                quantity: item.quantity,
+                sellerId: item.sellerId,
+                buyerId: pendingData.buyerId,
+                buyerName: pendingData.buyerName,
+                buyerPhone: pendingData.phone,
+                paymentId: transactionId || `FEDA_${Date.now()}`,
+                paymentStatus: 'paid'
+              });
+            }
+
+            clearCart();
+            sessionStorage.removeItem('pending_order');
           }
-
-          clearCart();
-          sessionStorage.removeItem('pending_order');
+          
+          setStatus('success');
+          setMessage('Paiement réussi ! Merci pour votre achat.');
+        } catch (err) {
+          console.error("Erreur post-paiement:", err);
+          setStatus('error');
+          setMessage("Le paiement a réussi mais une erreur s'est produite lors de la validation de la commande.");
         }
-        
-        setStatus('success');
-        setMessage('Paiement réussi ! Merci pour votre achat.');
-      } catch (err) {
-        console.error("Erreur post-paiement:", err);
+      } else if (fedapayStatus === 'canceled' || fedapayStatus === 'declined') {
         setStatus('error');
-        setMessage("Le paiement a réussi mais une erreur s'est produite lors de la validation de la commande.");
+        setMessage('Le paiement a été annulé ou refusé.');
+      } else {
+        // Cas générique ou validation inconnue
+        setStatus('error');
+        setMessage('Statut de paiement inconnu.');
       }
-    } else if (fedapayStatus === 'canceled' || fedapayStatus === 'declined') {
-      setStatus('error');
-      setMessage('Le paiement a été annulé ou refusé.');
-    } else {
-      // Cas générique ou validation inconnue
-      setStatus('error');
-      setMessage('Statut de paiement inconnu.');
-    }
+    };
+
+    processPayment();
   }, [searchParams, createOrder, clearCart]);
 
   return (

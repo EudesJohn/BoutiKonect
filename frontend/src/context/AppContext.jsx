@@ -3,7 +3,7 @@ import { supabase } from '../supabase/client'
 import { isAdminConfigured, getAdminInfo } from '../services/adminAuth'
 import { logoutUser as authLogoutUser, updateEmailWithVerification } from '../services/authService'
 import { cacheService } from '../services/cacheService'
-import { initSecureStorage, saveSecureUser, loadSecureUser, secureRemoveItem, saveSecureCart, loadSecureCart, secureSetItem, secureGetItem } from '../services/secureStorage'
+import { initSecureStorage, saveSecureUser, loadSecureUser, secureRemoveItem, saveSecureCart, loadSecureCart, secureSetItem, secureGetItem, loadSecureSeller, saveSecureSeller } from '../services/secureStorage'
 import { PROMOTION_PRICES } from '../services/paymentService'
 import { cities, categories, serviceCategories } from './constants'
 
@@ -44,7 +44,6 @@ export const AppProvider = ({ children }) => {
   
   const [toasts, setToasts] = useState([])
   const showToast = useCallback((message, type = 'info', duration = 5000, onClick = null) => {
-    // Utiliser un ID plus unique pour éviter les collisions de clés React
     const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     setToasts(prev => [...prev, { id, message, type, duration, onClick }])
   }, [])
@@ -58,11 +57,8 @@ export const AppProvider = ({ children }) => {
   // GESTION DE LA SESSION SUPABASE
   useEffect(() => {
     console.log('🏗️ Registering auth state listener');
-
-    // Flag pour savoir si on a déjà fini l'initialisation
     let isInitialized = false;
 
-    // Timeout de sécurité pour éviter de rester bloqué sur authLoading
     const authTimeout = setTimeout(() => {
       if (!isInitialized) {
         console.warn('⚠️ Auth check timed out after 6s');
@@ -81,8 +77,6 @@ export const AppProvider = ({ children }) => {
       const isResetPage = window.location.pathname === '/reset-password'
 
       if (event === 'INITIAL_SESSION' && !session) {
-        console.log('🏁 Initial session check: no session found');
-        // If not found in cache either, we can stop loading
         const cached = await loadSecureUser();
         if (!cached) setAuthLoading(false);
       }
@@ -101,28 +95,28 @@ export const AppProvider = ({ children }) => {
             .eq('id', session.user.id)
             .single()
 
-            if (error) {
-              console.error('❌ Profile fetch error:', error);
-              const cachedUser = await loadSecureUser();
-              if (cachedUser && cachedUser.id === session.user.id) {
-                if (cachedUser.is_seller) {
-                  setSeller(cachedUser);
-                  setUser(null);
-                } else {
-                  setUser(cachedUser);
-                  setSeller(null);
-                }
-              }
-            } else if (profile) {
-              if (profile.is_seller) {
-                setSeller(profile)
-                setUser(null)
+          if (error) {
+            console.error('❌ Profile fetch error:', error);
+            const cachedUser = await loadSecureUser();
+            if (cachedUser && cachedUser.id === session.user.id) {
+              if (cachedUser.is_seller) {
+                setSeller(cachedUser);
+                setUser(null);
               } else {
-                setUser(profile)
-                setSeller(null)
+                setUser(cachedUser);
+                setSeller(null);
               }
-              await saveSecureUser(profile)
             }
+          } else if (profile) {
+            if (profile.is_seller) {
+              setSeller(profile)
+              setUser(null)
+            } else {
+              setUser(profile)
+              setSeller(null)
+            }
+            await saveSecureUser(profile)
+          }
         } else if (event === 'SIGNED_OUT') {
           setSeller(null)
           setUser(null)
@@ -140,7 +134,6 @@ export const AppProvider = ({ children }) => {
       }
     })
 
-    // CHARGEMENT OPTIMISTE GÉNÉRAL AU DÉMARRAGE
     const loadOptimisticUser = async () => {
       try {
         const [cachedUser, cachedSeller] = await Promise.all([
@@ -151,11 +144,11 @@ export const AppProvider = ({ children }) => {
         if (cachedSeller) {
           setSeller(cachedSeller)
           setUser(null)
-          setAuthLoading(false) // Release loader optimistically if we have data
+          setAuthLoading(false)
         } else if (cachedUser) {
           setUser(cachedUser)
           setSeller(null)
-          setAuthLoading(false) // Release loader optimistically
+          setAuthLoading(false)
         }
       } catch (err) {
         // Silencieux
@@ -168,7 +161,7 @@ export const AppProvider = ({ children }) => {
       clearTimeout(authTimeout);
       subscription.unsubscribe();
     }
-  }, []) // AUCUNE DÉPENDANCE: l'écouteur tourne pendant toute la vie de l'app
+  }, [])
 
   // === DATA LOADING ===
   const [products, setProducts] = useState([])
@@ -244,7 +237,7 @@ export const AppProvider = ({ children }) => {
 
   const getDistance = (lat1, lon1, lat2, lon2) => {
     if (!lat1 || !lon1 || !lat2 || !lon2) return null;
-    const R = 6371; // Radius of the earth in km
+    const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a = 
@@ -252,7 +245,7 @@ export const AppProvider = ({ children }) => {
       Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
       Math.sin(dLon/2) * Math.sin(dLon/2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c; // Distance in km
+    return R * c; 
   }
 
   const mapOrderFromDB = (order) => ({
@@ -308,8 +301,8 @@ export const AppProvider = ({ children }) => {
       buyer_name: buyerName,
       buyer_phone: buyerPhone,
       buyer_address: buyerAddress,
-      location: buyerAddress, // Redundancy for different table versions
-      delivery_address: buyerAddress, // Redundancy for different table versions
+      location: buyerAddress,
+      delivery_address: buyerAddress,
       payment_id: paymentId,
       payment_status: paymentStatus,
       payment_method: paymentMethod
@@ -320,15 +313,11 @@ export const AppProvider = ({ children }) => {
     const fetchInitialData = async () => {
       setDataLoading(prev => ({ ...prev, products: true, services: true }))
       
-      // Fetch products first and set state immediately
       supabase.from('products').select('*').then(({ data }) => {
         if (data) setProducts(data.map(mapItemFromDB))
         setDataLoading(prev => ({ ...prev, products: false, services: false }))
       })
 
-      // Fetch categories/constants if they were dynamic (currently static in context/constants.js)
-
-      // Parallelize others without waiting for all in Promise.all
       supabase.from('orders').select('*').then(({ data }) => {
         if (data) setOrders(data.map(mapOrderFromDB))
         setDataLoading(prev => ({ ...prev, orders: false }))
@@ -438,7 +427,6 @@ export const AppProvider = ({ children }) => {
     return () => supabase.removeChannel(ordersSub)
   }, [seller, user])
 
-  // Recommandations
   useEffect(() => {
     const fetchRecs = async () => {
       const currentUser = seller || user;
@@ -453,13 +441,10 @@ export const AppProvider = ({ children }) => {
     fetchRecs();
   }, [seller, user, products]);
 
-  // Masquage du splash screen initial une fois que TOUT est prêt
   useEffect(() => {
-    // On attend que l'auth soit finie ET que les produits soient chargés
     const isAppReady = !authLoading && !dataLoading.products;
     
     if (isAppReady && window.hideAppLoader) {
-      // Durée minimale de 7.5 secondes pour donner une impression de sécurité/premium
       const timer = setTimeout(() => {
         window.hideAppLoader();
       }, 7500);
@@ -503,7 +488,6 @@ export const AppProvider = ({ children }) => {
       
       if (error) throw error
       const mapped = mapItemFromDB(data)
-      // On l'ajoute à la liste locale si il n'y est pas
       setProducts(prev => {
         if (prev.find(p => p.id === id)) return prev
         return [...prev, mapped]
@@ -583,16 +567,8 @@ export const AppProvider = ({ children }) => {
   const createOrder = async (orderData) => {
     try {
       const dbOrder = mapOrderToDB(orderData)
-      console.log('📦 Sending order to Supabase:', dbOrder)
       const { data, error } = await supabase.from('orders').insert([dbOrder]).select()
-      
-      if (error) {
-        console.error("❌ Supabase Insert Error:", error)
-        console.error("Error Details:", error.details)
-        console.error("Error Hint:", error.hint)
-        throw error
-      }
-      
+      if (error) throw error
       return { success: true, data: data[0] }
     } catch (error) {
       console.error("❌ createOrder Exception:", error)
@@ -685,12 +661,9 @@ export const AppProvider = ({ children }) => {
         if (!searchTerms.every(term => itemContent.includes(term))) return false;
       }
 
-      // Geolocation filter (Near Me - 50km)
       if (filters.nearMe && userLocation) {
         let itemLat = item.latitude;
         let itemLng = item.longitude;
-
-        // Fallback to city coordinates if product has no coordinates
         if (!itemLat || !itemLng) {
           const cityData = cities.find(c => c.name === item.seller_city);
           if (cityData) {
@@ -698,16 +671,13 @@ export const AppProvider = ({ children }) => {
             itemLng = cityData.lng;
           }
         }
-
         if (itemLat && itemLng) {
           const distance = getDistance(userLocation.latitude, userLocation.longitude, itemLat, itemLng);
           if (distance === null || distance > 50) return false;
         } else {
-          // If we still have no coordinates, exclude it when "Near Me" is active
           return false;
         }
       }
-
       return true;
     }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   }, [products, filters, userLocation]);
@@ -752,8 +722,6 @@ export const AppProvider = ({ children }) => {
       const { changePassword } = await import('../services/authService')
       return changePassword(current, next)
     },
-    
-    // Admin Getters
     getAllUsers: () => allUsers,
     getAllProducts: () => products,
     getAllOrders: () => orders,

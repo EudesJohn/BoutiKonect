@@ -113,42 +113,6 @@ export default function Payment() {
     )
   }
 
-  if (showConfirmation) {
-    return (
-      <div className="payment-page">
-        <div className="container">
-          <motion.div 
-            className="payment-confirmation"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <button className="back-btn" onClick={() => setShowConfirmation(false)}>
-              <ArrowLeft size={20} /> Retour
-            </button>
-            <div className="confirmation-header">
-              <Smartphone size={48} />
-              <h2>Confirmation du paiement</h2>
-              <p className="amount">{formatPrice(total)}</p>
-            </div>
-            <div className="payment-instructions">
-              <h3>Instructions Mobile Money</h3>
-              <pre>{paymentInstructions}</pre>
-            </div>
-            <div className="confirmation-actions">
-              <button 
-                className="btn btn-primary btn-large"
-                onClick={handleConfirmMobilePayment}
-                disabled={loading}
-              >
-                {loading ? <><Loader size={20} className="spin" /> Confirmation...</> : <><CheckCircle size={20} /> Confirmer</>}
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="payment-page">
       <div className="container">
