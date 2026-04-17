@@ -80,11 +80,11 @@ export const AppProvider = ({ children }) => {
       const currentUserId = session?.user?.id || null
       const isResetPage = window.location.pathname === '/reset-password'
 
-      // Cas spécial pour INITIAL_SESSION: on attend la fin du traitement avant de libérer le loader
       if (event === 'INITIAL_SESSION' && !session) {
         console.log('🏁 Initial session check: no session found');
-        // On ne libère le loader que si on n'a pas chargé d'utilisateur optimiste
-        // car on veut laisser une chance à loadOptimisticUser de finir
+        // If not found in cache either, we can stop loading
+        const cached = await loadSecureUser();
+        if (!cached) setAuthLoading(false);
       }
 
       if (event === 'SIGNED_IN' && lastSessionId.current === currentUserId) {
@@ -151,9 +151,11 @@ export const AppProvider = ({ children }) => {
         if (cachedSeller) {
           setSeller(cachedSeller)
           setUser(null)
+          setAuthLoading(false) // Release loader optimistically if we have data
         } else if (cachedUser) {
           setUser(cachedUser)
           setSeller(null)
+          setAuthLoading(false) // Release loader optimistically
         }
       } catch (err) {
         // Silencieux
@@ -317,34 +319,41 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     const fetchInitialData = async () => {
       setDataLoading({ products: true, users: true, orders: true, services: true })
-      const [productsRes, ordersRes, usersRes, reviewsRes] = await Promise.all([
-        supabase.from('products').select('*'),
-        supabase.from('orders').select('*'),
-        supabase.from('profiles').select('*'),
-        supabase.from('reviews').select('*')
-      ])
+      
+      // Fetch products first and set state immediately
+      supabase.from('products').select('*').then(({ data }) => {
+        if (data) setProducts(data.map(mapItemFromDB))
+        setDataLoading(prev => ({ ...prev, products: false, services: false }))
+      })
 
-      if (productsRes.data) setProducts(productsRes.data.map(mapItemFromDB))
-      if (ordersRes.data) setOrders(ordersRes.data.map(mapOrderFromDB))
-      if (usersRes.data) setAllUsers(usersRes.data)
-      if (reviewsRes.data) setReviews(reviewsRes.data.map(r => ({
-        id: r.id,
-        productId: r.product_id,
-        reviewerName: r.reviewer_name,
-        reviewerId: r.reviewer_id,
-        rating: r.rating,
-        comment: r.comment,
-        createdAt: r.created_at
-      })))
+      // Fetch categories/constants if they were dynamic (currently static in context/constants.js)
+
+      // Parallelize others without waiting for all in Promise.all
+      supabase.from('orders').select('*').then(({ data }) => {
+        if (data) setOrders(data.map(mapOrderFromDB))
+        setDataLoading(prev => ({ ...prev, orders: false }))
+      })
+
+      supabase.from('profiles').select('*').then(({ data }) => {
+        if (data) setAllUsers(data)
+        setDataLoading(prev => ({ ...prev, users: false }))
+      })
+
+      supabase.from('reviews').select('*').then(({ data }) => {
+        if (data) setReviews(data.map(r => ({
+          id: r.id,
+          productId: r.product_id,
+          reviewerName: r.reviewer_name,
+          reviewerId: r.reviewer_id,
+          rating: r.rating,
+          comment: r.comment,
+          createdAt: r.created_at
+        })))
+      })
       
-      // Fetch reports from admin_notifications with type 'report'
-      const { data: reportsData } = await supabase
-        .from('admin_notifications')
-        .select('*')
-        .eq('type', 'report')
-      if (reportsData) setReports(reportsData.map(r => ({ ...r, ...r.data, id: r.id })))
-      
-      setDataLoading({ products: false, users: false, orders: false, services: false })
+      supabase.from('admin_notifications').select('*').eq('type', 'report').then(({ data }) => {
+        if (data) setReports(data.map(r => ({ ...r, ...r.data, id: r.id })))
+      })
     }
     fetchInitialData()
 

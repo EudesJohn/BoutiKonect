@@ -28,5 +28,5 @@ root.render(
 
 // Signaler que l'application est prête
 if (window.hideAppLoader) {
-  setTimeout(window.hideAppLoader, 800);
+  window.hideAppLoader();
 }

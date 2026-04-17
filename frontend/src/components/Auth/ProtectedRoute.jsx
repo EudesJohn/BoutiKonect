@@ -14,18 +14,18 @@ export default function ProtectedRoute({ children }) {
         justifyContent: 'center', 
         alignItems: 'center', 
         height: '100vh', 
-        background: 'var(--bg-dark)',
+        background: '#0d1b2a',
         gap: '20px'
       }}>
         <div className="loader-spinner" style={{ 
           width: '50px', 
           height: '50px', 
-          border: '3px solid rgba(138, 43, 226, 0.1)', 
-          borderTopColor: 'var(--primary)', 
+          border: '3px solid rgba(255, 255, 255, 0.05)', 
+          borderTopColor: '#FF6A00', 
           borderRadius: '50%', 
           animation: 'spin 1s linear infinite' 
         }}></div>
-        <p style={{ color: 'var(--text-light)', fontWeight: '500', letterSpacing: '1px' }}>Sécurisation de la session...</p>
+        <p style={{ color: '#8fa3bf', fontWeight: '500', fontSize: '14px', letterSpacing: '0.5px' }}>Vérification de l'identité...</p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
