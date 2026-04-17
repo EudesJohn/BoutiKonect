@@ -12,7 +12,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    storageKey: 'boutikonect-auth-token', // Clé personnalisée pour éviter les conflits
+    storage: window.localStorage
   }
 })
 console.log('Supabase client initialized.')

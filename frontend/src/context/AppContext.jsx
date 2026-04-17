@@ -61,21 +61,34 @@ export const AppProvider = ({ children }) => {
 
     // Timeout de sécurité pour éviter de rester bloqué sur authLoading
     const authTimeout = setTimeout(() => {
+      console.warn('⚠️ Auth check timed out after 6s');
       setAuthLoading(false);
     }, 6000);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, !!session)
+      console.log(`🔐 Auth event: ${event}`, { 
+        hasSession: !!session, 
+        userId: session?.user?.id,
+        pathname: window.location.pathname 
+      });
       
       const currentUserId = session?.user?.id || null
       const isResetPage = window.location.pathname === '/reset-password'
 
-      // PROTECTION: Ne pas bloquer INITIAL_SESSION même si authProcessing est vrai
+      // PROTECTION: Empêcher les boucles infinies ou les doubles traitements
+      if (event !== 'INITIAL_SESSION' && authProcessing.current) {
+        console.log('⏳ Auth processing already in progress, skipping event:', event);
+        return;
+      }
+
+      // Cas spécial pour INITIAL_SESSION: on débloque le loading quoi qu'il arrive
       if (event === 'INITIAL_SESSION') {
-        setAuthLoading(false)
+        console.log('🏁 Initial session check completed');
         clearTimeout(authTimeout);
-        // On continue quand même le traitement pour charger le profil si session existe
-      } else if (authProcessing.current || (event === 'SIGNED_IN' && lastSessionId.current === currentUserId)) {
+        // Si session est null ici, on ne nettoie pas immédiatement si on a des données sécurisées
+        // pour laisser une chance à une éventuelle reconnexion automatique ou erreur passagère.
+      } else if (event === 'SIGNED_IN' && lastSessionId.current === currentUserId) {
+        console.log('🔄 User already signed in, skipping redundancy');
         return
       }
 
@@ -84,6 +97,7 @@ export const AppProvider = ({ children }) => {
 
       // ISOLATION: Si on est sur la page de reset
       if (isResetPage && (event === 'PASSWORD_RECOVERY' || event === 'USER_UPDATED')) {
+        console.log('🔑 Password recovery mode detected');
         setAuthLoading(false)
         clearTimeout(authTimeout);
         authProcessing.current = false
@@ -92,14 +106,23 @@ export const AppProvider = ({ children }) => {
 
       try {
         if (session?.user) {
+          console.log('👤 Session user found, fetching profile...');
           const { data: profile, error } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
             .single()
 
-            if (profile) {
-              console.log('Profile loaded:', profile.full_name || profile.name)
+            if (error) {
+              console.error('❌ Profile fetch error:', error);
+              // Si erreur de profil mais session existe, on charge depuis le cache sécurisé si possible
+              const cachedUser = await loadSecureUser();
+              if (cachedUser && cachedUser.id === session.user.id) {
+                console.log('📦 Using cached user profile due to fetch error');
+                if (cachedUser.is_seller) setSeller(cachedUser); else setUser(cachedUser);
+              }
+            } else if (profile) {
+              console.log('✅ Profile loaded:', profile.full_name || profile.name)
               if (profile.is_seller) {
                 setSeller(profile)
                 setUser(null)
@@ -109,14 +132,17 @@ export const AppProvider = ({ children }) => {
               }
               await saveSecureUser(profile)
             }
-        } else {
+        } else if (event !== 'INITIAL_SESSION' || (event === 'INITIAL_SESSION' && !session)) {
+          // Si on est sûr qu'il n'y a pas de session (sauf INITIAL_SESSION qui peut être lent)
+          // on nettoie l'état local.
+          console.log('🚫 No session, clearing user state');
           setSeller(null)
           setUser(null)
           secureRemoveItem('BoutiKonect_user')
           secureRemoveItem('BoutiKonect_seller')
         }
       } catch (err) {
-        console.error('❌ Profile Load Error:', err)
+        console.error('❌ Critical error in auth listener:', err)
       } finally {
         setAuthLoading(false)
         clearTimeout(authTimeout);

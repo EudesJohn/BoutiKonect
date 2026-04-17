@@ -21,22 +21,28 @@ const getDeviceSalt = () => {
   const SALT_KEY = 'BoutiKonect_device_enc_salt'
   let obfuscatedSalt = localStorage.getItem(SALT_KEY)
 
-  if (!obfuscatedSalt) {
+  // Validation du format du sel
+  const isValidFormat = (s) => typeof s === 'string' && s.startsWith('BK_') && s.endsWith('_SK');
+
+  if (!obfuscatedSalt || !isValidFormat(obfuscatedSalt)) {
+    console.log('🎲 Generating new secure storage salt...');
     const randomBytes = crypto.getRandomValues(new Uint8Array(32))
     let binary = '';
     for (let i = 0; i < randomBytes.byteLength; i++) {
       binary += String.fromCharCode(randomBytes[i]);
     }
     const rawSalt = btoa(binary)
-    // OBFUSCATION : On ne stocke pas le sel en clair. On l'inverse et on ajoute un préfixe.
-    // Cela empêche une lecture directe facile via XSS sans connaître la logique.
     obfuscatedSalt = 'BK_' + rawSalt.split('').reverse().join('') + '_SK';
     localStorage.setItem(SALT_KEY, obfuscatedSalt)
   }
 
-  // Dé-obfusquer pour l'utilisation interne
-  const deobfuscated = obfuscatedSalt.replace('BK_', '').replace('_SK', '').split('').reverse().join('')
-  return deobfuscated
+  try {
+    const deobfuscated = obfuscatedSalt.replace('BK_', '').replace('_SK', '').split('').reverse().join('')
+    return deobfuscated
+  } catch (e) {
+    console.error('❌ Failed to deobfuscate salt, fallback to random');
+    return 'fallback_salt_' + SALT_KEY;
+  }
 }
 
 /**
@@ -109,6 +115,7 @@ const encrypt = async (plainText) => {
  * Déchiffre une chaîne de données
  */
 const decrypt = async (cipherText) => {
+  if (!cipherText) return null;
   try {
     const key = await getOrCreateEncryptionKey()
 
@@ -117,6 +124,8 @@ const decrypt = async (cipherText) => {
     for (let i = 0; i < binaryStr.length; i++) {
       combined[i] = binaryStr.charCodeAt(i)
     }
+
+    if (combined.length < 13) throw new Error('Ciphertest too short');
 
     const iv = combined.slice(0, 12)
     const encrypted = combined.slice(12)
@@ -129,7 +138,7 @@ const decrypt = async (cipherText) => {
 
     return new TextDecoder().decode(decryptedBuffer)
   } catch (error) {
-    console.error('Erreur de déchiffrement:', error)
+    console.error('❌ Decryption failed. This might be due to a salt change or corrupted data.', error)
     return null
   }
 }
