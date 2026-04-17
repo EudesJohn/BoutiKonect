@@ -459,10 +459,10 @@ export const AppProvider = ({ children }) => {
     const isAppReady = !authLoading && !dataLoading.products;
     
     if (isAppReady && window.hideAppLoader) {
-      // Un court délai pour laisser le temps au premier rendu de se stabiliser
+      // Durée minimale de 7.5 secondes pour donner une impression de sécurité/premium
       const timer = setTimeout(() => {
         window.hideAppLoader();
-      }, 500);
+      }, 7500);
       return () => clearTimeout(timer);
     }
   }, [authLoading, dataLoading.products]);
