@@ -1,0 +1,89 @@
+.splash-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at center, #0d1b2a 0%, #050a0f 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  color: #ffffff;
+  font-family: 'Outfit', 'Inter', sans-serif;
+}
+
+.splash-content {
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+}
+
+.splash-logo {
+  margin-bottom: 40px;
+}
+
+.logo-icon-wrapper {
+  width: 120px;
+  height: 120px;
+  background: rgba(255, 106, 0, 0.1);
+  border: 1px solid rgba(255, 106, 0, 0.2);
+  border-radius: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.logo-icon {
+  color: #FF6A00;
+  filter: drop-shadow(0 0 10px rgba(255, 106, 0, 0.5));
+}
+
+.splash-logo h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -1px;
+}
+
+.splash-logo h1 span {
+  color: #FF6A00;
+}
+
+.splash-loading-container {
+  width: 200px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2px;
+  margin: 0 auto 20px;
+  overflow: hidden;
+}
+
+.splash-loader-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #FF6A00, #ff8c33);
+  box-shadow: 0 0 10px rgba(255, 106, 0, 0.5);
+}
+
+.splash-status {
+  color: #8fa3bf;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.splash-footer {
+  position: absolute;
+  bottom: 40px;
+  width: 100%;
+  text-align: center;
+}
+
+.splash-footer p {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+}

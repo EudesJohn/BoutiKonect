@@ -39,6 +39,7 @@ export const AppProvider = ({ children }) => {
   const [seller, setSeller] = useState(null)
   const [user, setUser] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
+  const [isAppReady, setIsAppReady] = useState(false)
   const [errors, setErrors] = useState({ products: null, users: null, orders: null })
   const [dataLoading, setDataLoading] = useState({ products: true, users: true, orders: true, services: true })
   
@@ -144,14 +145,12 @@ export const AppProvider = ({ children }) => {
         if (cachedSeller) {
           setSeller(cachedSeller)
           setUser(null)
-          setAuthLoading(false)
         } else if (cachedUser) {
           setUser(cachedUser)
           setSeller(null)
-          setAuthLoading(false)
         }
       } catch (err) {
-        // Silencieux
+        console.error('Optimistic load error:', err)
       }
     }
 
@@ -162,6 +161,17 @@ export const AppProvider = ({ children }) => {
       subscription.unsubscribe();
     }
   }, [])
+
+  // === APP READINESS LOGIC ===
+  useEffect(() => {
+    // L'app est prête quand l'auth a fini son check initial 
+    // ET que les produits/services sont chargés (ou erreur reçue)
+    if (!authLoading && !dataLoading.products && !dataLoading.services) {
+      // On laisse un petit délai pour une transition fluide et "premium"
+      const timer = setTimeout(() => setIsAppReady(true), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [authLoading, dataLoading.products, dataLoading.services])
 
   // === DATA LOADING ===
   const [products, setProducts] = useState([])
@@ -697,7 +707,7 @@ export const AppProvider = ({ children }) => {
 
   const value = {
     seller, user, products, services, reviews: [], orders, allUsers, favorites, cart,
-    filters, userLocation, locationError, authLoading, dataLoading, errors,
+    filters, userLocation, locationError, authLoading, dataLoading, errors, isAppReady,
     cities, categories, serviceCategories, PROMOTION_PRICES, filteredProducts,
     getFilteredProducts: () => {
       if (!Array.isArray(filteredProducts)) return [];

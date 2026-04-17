@@ -122,10 +122,29 @@ export default function ProductDetail() {
 
   if (loadingLocalProduct || (dataLoading.products && !product)) {
     return (
-      <div className="product-loading-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: '20px' }}>
-        <div className="loader-spinner" style={{ width: '50px', height: '50px', border: '3px solid rgba(138, 43, 226, 0.1)', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-        <p style={{ color: 'var(--text-light)', fontWeight: '500' }}>Chargement du produit...</p>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <div className="product-loading-container" style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        height: '60vh', 
+        background: 'transparent',
+        gap: '20px' 
+      }}>
+        <div className="loader-spinner-pro"></div>
+        <p style={{ color: 'var(--text-light)', fontWeight: '500', fontSize: '1rem', letterSpacing: '0.5px' }}>Préparation de votre produit...</p>
+        <style>{`
+          .loader-spinner-pro {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(255, 106, 0, 0.05);
+            border-top: 3px solid #FF6A00;
+            border-right: 3px solid #FF6A00;
+            border-radius: 50%;
+            animation: spinPro 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+          }
+          @keyframes spinPro { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        `}</style>
       </div>
     )
   }

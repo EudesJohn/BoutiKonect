@@ -8,6 +8,7 @@ import VirtualAssistant from './components/VirtualAssistant/VirtualAssistant'
 import PWAInstallPrompt from './components/PWAInstallPrompt/PWAInstallPrompt'
 import TopBarLoader from './components/TopBarLoader/TopBarLoader'
 import PageTransition from './components/PageTransition/PageTransition'
+import SplashScreen from './components/SplashScreen/SplashScreen'
 import './App.css'
 
 import Home from './pages/Home/Home'
@@ -42,8 +43,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import './App.css'
 
 function App() {
-  const { seller, user, toasts, removeToast } = useContext(AppContext)
+  const { seller, user, toasts, removeToast, isAppReady } = useContext(AppContext)
   const location = useLocation()
+
+  if (!isAppReady) {
+    return <SplashScreen />
+  }
 
   return (
     <div className="app">

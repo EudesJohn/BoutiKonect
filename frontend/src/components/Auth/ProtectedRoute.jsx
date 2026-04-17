@@ -3,8 +3,12 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { AppContext } from '../../context/AppContext';
 
 export default function ProtectedRoute({ children }) {
-  const { user, seller, authLoading } = useContext(AppContext);
+  const { user, seller, authLoading, isAppReady } = useContext(AppContext);
   const location = useLocation();
+
+  if (!isAppReady) {
+    return null; // Don't show anything or a tiny spinner, App.jsx handles the Splash
+  }
 
   if (authLoading) {
     return (
