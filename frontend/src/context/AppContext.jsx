@@ -3,7 +3,7 @@ import { supabase } from '../supabase/client'
 import { isAdminConfigured, getAdminInfo } from '../services/adminAuth'
 import { logoutUser as authLogoutUser, updateEmailWithVerification } from '../services/authService'
 import { cacheService } from '../services/cacheService'
-import { initSecureStorage, saveSecureUser, loadSecureUser, secureRemoveItem, saveSecureCart, loadSecureCart, secureSetItem, secureGetItem, loadSecureSeller, saveSecureSeller } from '../services/secureStorage'
+import { initSecureStorage, saveSecureUser, loadSecureUser, secureRemoveItem, saveSecureCart, loadSecureCart, secureSetItem, secureGetItem, loadSecureSeller, saveSecureSeller, secureClear } from '../services/secureStorage'
 import { PROMOTION_PRICES } from '../services/paymentService'
 import { cities, categories, serviceCategories } from './constants'
 
@@ -54,6 +54,135 @@ export const AppProvider = ({ children }) => {
 
   const authProcessing = useRef(false)
   const lastSessionId = useRef(null)
+
+  // ============ FONCTIONS UTILITAIRES ET MAPPAGE ============
+  
+  const cleanObject = (obj) => {
+    const newObj = {}
+    Object.keys(obj).forEach(key => {
+      if (obj[key] !== undefined && obj[key] !== null) {
+        newObj[key] = obj[key]
+      }
+    })
+    return newObj
+  }
+
+  /**
+   * Fonction interne d'auto-réparation du statut vendeur
+   */
+  const handleSellerAutoRepair = async (profile, userId) => {
+    try {
+      const { count, error } = await supabase
+        .from('products')
+        .select('*', { count: 'exact', head: true })
+        .eq('seller_id', userId);
+      
+      if (!error && count > 0 && !profile.is_seller) {
+        console.log(`🔧 Auto-repair: User ${userId} has ${count} products. Updating status...`);
+        const { data: updatedProfile } = await supabase
+          .from('profiles')
+          .update({ is_seller: true })
+          .eq('id', userId)
+          .select()
+          .single();
+        
+        return updatedProfile || profile;
+      }
+    } catch (e) {
+      console.error('Auto-repair failed:', e);
+    }
+    return profile;
+  }
+
+  const mapItemFromDB = (item) => ({
+    ...item,
+    sellerId: item.seller_id,
+    sellerName: item.seller_name,
+    sellerCity: item.seller_city,
+    sellerNeighborhood: item.seller_neighborhood,
+    sellerAvatar: item.seller_avatar,
+    priceType: item.price_type,
+    isPromoted: item.is_promoted,
+    promotionEndDate: item.promotion_end_date,
+    latitude: item.latitude,
+    longitude: item.longitude,
+    createdAt: item.created_at,
+    updatedAt: item.updated_at
+  })
+
+  const getDistance = (lat1, lon1, lat2, lon2) => {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c; 
+  }
+
+  const mapOrderFromDB = (order) => ({
+    ...order,
+    productId: order.product_id,
+    productTitle: order.product_title,
+    productImage: order.product_image,
+    sellerId: order.seller_id,
+    sellerName: order.seller_name,
+    buyerId: order.buyer_id,
+    buyerName: order.buyer_name,
+    buyerPhone: order.buyer_phone,
+    buyerAddress: order.buyer_address,
+    createdAt: order.created_at
+  })
+
+  const mapItemToDB = (item) => {
+    const { 
+      sellerId, sellerName, sellerCity, sellerNeighborhood, sellerAvatar,
+      priceType, isPromoted, promotionEndDate, ...rest 
+    } = item;
+
+    return cleanObject({
+      ...rest,
+      seller_id: sellerId,
+      seller_name: sellerName,
+      seller_city: sellerCity,
+      seller_neighborhood: sellerNeighborhood,
+      seller_avatar: sellerAvatar,
+      price_type: priceType,
+      is_promoted: isPromoted,
+      promotion_end_date: promotionEndDate,
+      latitude: item.latitude,
+      longitude: item.longitude
+    })
+  }
+
+  const mapOrderToDB = (order) => {
+    const {
+      productId, productTitle, productImage, serviceId, serviceTitle,
+      sellerId, sellerName, buyerId, buyerName, buyerPhone, buyerAddress,
+      paymentId, paymentStatus, paymentMethod, ...rest
+    } = order;
+
+    return cleanObject({
+      ...rest,
+      product_id: productId || serviceId,
+      product_title: productTitle || serviceTitle,
+      product_image: productImage,
+      seller_id: sellerId,
+      seller_name: sellerName,
+      buyer_id: buyerId,
+      buyer_name: buyerName,
+      buyer_phone: buyerPhone,
+      buyer_address: buyerAddress,
+      location: buyerAddress,
+      delivery_address: buyerAddress,
+      payment_id: paymentId,
+      payment_status: paymentStatus,
+      payment_method: paymentMethod
+    })
+  }
 
   // GESTION DE LA SESSION SUPABASE
   useEffect(() => {
@@ -221,134 +350,6 @@ export const AppProvider = ({ children }) => {
     }
     persistCart()
   }, [cart])
-
-  // --- HELPERS ---
-  const cleanObject = (obj) => {
-    const newObj = { ...obj }
-    Object.keys(newObj).forEach(key => {
-      if (newObj[key] === undefined || newObj[key] === null) {
-        delete newObj[key]
-      }
-    })
-    return newObj
-  }
-
-  /**
-   * Fonction interne d'auto-réparation du statut vendeur
-   */
-  const handleSellerAutoRepair = async (profile, userId) => {
-    try {
-      const { count, error } = await supabase
-        .from('products')
-        .select('*', { count: 'exact', head: true })
-        .eq('seller_id', userId);
-      
-      if (!error && count > 0 && !profile.is_seller) {
-        console.log(`🔧 Auto-repair: User ${userId} has ${count} products. Updating status...`);
-        const { data: updatedProfile } = await supabase
-          .from('profiles')
-          .update({ is_seller: true })
-          .eq('id', userId)
-          .select()
-          .single();
-        
-        return updatedProfile || profile;
-      }
-    } catch (e) {
-      console.error('Auto-repair failed:', e);
-    }
-    return profile;
-  }
-
-  const mapItemFromDB = (item) => ({
-    ...item,
-    sellerId: item.seller_id,
-    sellerName: item.seller_name,
-    sellerCity: item.seller_city,
-    sellerNeighborhood: item.seller_neighborhood,
-    sellerAvatar: item.seller_avatar,
-    priceType: item.price_type,
-    isPromoted: item.is_promoted,
-    promotionEndDate: item.promotion_end_date,
-    latitude: item.latitude,
-    longitude: item.longitude,
-    createdAt: item.created_at,
-    updatedAt: item.updated_at
-  })
-
-  const getDistance = (lat1, lon1, lat2, lon2) => {
-    if (!lat1 || !lon1 || !lat2 || !lon2) return null;
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c; 
-  }
-
-  const mapOrderFromDB = (order) => ({
-    ...order,
-    productId: order.product_id,
-    productTitle: order.product_title,
-    productImage: order.product_image,
-    sellerId: order.seller_id,
-    sellerName: order.seller_name,
-    buyerId: order.buyer_id,
-    buyerName: order.buyer_name,
-    buyerPhone: order.buyer_phone,
-    buyerAddress: order.buyer_address,
-    createdAt: order.created_at
-  })
-
-  const mapItemToDB = (item) => {
-    const { 
-      sellerId, sellerName, sellerCity, sellerNeighborhood, sellerAvatar,
-      priceType, isPromoted, promotionEndDate, ...rest 
-    } = item;
-
-    return cleanObject({
-      ...rest,
-      seller_id: sellerId,
-      seller_name: sellerName,
-      seller_city: sellerCity,
-      seller_neighborhood: sellerNeighborhood,
-      seller_avatar: sellerAvatar,
-      price_type: priceType,
-      is_promoted: isPromoted,
-      promotion_end_date: promotionEndDate,
-      latitude: item.latitude,
-      longitude: item.longitude
-    })
-  }
-
-  const mapOrderToDB = (order) => {
-    const {
-      productId, productTitle, productImage, serviceId, serviceTitle,
-      sellerId, sellerName, buyerId, buyerName, buyerPhone, buyerAddress,
-      paymentId, paymentStatus, paymentMethod, ...rest
-    } = order;
-
-    return cleanObject({
-      ...rest,
-      product_id: productId || serviceId,
-      product_title: productTitle || serviceTitle,
-      product_image: productImage,
-      seller_id: sellerId,
-      seller_name: sellerName,
-      buyer_id: buyerId,
-      buyer_name: buyerName,
-      buyer_phone: buyerPhone,
-      buyer_address: buyerAddress,
-      location: buyerAddress,
-      delivery_address: buyerAddress,
-      payment_id: paymentId,
-      payment_status: paymentStatus,
-      payment_method: paymentMethod
-    })
-  }
 
   useEffect(() => {
     const fetchInitialData = async () => {
