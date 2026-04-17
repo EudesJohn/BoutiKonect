@@ -11,7 +11,9 @@ import './ProductDetail.css'
 export default function ProductDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { getProductById, addToCart, toggleFavorite, isFavorite, createOrder, user, seller, reportProduct, reviews: allReviews, decrementProductStock, formatPrice } = useContext(AppContext)
+  const { getProductById, fetchSingleProduct, dataLoading, addToCart, toggleFavorite, isFavorite, createOrder, user, seller, reportProduct, reviews: allReviews, decrementProductStock, formatPrice } = useContext(AppContext)
+  const [localProduct, setLocalProduct] = useState(null)
+  const [loadingLocalProduct, setLoadingLocalProduct] = useState(true)
   const [showOrderModal, setShowOrderModal] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [showGallery, setShowGallery] = useState(false)
@@ -67,7 +69,26 @@ export default function ProductDetail() {
     return new Date(dateValue);
   }
   
-  const product = useMemo(() => getProductById(id), [id, getProductById])
+  const productFromState = useMemo(() => getProductById(id), [id, getProductById])
+  const product = localProduct || productFromState
+
+  useEffect(() => {
+    const loadProduct = async () => {
+      if (productFromState) {
+        setLoadingLocalProduct(false)
+        return
+      }
+
+      setLoadingLocalProduct(true)
+      const fetched = await fetchSingleProduct(id)
+      if (fetched) {
+        setLocalProduct(fetched)
+      }
+      setLoadingLocalProduct(false)
+    }
+    
+    loadProduct()
+  }, [id, productFromState, fetchSingleProduct])
 
   // Filtrer les avis pour ce produit
   const itemReviews = useMemo(() => 
@@ -99,14 +120,27 @@ export default function ProductDetail() {
     setCurrentImageIndex(index)
   }
 
+  if (loadingLocalProduct || (dataLoading.products && !product)) {
+    return (
+      <div className="product-loading-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: '20px' }}>
+        <div className="loader-spinner" style={{ width: '50px', height: '50px', border: '3px solid rgba(138, 43, 226, 0.1)', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+        <p style={{ color: 'var(--text-light)', fontWeight: '500' }}>Chargement du produit...</p>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    )
+  }
+
   if (!product) {
     return (
       <div className="product-not-found">
-        <h2>Produit non trouvé</h2>
-        <p>Le produit que vous recherchez n'existe pas.</p>
-        <Link to="/products" className="btn btn-primary">
-          Retour aux produits
-        </Link>
+        <div className="not-found-content">
+          <X size={48} color="var(--danger)" />
+          <h2>Produit non trouvé</h2>
+          <p>Désolé, ce produit n'existe plus ou le lien est invalide.</p>
+          <Link to="/products" className="btn btn-primary">
+            Retour aux produits
+          </Link>
+        </div>
       </div>
     )
   }

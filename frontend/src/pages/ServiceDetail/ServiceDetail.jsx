@@ -14,7 +14,7 @@ import './ServiceDetail.css'
 export default function ServiceDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { getServiceById, user, seller, toggleFavorite, isFavorite, reviews: allReviews, createOrder, reportProduct, formatPrice } = useContext(AppContext)
+  const { getServiceById, fetchSingleProduct, dataLoading, user, seller, toggleFavorite, isFavorite, reviews: allReviews, createOrder, reportProduct, formatPrice } = useContext(AppContext)
   
   const currentUser = user || seller
   const [service, setService] = useState(null)
@@ -88,12 +88,25 @@ export default function ServiceDetail() {
 
   useEffect(() => {
     window.scrollTo(0, 0)
-    const foundService = getServiceById(id)
-    if (foundService) {
-      setService(foundService)
+    
+    const loadService = async () => {
+      const foundService = getServiceById(id)
+      if (foundService) {
+        setService(foundService)
+        setLoading(false)
+        return
+      }
+
+      setLoading(true)
+      const fetched = await fetchSingleProduct(id)
+      if (fetched) {
+        setService(fetched)
+      }
+      setLoading(false)
     }
-    setLoading(false)
-  }, [id, getServiceById])
+
+    loadService()
+  }, [id, getServiceById, fetchSingleProduct])
 
   const handleShare = () => {
     if (navigator.share) {
@@ -216,8 +229,28 @@ export default function ServiceDetail() {
     ? service.images
     : ['https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&q=80']
 
-  if (loading) return <div className="container service-detail-loading"><div className="loading-spinner"></div></div>
-  if (!service) return <div className="container service-not-found"><h2>Service non trouvé</h2><button className="btn btn-primary" onClick={() => navigate('/services')}>Retour aux services</button></div>
+  if (loading || (dataLoading.products && !service)) {
+    return (
+      <div className="service-loading-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: '20px' }}>
+        <div className="loader-spinner" style={{ width: '50px', height: '50px', border: '3px solid rgba(0, 162, 232, 0.1)', borderTopColor: '#00A2E8', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+        <p style={{ color: 'var(--text-light)', fontWeight: '500' }}>Chargement du service...</p>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    )
+  }
+
+  if (!service) {
+    return (
+      <div className="service-not-found" style={{ textAlign: 'center', padding: '100px 20px' }}>
+        <X size={48} color="var(--danger)" />
+        <h2>Service non trouvé</h2>
+        <p style={{ color: '#8fa3bf', margin: '10px 0 30px' }}>Désolé, ce service n'est plus disponible ou le lien est invalide.</p>
+        <button className="btn btn-primary" onClick={() => navigate('/services')}>
+          Retour aux services
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="service-detail-page">

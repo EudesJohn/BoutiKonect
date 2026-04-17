@@ -59,54 +59,42 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     console.log('🏗️ Registering auth state listener');
 
+    // Flag pour savoir si on a déjà fini l'initialisation
+    let isInitialized = false;
+
     // Timeout de sécurité pour éviter de rester bloqué sur authLoading
     const authTimeout = setTimeout(() => {
-      console.warn('⚠️ Auth check timed out after 6s');
-      setAuthLoading(false);
+      if (!isInitialized) {
+        console.warn('⚠️ Auth check timed out after 6s');
+        setAuthLoading(false);
+        isInitialized = true;
+      }
     }, 6000);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log(`🔐 Auth event: ${event}`, { 
         hasSession: !!session, 
-        userId: session?.user?.id,
-        pathname: window.location.pathname 
+        userId: session?.user?.id
       });
       
       const currentUserId = session?.user?.id || null
       const isResetPage = window.location.pathname === '/reset-password'
 
-      // PROTECTION: Empêcher les boucles infinies ou les doubles traitements
-      if (event !== 'INITIAL_SESSION' && authProcessing.current) {
-        console.log('⏳ Auth processing already in progress, skipping event:', event);
-        return;
+      // Cas spécial pour INITIAL_SESSION: on attend la fin du traitement avant de libérer le loader
+      if (event === 'INITIAL_SESSION' && !session) {
+        console.log('🏁 Initial session check: no session found');
+        // On ne libère le loader que si on n'a pas chargé d'utilisateur optimiste
+        // car on veut laisser une chance à loadOptimisticUser de finir
       }
 
-      // Cas spécial pour INITIAL_SESSION: on débloque le loading quoi qu'il arrive
-      if (event === 'INITIAL_SESSION') {
-        console.log('🏁 Initial session check completed');
-        clearTimeout(authTimeout);
-        // Si session est null ici, on ne nettoie pas immédiatement si on a des données sécurisées
-        // pour laisser une chance à une éventuelle reconnexion automatique ou erreur passagère.
-      } else if (event === 'SIGNED_IN' && lastSessionId.current === currentUserId) {
-        console.log('🔄 User already signed in, skipping redundancy');
+      if (event === 'SIGNED_IN' && lastSessionId.current === currentUserId) {
         return
       }
 
-      authProcessing.current = true
       lastSessionId.current = currentUserId
-
-      // ISOLATION: Si on est sur la page de reset
-      if (isResetPage && (event === 'PASSWORD_RECOVERY' || event === 'USER_UPDATED')) {
-        console.log('🔑 Password recovery mode detected');
-        setAuthLoading(false)
-        clearTimeout(authTimeout);
-        authProcessing.current = false
-        return
-      }
 
       try {
         if (session?.user) {
-          console.log('👤 Session user found, fetching profile...');
           const { data: profile, error } = await supabase
             .from('profiles')
             .select('*')
@@ -115,14 +103,17 @@ export const AppProvider = ({ children }) => {
 
             if (error) {
               console.error('❌ Profile fetch error:', error);
-              // Si erreur de profil mais session existe, on charge depuis le cache sécurisé si possible
               const cachedUser = await loadSecureUser();
               if (cachedUser && cachedUser.id === session.user.id) {
-                console.log('📦 Using cached user profile due to fetch error');
-                if (cachedUser.is_seller) setSeller(cachedUser); else setUser(cachedUser);
+                if (cachedUser.is_seller) {
+                  setSeller(cachedUser);
+                  setUser(null);
+                } else {
+                  setUser(cachedUser);
+                  setSeller(null);
+                }
               }
             } else if (profile) {
-              console.log('✅ Profile loaded:', profile.full_name || profile.name)
               if (profile.is_seller) {
                 setSeller(profile)
                 setUser(null)
@@ -133,49 +124,39 @@ export const AppProvider = ({ children }) => {
               await saveSecureUser(profile)
             }
         } else if (event === 'SIGNED_OUT') {
-          // Uniquement sur déconnexion explicite, on nettoie TOUT
-          console.log('🚪 Signed out event, clearing storage');
           setSeller(null)
           setUser(null)
           secureRemoveItem('BoutiKonect_user')
           secureRemoveItem('BoutiKonect_seller')
-        } else if (event === 'INITIAL_SESSION' && !session) {
-          // Au démarrage, si Supabase ne trouve rien, on NE SUPPRIME PAS le cache. 
-          // On attend un SIGNED_OUT explicite ou on laisse le chargement optimiste faire son travail.
-          console.log('🏁 Initial session check: no session found yet');
         }
       } catch (err) {
         console.error('❌ Critical error in auth listener:', err)
       } finally {
-        setAuthLoading(false)
-        clearTimeout(authTimeout);
-        authProcessing.current = false
+        if (!isInitialized) {
+          setAuthLoading(false)
+          isInitialized = true;
+          clearTimeout(authTimeout);
+        }
       }
     })
 
     // CHARGEMENT OPTIMISTE GÉNÉRAL AU DÉMARRAGE
     const loadOptimisticUser = async () => {
       try {
-        console.log('🚀 Loading optimistic user state from cache...')
         const [cachedUser, cachedSeller] = await Promise.all([
           loadSecureUser(),
           loadSecureSeller()
         ])
         
         if (cachedSeller) {
-          console.log('✅ Optimistic seller loaded:', cachedSeller.name)
           setSeller(cachedSeller)
           setUser(null)
         } else if (cachedUser) {
-          console.log('✅ Optimistic user loaded:', cachedUser.name)
           setUser(cachedUser)
           setSeller(null)
         }
       } catch (err) {
-        console.warn('⚠️ Optimistic load failed:', err)
-      } finally {
-        // Optionnel: on peut baisser le flag ici si on est sûr
-        // setAuthLoading(false)
+        // Silencieux
       }
     }
 
@@ -318,15 +299,26 @@ export const AppProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchInitialData = async () => {
-      const [productsRes, ordersRes, usersRes] = await Promise.all([
+      setDataLoading({ products: true, users: true, orders: true, services: true })
+      const [productsRes, ordersRes, usersRes, reviewsRes] = await Promise.all([
         supabase.from('products').select('*'),
         supabase.from('orders').select('*'),
-        supabase.from('profiles').select('*')
+        supabase.from('profiles').select('*'),
+        supabase.from('reviews').select('*')
       ])
 
       if (productsRes.data) setProducts(productsRes.data.map(mapItemFromDB))
       if (ordersRes.data) setOrders(ordersRes.data.map(mapOrderFromDB))
       if (usersRes.data) setAllUsers(usersRes.data)
+      if (reviewsRes.data) setReviews(reviewsRes.data.map(r => ({
+        id: r.id,
+        productId: r.product_id,
+        reviewerName: r.reviewer_name,
+        reviewerId: r.reviewer_id,
+        rating: r.rating,
+        comment: r.comment,
+        createdAt: r.created_at
+      })))
       
       // Fetch reports from admin_notifications with type 'report'
       const { data: reportsData } = await supabase
@@ -348,8 +340,40 @@ export const AppProvider = ({ children }) => {
       })
       .subscribe()
 
-    return () => supabase.removeChannel(productsSub)
-  }, [])
+    const profilesSub = supabase
+      .channel('public:profiles')
+      .on('postgres_changes', { event: 'UPDATE', table: 'profiles' }, (payload) => {
+        const updatedProfile = payload.new
+        if (user && updatedProfile.id === user.id) setUser(prev => ({ ...prev, ...updatedProfile }))
+        if (seller && updatedProfile.id === seller.id) setSeller(prev => ({ ...prev, ...updatedProfile }))
+        setAllUsers(prev => prev.map(u => u.id === updatedProfile.id ? updatedProfile : u))
+      })
+      .subscribe()
+
+    const reviewsSub = supabase
+      .channel('public:reviews')
+      .on('postgres_changes', { event: '*', table: 'reviews' }, (payload) => {
+        const mapRes = (r) => ({
+          id: r.id,
+          productId: r.product_id,
+          reviewerName: r.reviewer_name,
+          reviewerId: r.reviewer_id,
+          rating: r.rating,
+          comment: r.comment,
+          createdAt: r.created_at
+        });
+        if (payload.eventType === 'INSERT') setReviews(prev => [mapRes(payload.new), ...prev])
+        else if (payload.eventType === 'UPDATE') setReviews(prev => prev.map(r => r.id === payload.new.id ? mapRes(payload.new) : r))
+        else if (payload.eventType === 'DELETE') setReviews(prev => prev.filter(r => r.id === payload.old.id))
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(productsSub)
+      supabase.removeChannel(profilesSub)
+      supabase.removeChannel(reviewsSub)
+    }
+  }, [user?.id, seller?.id])
 
   useEffect(() => {
     const currentUser = seller || user
@@ -424,6 +448,28 @@ export const AppProvider = ({ children }) => {
   }
 
   const getProductById = (id) => products.find(p => p.id === id)
+
+  const fetchSingleProduct = async (id) => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', id)
+        .single()
+      
+      if (error) throw error
+      const mapped = mapItemFromDB(data)
+      // On l'ajoute à la liste locale si il n'y est pas
+      setProducts(prev => {
+        if (prev.find(p => p.id === id)) return prev
+        return [...prev, mapped]
+      })
+      return mapped
+    } catch (error) {
+      console.error("fetchSingleProduct error:", error)
+      return null
+    }
+  }
 
   const addProduct = async (itemData) => {
     try {
