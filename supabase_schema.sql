@@ -139,7 +139,19 @@ CREATE POLICY "Only admins can update notifications." ON admin_notifications FOR
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, name, avatar, is_seller, role, is_admin)
+  INSERT INTO public.profiles (
+    id, 
+    email, 
+    name, 
+    avatar, 
+    is_seller, 
+    role, 
+    is_admin,
+    city,
+    neighborhood,
+    phone,
+    whatsapp
+  )
   VALUES (
     NEW.id,
     NEW.email,
@@ -147,7 +159,11 @@ BEGIN
     NEW.raw_user_meta_data->>'avatar_url',
     COALESCE((NEW.raw_user_meta_data->>'is_seller')::boolean, false),
     'user',
-    false
+    false,
+    NEW.raw_user_meta_data->>'city',
+    NEW.raw_user_meta_data->>'neighborhood',
+    NEW.raw_user_meta_data->>'phone',
+    NEW.raw_user_meta_data->>'whatsapp'
   );
   RETURN NEW;
 END;

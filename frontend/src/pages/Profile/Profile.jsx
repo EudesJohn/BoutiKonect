@@ -158,6 +158,12 @@ export default function Profile() {
     
     try {
       // Préparer le quartier final (gérer l'option 'AUTRE')
+      if (editForm.neighborhood === 'AUTRE' && !editForm.customNeighborhood?.trim()) {
+        showToast("Veuillez préciser le nom de votre quartier.", 'error');
+        setIsMfaLoading(false);
+        return;
+      }
+
       const finalNeighborhood = editForm.neighborhood === 'AUTRE' 
         ? editForm.customNeighborhood 
         : editForm.neighborhood;

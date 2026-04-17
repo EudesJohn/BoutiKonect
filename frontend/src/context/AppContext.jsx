@@ -638,8 +638,21 @@ export const AppProvider = ({ children }) => {
   }
 
   const resetPassword = async (email) => {
-    const { sendPasswordResetEmail } = await import('../services/authService')
-    return sendPasswordResetEmail(email)
+    try {
+      const { sendPasswordResetEmail } = await import('../services/authService')
+      return await sendPasswordResetEmail(email)
+    } catch (error) {
+      return { success: false, error: error.message }
+    }
+  }
+
+  const updateEmailWithVerification = async (newEmail) => {
+    try {
+      const { updateEmailWithVerification: authUpdateEmail } = await import('../services/authService')
+      return await authUpdateEmail(newEmail)
+    } catch (error) {
+      return { success: false, error: error.message }
+    }
   }
 
   const services = useMemo(() => products.filter(p => p.type === 'service'), [products])
