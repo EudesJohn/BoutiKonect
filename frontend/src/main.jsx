@@ -27,6 +27,7 @@ root.render(
 );
 
 // Signaler que l'application est prête
+// La suppression du loader est maintenant gérée par AppContext une fois les données reçues
 if (window.hideAppLoader) {
-  window.hideAppLoader();
+  // Supprimé: l'appel immédiat
 }

@@ -318,7 +318,7 @@ export const AppProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchInitialData = async () => {
-      setDataLoading({ products: true, users: true, orders: true, services: true })
+      setDataLoading(prev => ({ ...prev, products: true, services: true }))
       
       // Fetch products first and set state immediately
       supabase.from('products').select('*').then(({ data }) => {
@@ -403,9 +403,13 @@ export const AppProvider = ({ children }) => {
 
   useEffect(() => {
     const currentUser = seller || user
-    if (!currentUser) return
+    if (!currentUser) {
+      setDataLoading(prev => ({ ...prev, orders: false, users: false }))
+      return
+    }
 
     const fetchUserData = async () => {
+      setDataLoading(prev => ({ ...prev, orders: true, users: true }))
       const { data: ordersData } = await supabase
         .from('orders')
         .select('*')
@@ -448,6 +452,20 @@ export const AppProvider = ({ children }) => {
     };
     fetchRecs();
   }, [seller, user, products]);
+
+  // Masquage du splash screen initial une fois que TOUT est prêt
+  useEffect(() => {
+    // On attend que l'auth soit finie ET que les produits soient chargés
+    const isAppReady = !authLoading && !dataLoading.products;
+    
+    if (isAppReady && window.hideAppLoader) {
+      // Un court délai pour laisser le temps au premier rendu de se stabiliser
+      const timer = setTimeout(() => {
+        window.hideAppLoader();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [authLoading, dataLoading.products]);
 
   const [userLocation, setUserLocation] = useState(null)
   const [locationError, setLocationError] = useState(null)
