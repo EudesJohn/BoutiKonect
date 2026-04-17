@@ -12,8 +12,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true,
-    storageKey: 'boutikonect-auth-token', // Clé personnalisée pour éviter les conflits
+    detectSessionInUrl: false, // Désactivé pour éviter les conflits de rafraîchissement
+    storageKey: 'boutikonect-auth-token',
     storage: window.localStorage
   }
 })

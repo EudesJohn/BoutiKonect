@@ -132,14 +132,17 @@ export const AppProvider = ({ children }) => {
               }
               await saveSecureUser(profile)
             }
-        } else if (event !== 'INITIAL_SESSION' || (event === 'INITIAL_SESSION' && !session)) {
-          // Si on est sûr qu'il n'y a pas de session (sauf INITIAL_SESSION qui peut être lent)
-          // on nettoie l'état local.
-          console.log('🚫 No session, clearing user state');
+        } else if (event === 'SIGNED_OUT') {
+          // Uniquement sur déconnexion explicite, on nettoie TOUT
+          console.log('🚪 Signed out event, clearing storage');
           setSeller(null)
           setUser(null)
           secureRemoveItem('BoutiKonect_user')
           secureRemoveItem('BoutiKonect_seller')
+        } else if (event === 'INITIAL_SESSION' && !session) {
+          // Au démarrage, si Supabase ne trouve rien, on NE SUPPRIME PAS le cache. 
+          // On attend un SIGNED_OUT explicite ou on laisse le chargement optimiste faire son travail.
+          console.log('🏁 Initial session check: no session found yet');
         }
       } catch (err) {
         console.error('❌ Critical error in auth listener:', err)
@@ -149,6 +152,34 @@ export const AppProvider = ({ children }) => {
         authProcessing.current = false
       }
     })
+
+    // CHARGEMENT OPTIMISTE GÉNÉRAL AU DÉMARRAGE
+    const loadOptimisticUser = async () => {
+      try {
+        console.log('🚀 Loading optimistic user state from cache...')
+        const [cachedUser, cachedSeller] = await Promise.all([
+          loadSecureUser(),
+          loadSecureSeller()
+        ])
+        
+        if (cachedSeller) {
+          console.log('✅ Optimistic seller loaded:', cachedSeller.name)
+          setSeller(cachedSeller)
+          setUser(null)
+        } else if (cachedUser) {
+          console.log('✅ Optimistic user loaded:', cachedUser.name)
+          setUser(cachedUser)
+          setSeller(null)
+        }
+      } catch (err) {
+        console.warn('⚠️ Optimistic load failed:', err)
+      } finally {
+        // Optionnel: on peut baisser le flag ici si on est sûr
+        // setAuthLoading(false)
+      }
+    }
+
+    loadOptimisticUser()
 
     return () => {
       clearTimeout(authTimeout);
