@@ -105,11 +105,14 @@ const VirtualAssistant = () => {
     const fetchResponse = async () => {
       try {
         const response = await getAIResponse(userMsg.text);
+        
+        // Si la réponse commence par [DIAGNOSTIC], c'est une erreur silencieuse attrapée par getAIResponse
         const botMsg = {
           id: Date.now() + 1,
           sender: 'bot',
           text: response,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          isError: response.startsWith('[DIAGNOSTIC]')
         };
         setMessages(prev => [...prev, botMsg]);
       } catch (err) {
@@ -117,8 +120,9 @@ const VirtualAssistant = () => {
         const errorMsg = {
           id: Date.now() + 1,
           sender: 'bot',
-          text: "Désolé, je rencontre une erreur de connexion. Veuillez réessayer plus tard.",
-          timestamp: new Date().toISOString()
+          text: "Désolé, je rencontre une petite difficulté technique pour me connecter à mon cerveau. 🧠💨 Veuillez réessayer dans un instant.",
+          timestamp: new Date().toISOString(),
+          isError: true
         };
         setMessages(prev => [...prev, errorMsg]);
       } finally {
@@ -177,7 +181,7 @@ const VirtualAssistant = () => {
                   )}
                   
                   <div className="va-message-content">
-                    <div className={`va-bubble ${msg.sender}`} style={{ whiteSpace: 'pre-wrap' }}>
+                    <div className={`va-bubble ${msg.sender} ${msg.isError ? 'error-bubble' : ''}`} style={{ whiteSpace: 'pre-wrap' }}>
                       {msg.text}
                     </div>
                     <span className="va-time">{formatTime(msg.timestamp)}</span>

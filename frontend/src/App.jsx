@@ -9,6 +9,7 @@ import PWAInstallPrompt from './components/PWAInstallPrompt/PWAInstallPrompt'
 import TopBarLoader from './components/TopBarLoader/TopBarLoader'
 import PageTransition from './components/PageTransition/PageTransition'
 import SplashScreen from './components/SplashScreen/SplashScreen'
+import UpdatePrompt from './components/UpdatePrompt/UpdatePrompt'
 import './App.css'
 
 import Home from './pages/Home/Home'
@@ -101,6 +102,7 @@ function App() {
       <Footer />
       <VirtualAssistant />
       <PWAInstallPrompt />
+      <UpdatePrompt />
     </div>
   )
 }

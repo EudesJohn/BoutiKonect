@@ -1,0 +1,158 @@
+.update-prompt-container {
+  position: fixed;
+  z-index: 9999;
+  bottom: 20px;
+  right: 20px;
+  max-width: 400px;
+  width: calc(100% - 40px);
+  animation: slideInUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.update-prompt-container.mandatory {
+  /* On mobile or when mandatory, we make it more prominent */
+}
+
+.update-prompt-card {
+  background: var(--bg-card, #1b263b);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 106, 0, 0.3);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.update-prompt-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.update-icon-wrapper {
+  background: rgba(255, 106, 0, 0.2);
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-color, #ff6a00);
+}
+
+.update-icon {
+  animation: rotate 2s linear infinite;
+}
+
+.update-prompt-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: white;
+}
+
+.update-prompt-body p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.5;
+}
+
+.update-features {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.update-features span {
+  font-size: 0.85rem;
+  color: #4CAF50;
+  display: flex;
+  align-items: center;
+}
+
+.update-prompt-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.update-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.update-btn.primary {
+  background: var(--primary-color, #ff6a00);
+  color: white;
+}
+
+.update-btn.primary:hover {
+  background: #e55a00;
+  transform: translateY(-2px);
+}
+
+.update-btn.secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.close-icon-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: white;
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+.close-icon-btn:hover {
+  opacity: 1;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes slideInUp {
+  from { transform: translateY(100px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Mobile styles for "forced" feeling */
+@media (max-width: 768px) {
+  .update-prompt-container.mandatory {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .update-prompt-container.mandatory .update-prompt-card {
+    width: 100%;
+    max-width: 320px;
+    border: 2px solid var(--primary-color);
+  }
+}

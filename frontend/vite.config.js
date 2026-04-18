@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['favicon.svg', 'vite.svg'],
       manifest: {
         name: 'BoutiKonect.bj - Ventes & Services au Bénin',

@@ -29,6 +29,12 @@ export default async function handler(request, response) {
     const safeServices = Array.isArray(context.services) ? context.services.slice(0, 10).map(s => ({ title: s.title, category: s.category, price: s.price })) : [];
 
     console.log(`[AI INFO] Requête reçue pour prompt: "${prompt.substring(0, 50)}..."`);
+    
+    if (!apiKey) {
+      console.error("[AI ERROR] Clé API GEMINI_API_KEY manquante dans l'environnement.");
+      return response.status(503).json({ error: "L'assistant est en maintenance (Configuration API manquante)." });
+    }
+
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
@@ -61,22 +67,47 @@ export default async function handler(request, response) {
     `;
 
     const fullPrompt = `${systemInstruction}\n\nUtilisateur: ${prompt}`;
+    
+    // Appel à l'API Gemini
     const result = await model.generateContent(fullPrompt);
     const aiResponse = await result.response;
     
-    // Vérifier si la réponse a été bloquée par les filtres de sécurité
-    if (aiResponse.candidates && aiResponse.candidates[0]?.finishReason === 'SAFETY') {
+    console.log(`[AI INFO] Réponse reçue de Gemini`);
+
+    // Vérifier si la réponse a été bloquée par les filtres de sécurité ou est vide
+    if (!aiResponse || !aiResponse.candidates || aiResponse.candidates.length === 0) {
+       throw new Error("Gemini a renvoyé une réponse vide.");
+    }
+
+    if (aiResponse.candidates[0].finishReason === 'SAFETY') {
       return response.status(200).json({ response: "Désolé, je ne peux pas répondre à cette demande pour des raisons de sécurité. Veuillez poser une question sur les services de BoutiKonect." });
     }
 
-    const text = aiResponse.text();
-    return response.status(200).json({ response: text });
-  } catch (error) {
-    console.error("AI API ERROR DETAIL:", error);
-    let errorMessage = error.message;
-    if (errorMessage.includes("safety")) {
-      errorMessage = "La réponse a été bloquée par les filtres de sécurité.";
+    try {
+      const text = aiResponse.text();
+      if (!text) throw new Error("Texte de réponse vide");
+      return response.status(200).json({ response: text });
+    } catch (textError) {
+      console.error("[AI ERROR] Erreur lors de l'extraction du texte:", textError);
+      // Fallback: essayer d'extraire via les parts si text() échoue
+      const fallbackText = aiResponse.candidates[0]?.content?.parts?.[0]?.text;
+      if (fallbackText) {
+        return response.status(200).json({ response: fallbackText });
+      }
+      throw new Error("Impossible d'extraire le texte de la réponse Gemini.");
     }
-    return response.status(500).json({ error: errorMessage });
+  } catch (error) {
+    console.error("[AI CRITICAL ERROR]:", error);
+    let errorMessage = "Désolé, je rencontre une petite difficulté technique.";
+    
+    if (error.message.includes("API key")) {
+      errorMessage = "La clé API de l'assistant est invalide ou manquante.";
+    } else if (error.message.includes("safety")) {
+      errorMessage = "La réponse a été bloquée par les filtres de sécurité.";
+    } else if (error.message.includes("quota")) {
+      errorMessage = "L'assistant a atteint sa limite de messages pour l'instant.";
+    }
+
+    return response.status(500).json({ error: errorMessage, details: error.message });
   }
 }
