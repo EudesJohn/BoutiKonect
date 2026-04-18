@@ -1,6 +1,8 @@
 /**
  * Service pour interagir avec l'assistant IA de BoutiKonect via l'API interne (Vercel Serverless)
+ * Version: 2.2 (Build: 2026-04-18)
  */
+console.log("🧠 AIService v2.2 initialized.");
 class AIService {
   /**
    * Génère une réponse textuelle à partir d'un prompt et d'un contexte

@@ -195,11 +195,11 @@ export const AppProvider = ({ children }) => {
 
     const authTimeout = setTimeout(() => {
       if (!isInitialized) {
-        console.warn('⚠️ Auth check timed out after 6s');
+        console.warn('⚠️ Auth check timed out after 20s (Slow connection detected)');
         setAuthLoading(false);
         isInitialized = true;
       }
-    }, 6000);
+    }, 20000);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log(`🔐 Auth event: ${event}`, { 

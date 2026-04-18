@@ -10,6 +10,11 @@ import assistantAvatar from '../../assets/stickers/assistant_avatar.png';
 const VirtualAssistant = () => {
   const { products, services } = useContext(AppContext);
   const [isOpen, setIsOpen] = useState(false);
+
+  // Diagnostic de version au montage
+  useEffect(() => {
+    console.log("🤖 Assistant BoutiKonect v2.2 (Build: 2026-04-18) loaded.");
+  }, []);
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -158,7 +163,7 @@ const VirtualAssistant = () => {
                   <img src={assistantAvatar} alt="AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0 }}>Assistant BoutiKonect <small style={{ fontSize: '10px', opacity: 0.7 }}>v2.0</small></h3>
+                  <h3 style={{ margin: 0 }}>Assistant BoutiKonect <small style={{ fontSize: '10px', opacity: 0.7 }}>v2.2</small></h3>
                   <span className="online-status">En ligne</span>
                 </div>
               </div>
