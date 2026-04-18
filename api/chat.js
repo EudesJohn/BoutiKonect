@@ -16,6 +16,10 @@ export default async function handler(request, response) {
   }
 
   try {
+    if (!request.body) {
+      console.error("[AI ERROR] Corps de la requête (body) manquant. Vérifiez le parsing JSON.");
+      return response.status(400).json({ error: 'Corps de la requête manquant' });
+    }
     const { prompt, context = {} } = request.body;
     
     if (!prompt || typeof prompt !== 'string') {

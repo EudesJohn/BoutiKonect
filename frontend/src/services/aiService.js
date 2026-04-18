@@ -30,8 +30,22 @@ class AIService {
         if (response.status === 503) {
           throw new Error("L'assistant est actuellement en maintenance (Configuration API manquante). Veuillez contacter l'administrateur.");
         }
-        const errorData = await response.json().catch(() => ({ error: "Erreur serveur inconnue" }));
-        throw new Error(errorData.error || `Erreur serveur (${response.status})`);
+        
+        // Tentative de lecture de l'erreur
+        let errorMsg = `Erreur serveur (${response.status})`;
+        try {
+          const errorData = await response.json();
+          errorMsg = errorData.error || errorMsg;
+        } catch (jsonErr) {
+          // Si pas du JSON, on tente de lire le texte brut (souvent une page HTML d'erreur)
+          const rawText = await response.text().catch(() => "");
+          if (rawText.includes("<!DOCTYPE html>")) {
+            errorMsg = `Erreur serveur HTTP ${response.status} (Le serveur a renvoyé du HTML au lieu de JSON)`;
+          } else if (rawText) {
+            errorMsg = `Erreur (${response.status}): ${rawText.substring(0, 100)}`;
+          }
+        }
+        throw new Error(errorMsg);
       }
 
       if (contentType && contentType.indexOf("application/json") !== -1) {
