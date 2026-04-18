@@ -44,7 +44,16 @@ export default defineConfig({
             type: 'image/png',
             purpose: 'maskable'
           }
-        ]
+        ],
+        workbox: {
+          navigateFallbackDenylist: [/^\/api/],
+          runtimeCaching: [
+            {
+              urlPattern: /^\/api\/.*$/,
+              handler: 'NetworkOnly', // Toujours aller sur le réseau pour l'API
+            }
+          ]
+        }
       }
     })
   ],

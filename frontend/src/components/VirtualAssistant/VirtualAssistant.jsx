@@ -103,6 +103,7 @@ const VirtualAssistant = () => {
 
     // AI generated dynamic response
     const fetchResponse = async () => {
+      console.log("[DEBUG] Assistant calling API for prompt:", userMsg.text.substring(0, 20) + "...");
       try {
         const response = await getAIResponse(userMsg.text);
         
