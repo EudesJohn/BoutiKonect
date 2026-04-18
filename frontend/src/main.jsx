@@ -7,14 +7,14 @@ import { AppProvider } from './context/AppContext.jsx'
 import './index.css'
 // import './pwa.js'
 
-    // Forcer la mise à jour du Service Worker si une nouvelle version est disponible
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(registrations => {
-        registrations.forEach(registration => {
-          registration.update()
-        })
-      })
-    }
+// Forcer la mise à jour du Service Worker si une nouvelle version est disponible
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    registrations.forEach(registration => {
+      registration.update()
+    })
+  })
+}
 
 const root = createRoot(document.getElementById('root'));
 

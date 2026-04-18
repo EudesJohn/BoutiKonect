@@ -11,7 +11,7 @@ class AIService {
    * @returns {Promise<string>} - La réponse générée
    */
   async generateResponse(prompt, context = {}) {
-    const apiUrl = `${window.location.origin}/api/chat`;
+    const apiUrl = `${window.location.origin}/api/chat?t=${Date.now()}`;
     try {
       const response = await fetch(apiUrl, {
         method: 'POST',

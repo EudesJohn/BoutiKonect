@@ -4,6 +4,12 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
  * Endpoint Serverless pour l'assistant IA Gemini (Root v2.0)
  */
 export default async function handler(request, response) {
+  // CORS Headers explicites
+  response.setHeader('Access-Control-Allow-Credentials', 'true');
+  response.setHeader('Access-Control-Allow-Origin', '*');
+  response.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  response.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+
    // Gestion du CORS Preflight
   if (request.method === 'OPTIONS') {
     return response.status(200).end();
