@@ -9,9 +9,12 @@ class AIService {
    * @returns {Promise<string>} - La réponse générée
    */
   async generateResponse(prompt, context = {}) {
+    const apiUrl = `${window.location.origin}/api/chat`;
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch(apiUrl, {
         method: 'POST',
+        cache: 'no-store', // Bypasser le cache agressif
+        mode: 'cors',
         headers: {
           'Content-Type': 'application/json',
         },

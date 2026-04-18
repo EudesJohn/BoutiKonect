@@ -16,11 +16,25 @@ export default async function handler(request, response) {
   }
 
   try {
-    if (!request.body) {
+    // Robust parsing for various environments
+    let body = request.body;
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch (e) {
+        console.error("[AI ERROR] Échec du parsing JSON manuel.");
+      }
+    }
+
+    if (!body) {
       console.error("[AI ERROR] Corps de la requête (body) manquant. Vérifiez le parsing JSON.");
       return response.status(400).json({ error: 'Corps de la requête manquant' });
     }
-    const { prompt, context = {} } = request.body;
+
+    const { prompt, context = {} } = body;
+    
+    // Forcer la fermeture de connexion pour éviter les NetworkErrors intermittents sur certains proxys
+    response.setHeader('Connection', 'close');
     
     if (!prompt || typeof prompt !== 'string') {
       return response.status(400).json({ error: 'Le message est vide ou invalide' });
