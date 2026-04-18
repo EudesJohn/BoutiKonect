@@ -9,6 +9,14 @@ import './index.css'
 
 // Forcer la mise à jour du Service Worker si une nouvelle version est disponible
 if ('serviceWorker' in navigator) {
+  // Désinscription temporaire pour nettoyer les anciens caches problématiques
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    for (const registration of registrations) {
+      registration.unregister();
+      console.log('♻️ SW Unregistered for clean update');
+    }
+  });
+
   navigator.serviceWorker.getRegistrations().then(registrations => {
     registrations.forEach(registration => {
       registration.update()
