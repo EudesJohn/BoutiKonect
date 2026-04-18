@@ -301,14 +301,33 @@ export const AppProvider = ({ children }) => {
 
   // === APP READINESS LOGIC ===
   useEffect(() => {
-    // L'app est prête quand l'auth a fini son check initial 
-    // ET que les produits/services sont chargés (ou erreur reçue)
-    if (!authLoading && !dataLoading.products && !dataLoading.services) {
-      // On laisse un petit délai pour une transition fluide et "premium"
-      const timer = setTimeout(() => setIsAppReady(true), 1500);
-      return () => clearTimeout(timer);
+    // Sécurité globale : force l'affichage après 25s même si tout n'est pas prêt
+    const globalSafetyTimeout = setTimeout(() => {
+      if (!isAppReady) {
+        console.warn('⚠️ Safety Timeout: Forcing App Ready after 25s.');
+        setIsAppReady(true);
+        if (window.hideAppLoader) window.hideAppLoader();
+      }
+    }, 25000);
+
+    // L'app est prête normalement quand l'auth et les produits sont là
+    if (!authLoading && !dataLoading.products) {
+      // On déclenche le rendu de l'App
+      setIsAppReady(true);
+      
+      // On masque le loader HTML lourd avec un délai minimal pour le "premium"
+      const loaderTimer = setTimeout(() => {
+        if (window.hideAppLoader) window.hideAppLoader();
+      }, 800);
+
+      return () => {
+        clearTimeout(globalSafetyTimeout);
+        clearTimeout(loaderTimer);
+      };
     }
-  }, [authLoading, dataLoading.products, dataLoading.services])
+
+    return () => clearTimeout(globalSafetyTimeout);
+  }, [authLoading, dataLoading.products])
 
   // === DATA LOADING ===
   const [products, setProducts] = useState([])
@@ -359,36 +378,56 @@ export const AppProvider = ({ children }) => {
     const fetchInitialData = async () => {
       setDataLoading(prev => ({ ...prev, products: true, services: true }))
       
-      supabase.from('products').select('*').then(({ data }) => {
-        if (data) setProducts(data.map(mapItemFromDB))
-        setDataLoading(prev => ({ ...prev, products: false, services: false }))
-      })
+      const productsPromise = supabase.from('products').select('*')
+        .then(({ data, error }) => {
+          if (error) throw error;
+          if (data) setProducts(data.map(mapItemFromDB));
+        })
+        .catch(err => console.error('Failed to load products:', err))
+        .finally(() => setDataLoading(prev => ({ ...prev, products: false })));
 
-      supabase.from('orders').select('*').then(({ data }) => {
-        if (data) setOrders(data.map(mapOrderFromDB))
-        setDataLoading(prev => ({ ...prev, orders: false }))
-      })
+      const ordersPromise = supabase.from('orders').select('*')
+        .then(({ data }) => {
+          if (data) setOrders(data.map(mapOrderFromDB))
+        })
+        .catch(err => console.error('Failed to load orders:', err))
+        .finally(() => setDataLoading(prev => ({ ...prev, orders: false })));
 
-      supabase.from('profiles').select('*').then(({ data }) => {
-        if (data) setAllUsers(data)
-        setDataLoading(prev => ({ ...prev, users: false }))
-      })
+      const profilesPromise = supabase.from('profiles').select('*')
+        .then(({ data }) => {
+          if (data) setAllUsers(data)
+        })
+        .catch(err => console.error('Failed to load profiles:', err))
+        .finally(() => setDataLoading(prev => ({ ...prev, users: false })));
 
-      supabase.from('reviews').select('*').then(({ data }) => {
-        if (data) setReviews(data.map(r => ({
-          id: r.id,
-          productId: r.product_id,
-          reviewerName: r.reviewer_name,
-          reviewerId: r.reviewer_id,
-          rating: r.rating,
-          comment: r.comment,
-          createdAt: r.created_at
-        })))
-      })
+      const reviewsPromise = supabase.from('reviews').select('*')
+        .then(({ data }) => {
+          if (data) setReviews(data.map(r => ({
+            id: r.id,
+            productId: r.product_id,
+            reviewerName: r.reviewer_name,
+            reviewerId: r.reviewer_id,
+            rating: r.rating,
+            comment: r.comment,
+            createdAt: r.created_at
+          })))
+        })
+        .catch(err => console.error('Failed to load reviews:', err));
+
+      const reportsPromise = supabase.from('admin_notifications').select('*').eq('type', 'report')
+        .then(({ data }) => {
+          if (data) setReports(data.map(r => ({ ...r, ...r.data, id: r.id })))
+        })
+        .catch(err => console.error('Failed to load reports:', err));
       
-      supabase.from('admin_notifications').select('*').eq('type', 'report').then(({ data }) => {
-        if (data) setReports(data.map(r => ({ ...r, ...r.data, id: r.id })))
-      })
+      // Sécurité pour les services : ils partagent souvent le chargement avec les produits
+      // On s'assure que dataLoading.services repasse à false
+      const servicesSafety = Promise.resolve().then(() => {
+        setDataLoading(prev => ({ ...prev, services: false }));
+      });
+
+      // On n'attend pas forcément tout, mais on gère les états
+      await Promise.allSettled([productsPromise, ordersPromise, profilesPromise, reviewsPromise, reportsPromise, servicesSafety]);
     }
     fetchInitialData()
 
@@ -487,16 +526,12 @@ export const AppProvider = ({ children }) => {
     fetchRecs();
   }, [seller, user, products]);
 
+  // Nettoyage de l'ancien effet hideAppLoader redondant
   useEffect(() => {
-    const isAppReady = !authLoading && !dataLoading.products;
-    
     if (isAppReady && window.hideAppLoader) {
-      const timer = setTimeout(() => {
-        window.hideAppLoader();
-      }, 7500);
-      return () => clearTimeout(timer);
+      window.hideAppLoader();
     }
-  }, [authLoading, dataLoading.products]);
+  }, [isAppReady]);
 
   const [userLocation, setUserLocation] = useState(null)
   const [locationError, setLocationError] = useState(null)
