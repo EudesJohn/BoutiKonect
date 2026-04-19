@@ -7,7 +7,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Supabase URL or Anon Key missing in environment variables.')
 }
 
-console.log('Initializing Supabase client with URL:', supabaseUrl)
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
@@ -17,4 +16,4 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storage: window.localStorage
   }
 })
-console.log('Supabase client initialized.')
+

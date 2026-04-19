@@ -6,7 +6,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight, CheckCircle, AlertCircle } from 'l
 import './Login.css'
 
 export default function Login() {
-  const { loginUser, rememberMe, setRememberMe } = useContext(AppContext)
+  const { loginUser } = useContext(AppContext)
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
     email: '',
@@ -17,6 +17,7 @@ export default function Login() {
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
   const [showVerificationSuccess, setShowVerificationSuccess] = useState(false)
+  const [rememberMe, setRememberMe] = useState(true)
 
   // Gérer le paramètre de succès de vérification d'email
   useEffect(() => {

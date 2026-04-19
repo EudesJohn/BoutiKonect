@@ -8,11 +8,10 @@ export * from './authService'
 
 // Service d'authentification spécifique à l'administrateur
 export { 
-  verifyAdminCredentials, 
-  isUserAdmin, 
+  isAdminEmail,
   isAdminConfigured, 
   getAdminInfo,
-  adminLogout 
+  loginAdmin
 } from './adminAuth';
 
 // Service de gestion des emails (vérification, mot de passe oublié)

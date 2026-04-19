@@ -1,7 +1,7 @@
 import { createContext, useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { supabase } from '../supabase/client'
 import { isAdminConfigured, getAdminInfo } from '../services/adminAuth'
-import { logoutUser as authLogoutUser, updateEmailWithVerification } from '../services/authService'
+import { logoutUser as authLogoutUser } from '../services/authService'
 import { cacheService } from '../services/cacheService'
 import { initSecureStorage, saveSecureUser, loadSecureUser, secureRemoveItem, saveSecureCart, loadSecureCart, secureSetItem, secureGetItem, loadSecureSeller, saveSecureSeller, secureClear } from '../services/secureStorage'
 import { PROMOTION_PRICES } from '../services/paymentService'
@@ -436,7 +436,7 @@ export const AppProvider = ({ children }) => {
       .on('postgres_changes', { event: '*', table: 'products' }, (payload) => {
         if (payload.eventType === 'INSERT') setProducts(prev => [mapItemFromDB(payload.new), ...prev])
         else if (payload.eventType === 'UPDATE') setProducts(prev => prev.map(p => p.id === payload.new.id ? mapItemFromDB(payload.new) : p))
-        else if (payload.eventType === 'DELETE') setProducts(prev => prev.filter(p => p.id === payload.old.id))
+        else if (payload.eventType === 'DELETE') setProducts(prev => prev.filter(p => p.id !== payload.old.id))
       })
       .subscribe()
 
@@ -690,6 +690,10 @@ export const AppProvider = ({ children }) => {
   }
 
   const removeFromCart = (productId) => setCart(prev => prev.filter(item => item.id !== productId))
+  const updateCartQuantity = (productId, newQty) => {
+    if (newQty < 1) return removeFromCart(productId)
+    setCart(prev => prev.map(item => item.id === productId ? { ...item, quantity: newQty } : item))
+  }
   const clearCart = () => setCart([])
 
   const updateProfile = async (id, profileData) => {
@@ -777,7 +781,7 @@ export const AppProvider = ({ children }) => {
   }, [products, filters, userLocation]);
 
   const value = {
-    seller, user, products, services, reviews: [], orders, allUsers, favorites, cart,
+    seller, user, products, services, reviews, orders, allUsers, favorites, cart,
     filters, userLocation, locationError, authLoading, dataLoading, errors, isAppReady,
     cities, categories, serviceCategories, PROMOTION_PRICES, filteredProducts,
     getFilteredProducts: () => {
@@ -792,7 +796,7 @@ export const AppProvider = ({ children }) => {
       if (!Array.isArray(cart)) return 0;
       return cart.reduce((total, item) => total + (item.price * (item.quantity || 1)), 0);
     },
-    setFilters, addToCart, removeFromCart, clearCart, getProductById,
+    setFilters, addToCart, removeFromCart, updateCartQuantity, clearCart, getProductById, fetchSingleProduct,
     addProduct, updateProduct, deleteProduct, createOrder,
     getCurrentLocation, formatPrice, parseDate, checkIsAdmin,
     showToast, removeToast, toasts,

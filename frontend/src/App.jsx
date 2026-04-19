@@ -41,7 +41,6 @@ import PromotionCallback from './pages/Payment/PromotionCallback'
 
 import Toast from './components/Toast/Toast'
 import { motion, AnimatePresence } from 'framer-motion'
-import './App.css'
 
 function App() {
   const { seller, user, toasts, removeToast, isAppReady } = useContext(AppContext)

@@ -3,9 +3,9 @@ import { Navigate } from 'react-router-dom';
 import { AppContext } from '../../context/AppContext';
 
 export default function GuestRoute({ children }) {
-  const { user, seller, loading } = useContext(AppContext);
+  const { user, seller, authLoading } = useContext(AppContext);
 
-  if (loading) {
+  if (authLoading) {
     return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'var(--primary)' }}>Chargement en cours...</div>;
   }
 
