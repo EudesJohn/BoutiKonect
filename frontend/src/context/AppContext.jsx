@@ -397,25 +397,27 @@ export const AppProvider = ({ children }) => {
         setDataLoading(prev => ({ ...prev, products: false }))
       }
 
-      // 2. Fetch optimisé (limité et colonnes spécifiques)
+      // 2. Fetch optimisé (limité)
       const productsPromise = supabase
         .from('products')
-        .select(`
-          id, title, price, images, price_type, is_promoted, promotion_end_date, 
-          seller_id, seller_name, seller_city, seller_neighborhood, seller_avatar, 
-          created_at, stock, category, description, whatsapp, type, latitude, longitude
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(100)
         .then(({ data, error }) => {
-          if (error) throw error;
+          if (error) {
+            console.error('❌ Failed to load products from network:', error);
+            throw error;
+          }
           if (data) {
             const mapped = data.map(mapItemFromDB)
             setProducts(mapped);
             cacheService.set('initial_products', data, 12) // Cache pendant 12h
           }
         })
-        .catch(err => console.error('Failed to load products:', err))
+        .catch(err => {
+          console.error('Failed to load products:', err);
+          setErrors(prev => ({ ...prev, products: err.message }));
+        })
         .finally(() => setDataLoading(prev => ({ ...prev, products: false, services: false })));
 
       // 3. Charger le reste en arrière-plan sans bloquer l'initialisation
