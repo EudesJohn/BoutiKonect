@@ -88,7 +88,7 @@
 }
 
 .footer-desc {
-  color: #8fa3bf;
+  color: var(--text-light);
   font-size: 0.95rem;
   line-height: 1.7;
   margin-bottom: var(--space-md);
@@ -152,7 +152,7 @@
 }
 
 .footer-links a {
-  color: #8fa3bf;
+  color: var(--text-light);
   font-size: 0.95rem;
   transition: var(--transition-fast);
   display: inline-block;
@@ -176,7 +176,7 @@
   align-items: flex-start;
   gap: var(--space-sm);
   margin-bottom: var(--space-md);
-  color: #8fa3bf;
+  color: var(--text-light);
 }
 
 .footer-contact li svg {
@@ -197,7 +197,7 @@
 }
 
 .footer-bottom p {
-  color: #8fa3bf;
+  color: var(--text-light);
   font-size: 0.9rem;
   margin: 0;
 }
@@ -208,7 +208,7 @@
 }
 
 .footer-bottom-links a {
-  color: #8fa3bf;
+  color: var(--text-light);
   font-size: 0.9rem;
   transition: var(--transition-fast);
   text-decoration: none;

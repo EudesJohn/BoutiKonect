@@ -73,7 +73,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-xs);
-  color: #8fa3bf;
+  color: var(--text-light);
   margin-bottom: var(--space-xs);
 }
 
@@ -82,7 +82,7 @@
 }
 
 .seller-phone {
-  color: #8fa3bf;
+  color: var(--text-light);
   margin-bottom: var(--space-md);
 }
 
@@ -195,7 +195,7 @@
 
 .analytics-stat-card .stat-label {
   font-size: 0.875rem;
-  color: #8fa3bf;
+  color: var(--text-light);
 }
 
 .analytics-section {
@@ -263,7 +263,7 @@
 
 .chart-label {
   font-size: 0.7rem;
-  color: #8fa3bf;
+  color: var(--text-light);
   margin-top: var(--space-xs);
 }
 
@@ -285,7 +285,7 @@
 }
 
 .orders-table th {
-  color: #8fa3bf;
+  color: var(--text-light);
   font-weight: 600;
   font-size: 0.875rem;
 }
@@ -319,7 +319,7 @@
 
 .no-orders {
   text-align: center;
-  color: #8fa3bf;
+  color: var(--text-light);
   padding: var(--space-xl);
 }
 
@@ -338,7 +338,7 @@
   background: rgba(255, 255, 255, 0.05);
   border: 2px solid transparent;
   border-radius: var(--radius-md);
-  color: #8fa3bf;
+  color: var(--text-light);
   font-weight: 600;
   cursor: pointer;
   transition: var(--transition-fast);
@@ -386,7 +386,7 @@
 .no-products {
   text-align: center;
   padding: var(--space-3xl);
-  color: #8fa3bf;
+  color: var(--text-light);
 }
 
 .no-products svg {
@@ -418,7 +418,7 @@
 }
 
 .seller-not-found p {
-  color: #8fa3bf;
+  color: var(--text-light);
   margin-bottom: var(--space-xl);
 }
 

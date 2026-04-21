@@ -73,7 +73,7 @@
 
 .cart-item .item-info p {
   font-size: 0.8rem;
-  color: #8fa3bf;
+  color: var(--text-light);
 }
 
 .cart-item .item-price {
@@ -90,7 +90,7 @@
   display: flex;
   justify-content: space-between;
   margin-bottom: 8px;
-  color: #8fa3bf;
+  color: var(--text-light);
 }
 
 .summary-totals .total {
@@ -172,7 +172,7 @@
 
 .payment-option .option-content p {
   font-size: 0.85rem;
-  color: #8fa3bf;
+  color: var(--text-light);
 }
 
 .phone-input {
@@ -206,7 +206,7 @@
 
 .phone-input .help-text {
   font-size: 0.8rem;
-  color: #8fa3bf;
+  color: var(--text-light);
   margin-top: 6px;
 }
 
@@ -250,7 +250,7 @@
 }
 
 .payment-success p {
-  color: #8fa3bf;
+  color: var(--text-light);
   margin-bottom: 8px;
 }
 
@@ -283,7 +283,7 @@
   gap: 8px;
   background: none;
   border: none;
-  color: #8fa3bf;
+  color: var(--text-light);
   cursor: pointer;
   margin-bottom: 20px;
 }
@@ -326,7 +326,7 @@
   font-family: inherit;
   font-size: 0.9rem;
   line-height: 1.6;
-  color: #8fa3bf;
+  color: var(--text-light);
   white-space: pre-wrap;
 }
 
@@ -344,7 +344,7 @@
   justify-content: center;
   gap: 8px;
   font-size: 0.85rem;
-  color: #8fa3bf;
+  color: var(--text-light);
 }
 
 @keyframes spin {

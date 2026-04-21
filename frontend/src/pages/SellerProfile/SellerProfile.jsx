@@ -384,8 +384,8 @@ export default function SellerProfile() {
             </div>
           ) : (
             <div className="no-products" style={{ marginBottom: '50px', textAlign: 'center', padding: '40px', background: 'rgba(255,255,255,0.03)', borderRadius: '15px' }}>
-              <Package size={48} color="#8fa3bf" />
-              <p style={{ color: '#8fa3bf', marginTop: '10px' }}>Ce vendeur n'a pas encore de produits</p>
+              <Package size={48} color="var(--text-light)" />
+              <p style={{ color: 'var(--text-light)', marginTop: '10px' }}>Ce vendeur n'a pas encore de produits</p>
             </div>
           )}
 
@@ -403,8 +403,8 @@ export default function SellerProfile() {
             </div>
           ) : (
             <div className="no-products" style={{ textAlign: 'center', padding: '40px', background: 'rgba(255,255,255,0.03)', borderRadius: '15px' }}>
-              <Briefcase size={48} color="#8fa3bf" />
-              <p style={{ color: '#8fa3bf', marginTop: '10px' }}>Ce vendeur n'a pas encore de services</p>
+              <Briefcase size={48} color="var(--text-light)" />
+              <p style={{ color: 'var(--text-light)', marginTop: '10px' }}>Ce vendeur n'a pas encore de services</p>
             </div>
           )}
         </motion.div>

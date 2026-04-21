@@ -37,7 +37,7 @@
 }
 
 .privacy-date {
-  color: #8fa3bf;
+  color: var(--text-light);
   font-size: 0.95rem;
   margin-bottom: var(--space-2xl);
 }
@@ -90,7 +90,7 @@
 }
 
 .privacy-section ul li {
-  color: #8fa3bf;
+  color: var(--text-light);
   padding: var(--space-sm) 0;
   padding-left: var(--space-lg);
   position: relative;
@@ -142,7 +142,7 @@
 }
 
 .privacy-footer p {
-  color: #8fa3bf;
+  color: var(--text-light);
   font-size: 0.95rem;
   line-height: 1.6;
   margin: 0;

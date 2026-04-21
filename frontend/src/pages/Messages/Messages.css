@@ -30,7 +30,7 @@
 }
 
 .form-header p {
-  color: #8fa3bf;
+  color: var(--text-light);
 }
 
 .direct-message-form .buyer-form {
@@ -60,7 +60,7 @@
 }
 
 .direct-message-form .form-input::placeholder {
-  color: #8fa3bf;
+  color: var(--text-light);
 }
 
 .direct-message-form .form-input:focus {
@@ -118,7 +118,7 @@
 }
 
 .messages-welcome p {
-  color: #8fa3bf;
+  color: var(--text-light);
   margin-bottom: var(--space-xl);
 }
 
@@ -141,7 +141,7 @@
 }
 
 .buyer-form .form-input::placeholder {
-  color: #8fa3bf;
+  color: var(--text-light);
 }
 
 .buyer-form .btn {
@@ -244,7 +244,7 @@
 .conv-preview {
   display: block;
   font-size: 0.85rem;
-  color: #8fa3bf;
+  color: var(--text-light);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -256,7 +256,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #8fa3bf;
+  color: var(--text-light);
   padding: var(--space-xl);
 }
 
@@ -356,7 +356,7 @@
 
 .message-time {
   font-size: 0.75rem;
-  color: #8fa3bf;
+  color: var(--text-light);
   margin-top: var(--space-xs);
 }
 
@@ -369,7 +369,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #8fa3bf;
+  color: var(--text-light);
 }
 
 /* Chat Input */
@@ -393,7 +393,7 @@
 }
 
 .chat-input input::placeholder {
-  color: #8fa3bf;
+  color: var(--text-light);
 }
 
 .chat-input input:focus {
@@ -428,7 +428,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #8fa3bf;
+  color: var(--text-light);
   padding: var(--space-xl);
 }
 
@@ -476,7 +476,7 @@
 }
 
 .whatsapp-header p {
-  color: #8fa3bf;
+  color: var(--text-light);
   font-size: 1.1rem;
   max-width: 500px;
   margin: 0 auto;
@@ -544,7 +544,7 @@
 }
 
 .quick-seller {
-  color: #8fa3bf;
+  color: var(--text-light);
   font-size: 0.85rem;
   margin-bottom: var(--space-md);
 }
@@ -594,7 +594,7 @@
   align-items: center;
   gap: var(--space-md);
   padding: var(--space-md);
-  color: #8fa3bf;
+  color: var(--text-light);
   border-bottom: 1px solid #2a3f5f;
 }
 

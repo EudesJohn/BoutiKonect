@@ -29,7 +29,7 @@ export default function ProtectedRoute({ children }) {
           borderRadius: '50%', 
           animation: 'spin 1s linear infinite' 
         }}></div>
-        <p style={{ color: '#8fa3bf', fontWeight: '500', fontSize: '14px', letterSpacing: '0.5px' }}>Vérification de l'identité...</p>
+        <p style={{ color: 'var(--text-light)', fontWeight: '500', fontSize: '14px', letterSpacing: '0.5px' }}>Vérification de l'identité...</p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );

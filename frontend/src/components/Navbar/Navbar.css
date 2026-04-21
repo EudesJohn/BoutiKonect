@@ -93,7 +93,7 @@
 }
 
 .navbar-search .search-input::placeholder {
-  color: #8fa3bf;
+  color: var(--text-light);
 }
 
 .navbar-search .search-input:focus {
@@ -296,7 +296,7 @@
 .user-location {
   display: block;
   font-size: 0.85rem;
-  color: #8fa3bf;
+  color: var(--text-light);
   margin-top: 2px;
 }
 
@@ -384,7 +384,7 @@
 }
 
 .mobile-search .search-input::placeholder {
-  color: #8fa3bf;
+  color: var(--text-light);
 }
 
 .mobile-search .search-btn {
@@ -435,7 +435,7 @@
 }
 
 .mobile-user-info span:last-child {
-  color: #8fa3bf;
+  color: var(--text-light);
   font-weight: 400;
   margin-top: 4px;
 }

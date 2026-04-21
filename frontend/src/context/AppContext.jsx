@@ -388,13 +388,12 @@ export const AppProvider = ({ children }) => {
     const fetchInitialData = async () => {
       setDataLoading(prev => ({ ...prev, products: true, services: true }))
       
-      // 1. Essayer de charger depuis le cache pour une réactivité instantanée
+      // 1. Chargement optimiste (Cache)
       const cachedProducts = cacheService.get('initial_products')
       if (cachedProducts) {
-        console.log('📦 Loaded products from cache');
+        console.log('📦 Loaded products from cache (Optimistic)');
         setProducts(cachedProducts.map(mapItemFromDB))
-        // Si on a du cache, on peut déjà débloquer l'UI si auth est prêt
-        setDataLoading(prev => ({ ...prev, products: false }))
+        // NOTE: On laisse dataLoading.products à true pour que le Splash Screen attende le réseau
       }
 
       // 2. Fetch optimisé (limité)

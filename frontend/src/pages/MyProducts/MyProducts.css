@@ -61,7 +61,7 @@
 
 .header-info .product-count {
   font-size: 0.9rem;
-  color: #8fa3bf;
+  color: var(--text-light);
   background: rgba(255, 106, 0, 0.1);
   padding: var(--space-xs) var(--space-md);
   border-radius: var(--radius-full);
@@ -133,7 +133,7 @@
 
 .product-description {
   font-size: 0.8rem;
-  color: #8fa3bf;
+  color: var(--text-light);
 }
 
 .product-price-cell {
@@ -237,7 +237,7 @@
 .no-products {
   text-align: center;
   padding: 60px 20px;
-  color: #8fa3bf;
+  color: var(--text-light);
 }
 
 .no-products svg {

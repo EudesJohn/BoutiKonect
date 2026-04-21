@@ -536,7 +536,7 @@ export default function Admin() {
                       <h3>
                         <Package size={20} />
                         {getSellerName(orders[0])} 
-                        <div style={{ display: 'flex', flexDirection: 'column', fontSize: '12px', fontWeight: 'normal', color: '#8fa3bf', marginTop: '4px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', fontSize: '12px', fontWeight: 'normal', color: 'var(--text-light)', marginTop: '4px' }}>
                             <span>Ville: {orders[0].sellerCity}</span>
                             <span>Quartier: {orders[0].sellerNeighborhood}</span>
                         </div>
@@ -571,12 +571,12 @@ export default function Admin() {
                                     <div style={{ fontWeight: '700' }}>{order.buyerName}</div>
                                     <div style={{ fontSize: '12px' }}><Phone size={10} /> {order.buyerPhone}</div>
                                     {order.type === 'service' ? (
-                                      <div style={{ fontSize: '11px', color: '#8fa3bf', marginTop: '4px', padding: '4px', background: 'rgba(255,106,0,0.05)', borderRadius: '4px' }}>
+                                      <div style={{ fontSize: '11px', color: 'var(--text-light)', marginTop: '4px', padding: '4px', background: 'rgba(255,106,0,0.05)', borderRadius: '4px' }}>
                                         <div>📍 {order.location}</div>
                                         <div style={{ whiteSpace: 'pre-wrap' }}>📝 {order.details}</div>
                                       </div>
                                     ) : (
-                                      <div style={{ fontSize: '11px', color: '#8fa3bf' }}>🏠 {order.buyerAddress}</div>
+                                      <div style={{ fontSize: '11px', color: 'var(--text-light)' }}>🏠 {order.buyerAddress}</div>
                                     )}
                                 </td>
                                 <td data-label="Date">

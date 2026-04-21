@@ -142,7 +142,7 @@
 }
 
 .register-header p {
-  color: #8fa3bf;
+  color: var(--text-light);
   font-size: 14px;
 }
 
@@ -178,7 +178,7 @@
 }
 
 .success-container p {
-  color: #8fa3bf;
+  color: var(--text-light);
   font-size: 14px;
 }
 
@@ -246,7 +246,7 @@
 }
 
 .form-input::placeholder {
-  color: #8fa3bf;
+  color: var(--text-light);
   font-weight: 400;
 }
 
@@ -321,7 +321,7 @@
 
 .btn-ghost {
   background: transparent;
-  color: #8fa3bf;
+  color: var(--text-light);
   border: none;
 }
 
@@ -347,7 +347,7 @@
 }
 
 .register-footer p {
-  color: #8fa3bf;
+  color: var(--text-light);
   font-size: 14px;
 }
 

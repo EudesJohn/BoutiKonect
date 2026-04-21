@@ -69,7 +69,7 @@
 }
 
 .splash-status {
-  color: #8fa3bf;
+  color: var(--text-light);
   font-size: 0.9rem;
   font-weight: 500;
   letter-spacing: 0.5px;

@@ -94,7 +94,7 @@
 
 .hero-desc {
   font-size: 1.15rem;
-  color: #8fa3bf;
+  color: var(--text-light);
   line-height: 1.7;
   margin-bottom: var(--space-xl);
 }
@@ -131,7 +131,7 @@
 
 .stat-label {
   font-size: 0.9rem;
-  color: #8fa3bf;
+  color: var(--text-light);
 }
 
 /* Hero Visual */
@@ -194,7 +194,7 @@
 
 .hero-card-desc {
   display: block;
-  color: #8fa3bf;
+  color: var(--text-light);
   font-size: 0.85rem;
 }
 
@@ -258,7 +258,7 @@
 
 .feature-card p {
   font-size: 0.9rem;
-  color: #8fa3bf;
+  color: var(--text-light);
   margin: 0;
 }
 
@@ -283,7 +283,7 @@
 }
 
 .section-header p {
-  color: #8fa3bf;
+  color: var(--text-light);
   margin: 0;
 }
 

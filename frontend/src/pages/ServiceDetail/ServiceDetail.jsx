@@ -244,7 +244,7 @@ export default function ServiceDetail() {
       <div className="service-not-found" style={{ textAlign: 'center', padding: '100px 20px' }}>
         <X size={48} color="var(--danger)" />
         <h2>Service non trouvé</h2>
-        <p style={{ color: '#8fa3bf', margin: '10px 0 30px' }}>Désolé, ce service n'est plus disponible ou le lien est invalide.</p>
+        <p style={{ color: 'var(--text-light)', margin: '10px 0 30px' }}>Désolé, ce service n'est plus disponible ou le lien est invalide.</p>
         <button className="btn btn-primary" onClick={() => navigate('/services')}>
           Retour aux services
         </button>
@@ -467,14 +467,14 @@ export default function ServiceDetail() {
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <span style={{ fontWeight: '700', color: '#FFD700' }}>{rev.reviewerName}</span>
-                        <span style={{ fontSize: '0.75rem', color: '#8fa3bf' }}>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-light)' }}>
                           {rev.createdAt?.toDate ? rev.createdAt.toDate().toLocaleDateString('fr-FR') : (rev.createdAt ? new Date(rev.createdAt).toLocaleDateString('fr-FR') : 'Date inconnue')}
                         </span>
                       </div>
                     </div>
                     <div style={{ display: 'flex', color: '#FFD700' }}>{[...Array(5)].map((_, i) => <Star key={i} size={14} fill={i < rev.rating ? "#FFD700" : "none"} />)}</div>
                   </div>
-                  <p style={{ color: '#8fa3bf', fontSize: '0.95rem' }}>{rev.comment}</p>
+                  <p style={{ color: 'var(--text-light)', fontSize: '0.95rem' }}>{rev.comment}</p>
                 </div>
               ))}
               {itemReviews.length > reviewLimit && (
@@ -482,7 +482,7 @@ export default function ServiceDetail() {
               )}
             </div>
           ) : (
-            <p className="no-reviews" style={{ color: '#8fa3bf', fontStyle: 'italic', marginTop: '10px' }}>Aucun avis pour le moment.</p>
+            <p className="no-reviews" style={{ color: 'var(--text-light)', fontStyle: 'italic', marginTop: '10px' }}>Aucun avis pour le moment.</p>
           )}
         </div>
 
@@ -497,11 +497,11 @@ export default function ServiceDetail() {
                 exit={{ scale: 0.9, opacity: 0 }}
                 style={{ background: '#1e2a4a', padding: '30px', borderRadius: '20px', width: '100%', maxWidth: '500px', position: 'relative' }}
               >
-                <button className="close-modal" onClick={() => setShowOrderModal(false)} style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', color: '#8fa3bf', cursor: 'pointer' }}>
+                <button className="close-modal" onClick={() => setShowOrderModal(false)} style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', color: 'var(--text-light)', cursor: 'pointer' }}>
                   <X size={24} />
                 </button>
                 <h2 style={{ color: 'var(--primary)', marginBottom: '10px' }}>Confirmer la prestation</h2>
-                <p style={{ color: '#8fa3bf', marginBottom: '20px', fontSize: '0.9rem' }}>
+                <p style={{ color: 'var(--text-light)', marginBottom: '20px', fontSize: '0.9rem' }}>
                   Veuillez remplir ces informations pour confirmer votre demande au prestataire.
                 </p>
 
@@ -511,12 +511,12 @@ export default function ServiceDetail() {
                       <ShieldCheck size={40} color="#00C853" />
                     </div>
                     <h3 style={{ color: '#00C853', marginBottom: '10px' }}>Demande confirmée !</h3>
-                    <p style={{ color: '#8fa3bf' }}>Votre demande a été envoyée. Vous allez être redirigé vers WhatsApp...</p>
+                    <p style={{ color: 'var(--text-light)' }}>Votre demande a été envoyée. Vous allez être redirigé vers WhatsApp...</p>
                   </div>
                 ) : (
                   <form onSubmit={handleOrderService}>
                     <div className="form-group" style={{ marginBottom: '15px' }}>
-                      <label style={{ display: 'block', marginBottom: '8px', color: '#8fa3bf', fontSize: '0.85rem' }}>Votre Nom Complet</label>
+                      <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-light)', fontSize: '0.85rem' }}>Votre Nom Complet</label>
                       <input 
                         type="text" 
                         required 
@@ -527,7 +527,7 @@ export default function ServiceDetail() {
                       />
                     </div>
                     <div className="form-group" style={{ marginBottom: '15px' }}>
-                      <label style={{ display: 'block', marginBottom: '8px', color: '#8fa3bf', fontSize: '0.85rem' }}>Téléphone (WhatsApp)</label>
+                      <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-light)', fontSize: '0.85rem' }}>Téléphone (WhatsApp)</label>
                       <input 
                         type="tel" 
                         required 
@@ -538,7 +538,7 @@ export default function ServiceDetail() {
                       />
                     </div>
                     <div className="form-group" style={{ marginBottom: '15px' }}>
-                      <label style={{ display: 'block', marginBottom: '8px', color: '#8fa3bf', fontSize: '0.85rem' }}>Votre Ville / Quartier</label>
+                      <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-light)', fontSize: '0.85rem' }}>Votre Ville / Quartier</label>
                       <input 
                         type="text" 
                         required 
@@ -549,7 +549,7 @@ export default function ServiceDetail() {
                       />
                     </div>
                     <div className="form-group" style={{ marginBottom: '20px' }}>
-                      <label style={{ display: 'block', marginBottom: '8px', color: '#8fa3bf', fontSize: '0.85rem' }}>Détails de votre besoin</label>
+                      <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-light)', fontSize: '0.85rem' }}>Détails de votre besoin</label>
                       <textarea 
                         required 
                         value={orderForm.details}
@@ -572,7 +572,7 @@ export default function ServiceDetail() {
         {showReviewModal && (
           <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="modal-content" style={{ background: '#1e2a4a', padding: '30px', borderRadius: '20px', width: '100%', maxWidth: '500px', position: 'relative' }}>
-              <button className="close-modal" onClick={() => setShowReviewModal(false)} style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', color: '#8fa3bf', cursor: 'pointer' }}><X size={24} /></button>
+              <button className="close-modal" onClick={() => setShowReviewModal(false)} style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', color: 'var(--text-light)', cursor: 'pointer' }}><X size={24} /></button>
               <h2 style={{ color: '#FF6A00', marginBottom: '20px' }}>Noter ce service</h2>
               {reviewSuccess ? (
                 <div style={{ textAlign: 'center', padding: '20px' }}><Star size={48} color="#00C853" style={{ marginBottom: '10px' }} /><p style={{ color: '#00C853', fontWeight: '600' }}>Merci pour votre avis !</p></div>
@@ -580,7 +580,7 @@ export default function ServiceDetail() {
                 <form onSubmit={handleAddReview}>
                   <div className="rating-select" style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '25px' }}>
                     {[1, 2, 3, 4, 5].map(num => (
-                      <button key={num} type="button" onClick={() => setNewReview({ ...newReview, rating: num })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: num <= newReview.rating ? '#FFD700' : '#8fa3bf' }}>
+                      <button key={num} type="button" onClick={() => setNewReview({ ...newReview, rating: num })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: num <= newReview.rating ? '#FFD700' : 'var(--text-light)' }}>
                         <Star size={32} fill={num <= newReview.rating ? '#FFD700' : 'none'} />
                       </button>
                     ))}
@@ -605,7 +605,7 @@ export default function ServiceDetail() {
               animate={{ scale: 1, opacity: 1 }}
               style={{ background: '#1a2236', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '500px', position: 'relative' }}
             >
-              <button className="close-modal" onClick={() => setShowReportModal(false)} style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', color: '#8fa3bf' }}><X size={24} /></button>
+              <button className="close-modal" onClick={() => setShowReportModal(false)} style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', color: 'var(--text-light)' }}><X size={24} /></button>
               <h2 style={{ color: '#ff4d4d', marginBottom: '15px' }}><Flag size={24} style={{ marginRight: '10px' }} /> Signaler ce service</h2>
               <form onSubmit={async (e) => {
                 e.preventDefault();
@@ -617,7 +617,7 @@ export default function ServiceDetail() {
                 }
               }}>
                 <div className="form-group" style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', marginBottom: '10px', color: '#8fa3bf' }}>Motif du signalement</label>
+                  <label style={{ display: 'block', marginBottom: '10px', color: 'var(--text-light)' }}>Motif du signalement</label>
                   <select 
                     value={reportReason} 
                     onChange={(e) => setReportReason(e.target.value)} 

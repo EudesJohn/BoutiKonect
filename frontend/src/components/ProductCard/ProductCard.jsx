@@ -164,7 +164,7 @@ export default function ProductCard({ product, showViews }) {
                   <span className="price-label">À partir de </span>
                   <span className="price-amount">{formatPrice(product.price)}</span>
                   {product.priceType && product.priceType !== 'Fixe' && (
-                    <span className="price-unit" style={{ fontSize: '0.9rem', color: '#8fa3bf', marginLeft: '2px' }}>
+                    <span className="price-unit" style={{ fontSize: '0.9rem', color: 'var(--text-light)', marginLeft: '2px' }}>
                       {product.priceType.startsWith('/') ? product.priceType : `/${product.priceType}`}
                     </span>
                   )}

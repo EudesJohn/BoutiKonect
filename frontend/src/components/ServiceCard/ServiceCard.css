@@ -92,7 +92,7 @@
 
 .service-description {
   font-size: 0.85rem;
-  color: #8fa3bf;
+  color: var(--text-light);
   line-height: 1.5;
   margin-bottom: var(--space-sm);
 }
@@ -102,7 +102,7 @@
   align-items: center;
   gap: var(--space-xs);
   font-size: 0.8rem;
-  color: #8fa3bf;
+  color: var(--text-light);
   margin-bottom: var(--space-sm);
 }
 
@@ -126,7 +126,7 @@
 
 .price-unit {
   font-size: 0.9rem;
-  color: #8fa3bf;
+  color: var(--text-light);
   margin-left: 2px;
 }
 
@@ -165,7 +165,7 @@
   background: #0d1b2a;
   border: 2px solid #00C853;
   border-radius: var(--radius-full);
-  color: #8fa3bf;
+  color: var(--text-light);
   transition: var(--transition-fast);
   cursor: pointer;
 }

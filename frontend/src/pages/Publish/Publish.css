@@ -37,7 +37,7 @@
 
 .become-seller-card > p {
   font-size: 16px;
-  color: #8fa3bf;
+  color: var(--text-light);
   margin-bottom: 32px;
   line-height: 1.6;
 }
@@ -79,7 +79,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: #8fa3bf;
+  color: var(--text-light);
   font-size: 14px;
   text-decoration: none;
   transition: color 0.2s;
@@ -152,7 +152,7 @@
 }
 
 .publish-header p {
-  color: #8fa3bf;
+  color: var(--text-light);
   margin: 0;
 }
 
@@ -176,7 +176,7 @@
   background: transparent;
   border: 1px solid transparent;
   border-radius: var(--radius-md);
-  color: #8fa3bf;
+  color: var(--text-light);
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
@@ -268,7 +268,7 @@
 }
 
 .form-input::placeholder {
-  color: #8fa3bf;
+  color: var(--text-light);
   font-weight: 400;
 }
 
@@ -459,12 +459,12 @@
 
 .seller-product-card .product-category {
   font-size: 0.75rem;
-  color: #8fa3bf;
+  color: var(--text-light);
 }
 
 .seller-product-card .product-stock {
   font-size: 0.75rem;
-  color: #8fa3bf;
+  color: var(--text-light);
   margin-left: var(--space-sm);
 }
 
@@ -559,7 +559,7 @@
 
 .product-category-cell .product-category {
   font-size: 0.8rem;
-  color: #8fa3bf;
+  color: var(--text-light);
   background: rgba(255, 106, 0, 0.1);
   padding: 4px 8px;
   border-radius: var(--radius-sm);
@@ -607,7 +607,7 @@
 .no-products {
   text-align: center;
   padding: var(--space-xl);
-  color: #8fa3bf;
+  color: var(--text-light);
 }
 
 .no-products svg {
@@ -791,7 +791,7 @@
 .promote-modal .close-btn {
   background: none;
   border: none;
-  color: #8fa3bf;
+  color: var(--text-light);
   cursor: pointer;
   padding: var(--space-xs);
   display: flex;
@@ -895,7 +895,7 @@
 .payment-note {
   text-align: center;
   font-size: 0.75rem;
-  color: #8fa3bf;
+  color: var(--text-light);
   margin-top: var(--space-md);
 }
 
@@ -916,7 +916,7 @@
 }
 
 .promotion-success p {
-  color: #8fa3bf;
+  color: var(--text-light);
   font-size: 0.95rem;
 }
 

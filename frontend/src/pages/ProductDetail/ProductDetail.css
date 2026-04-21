@@ -117,7 +117,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  color: #8fa3bf;
+  color: var(--text-light);
   margin-bottom: var(--space-lg);
 }
 
@@ -136,7 +136,7 @@
 
 .product-description {
   font-size: 1.1rem;
-  color: #8fa3bf;
+  color: var(--text-light);
   line-height: 1.7;
   margin-bottom: var(--space-xl);
   word-wrap: break-word;
@@ -222,7 +222,7 @@
   align-items: center;
   gap: var(--space-xs);
   font-size: 0.85rem;
-  color: #8fa3bf;
+  color: var(--text-light);
   flex-wrap: wrap;
 }
 
@@ -355,7 +355,7 @@
   padding: var(--space-sm) var(--space-md);
   background: transparent;
   border: none;
-  color: #8fa3bf;
+  color: var(--text-light);
   font-weight: 600;
   cursor: pointer;
   transition: var(--transition-fast);
@@ -406,7 +406,7 @@
 }
 
 .product-not-found p {
-  color: #8fa3bf;
+  color: var(--text-light);
   margin-bottom: var(--space-xl);
 }
 
@@ -500,7 +500,7 @@
 }
 
 .modal .form-input::placeholder {
-  color: #8fa3bf;
+  color: var(--text-light);
 }
 
 /* Responsive */
@@ -844,12 +844,12 @@
 }
 
 .star-btn:disabled:not(.active) svg {
-  color: #8fa3bf;
+  color: var(--text-light);
 }
 
 .rating-text {
   font-size: 0.9rem;
-  color: #8fa3bf;
+  color: var(--text-light);
 }
 
 .add-review-btn {
@@ -938,7 +938,7 @@
 .review-date {
   display: block;
   font-size: 0.8rem;
-  color: #8fa3bf;
+  color: var(--text-light);
 }
 
 .review-rating .stars-rating {
@@ -946,7 +946,7 @@
 }
 
 .review-comment {
-  color: #8fa3bf;
+  color: var(--text-light);
   line-height: 1.6;
 }
 
@@ -1062,5 +1062,5 @@
 }
 
 .review-success p {
-  color: #8fa3bf;
+  color: var(--text-light);
 }

@@ -82,7 +82,7 @@
 .price-label {
   font-size: 0.8rem;
   font-weight: 600;
-  color: #8fa3bf;
+  color: var(--text-light);
   margin-right: 4px;
 }
 
@@ -125,7 +125,7 @@
   background: #0d1b2a;
   border: 2px solid #FF6A00;
   border-radius: var(--radius-full);
-  color: #8fa3bf;
+  color: var(--text-light);
   transition: var(--transition-fast);
   cursor: pointer;
 }
@@ -183,7 +183,7 @@
 
 .product-description {
   font-size: 0.85rem;
-  color: #8fa3bf;
+  color: var(--text-light);
   line-height: 1.5;
   margin-bottom: var(--space-sm);
 }
@@ -193,7 +193,7 @@
   align-items: center;
   gap: var(--space-xs);
   font-size: 0.8rem;
-  color: #8fa3bf;
+  color: var(--text-light);
   margin-bottom: var(--space-sm);
 }
 
