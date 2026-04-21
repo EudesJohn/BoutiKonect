@@ -407,8 +407,9 @@ export default function Home() {
                   </motion.div>
                 ))
               ) : (
-                <div style={{ color: 'var(--text-light)', gridColumn: '1 / -1', textAlign: 'center', padding: '2rem 0' }}>
-                  Aucun service en vedette pour le moment.
+                <div style={{ color: 'var(--text-light)', width: '100%', textAlign: 'center', padding: '2rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                  <HelpCircle size={40} opacity={0.3} />
+                  <p>Aucun service en vedette pour le moment.</p>
                 </div>
               )}
             </motion.div>

@@ -418,7 +418,7 @@ export const AppProvider = ({ children }) => {
           console.error('Failed to load products:', err);
           setErrors(prev => ({ ...prev, products: err.message }));
         })
-        .finally(() => setDataLoading(prev => ({ ...prev, products: false, services: false })));
+        .finally(() => setDataLoading(prev => ({ ...prev, products: false })));
 
       // 3. Charger le reste en arrière-plan sans bloquer l'initialisation
       const fetchBackgroundData = async () => {

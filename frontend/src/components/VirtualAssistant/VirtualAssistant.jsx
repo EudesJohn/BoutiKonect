@@ -108,10 +108,18 @@ const VirtualAssistant = () => {
 
     // AI generated dynamic response
     const fetchResponse = async () => {
-      console.log("[DEBUG] Assistant calling API for prompt:", userMsg.text.substring(0, 20) + "...");
+      console.log("📨 Assistant: Sending prompt to AI...", userMsg.text.substring(0, 30));
       try {
-        const response = await getAIResponse(userMsg.text);
+        const responsePromise = getAIResponse(userMsg.text);
         
+        // Timeout de sécurité au cas où l'API ne répondrait jamais
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("Le serveur de l'assistant a mis trop de temps à répondre.")), 15000)
+        );
+
+        const response = await Promise.race([responsePromise, timeoutPromise]);
+        
+        console.log("📩 Assistant: Response received.");
         // Si la réponse commence par [DIAGNOSTIC], c'est une erreur silencieuse attrapée par getAIResponse
         const botMsg = {
           id: Date.now() + 1,
@@ -126,7 +134,7 @@ const VirtualAssistant = () => {
         const errorMsg = {
           id: Date.now() + 1,
           sender: 'bot',
-          text: "Désolé, je rencontre une petite difficulté technique pour me connecter à mon cerveau. 🧠💨 Veuillez réessayer dans un instant.",
+          text: `Désolé, je rencontre une difficulté technique (${err.message || "Erreur inconnue"}). 🧠💨 Veuillez réessayer dans un instant.`,
           timestamp: new Date().toISOString(),
           isError: true
         };
