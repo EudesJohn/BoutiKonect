@@ -195,11 +195,11 @@ export const AppProvider = ({ children }) => {
 
     const authTimeout = setTimeout(() => {
       if (!isInitialized) {
-        console.warn('⚠️ Auth check timed out after 20s (Slow connection detected)');
+        console.warn('⚠️ Auth check timed out after 10s');
         setAuthLoading(false);
         isInitialized = true;
       }
-    }, 20000);
+    }, 10000); // Réduit de 20s à 10s
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log(`🔐 Auth event: ${event}`, { 
@@ -208,14 +208,20 @@ export const AppProvider = ({ children }) => {
       });
       
       const currentUserId = session?.user?.id || null
-      const isResetPage = window.location.pathname === '/reset-password'
+      // ... same logic but faster handling ...
 
       if (event === 'INITIAL_SESSION' && !session) {
         const cached = await loadSecureUser();
-        if (!cached) setAuthLoading(false);
+        if (cached) {
+           // Optimistic set already done below, but ensure loading is off
+           setAuthLoading(false);
+        } else {
+           setAuthLoading(false);
+        }
       }
 
       if (event === 'SIGNED_IN' && lastSessionId.current === currentUserId) {
+        setAuthLoading(false)
         return
       }
 
@@ -242,7 +248,6 @@ export const AppProvider = ({ children }) => {
               }
             }
           } else if (profile) {
-            // Utilisation d'une fonction séparée pour l'auto-réparation afin d'éviter les TDZ lexiques
             const finalProfile = await handleSellerAutoRepair(profile, session.user.id);
 
             if (finalProfile.is_seller) {
@@ -257,11 +262,14 @@ export const AppProvider = ({ children }) => {
             saveSecureSeller(finalProfile.is_seller ? finalProfile : null)
           }
         } else {
-          setUser(null)
-          setSeller(null)
-          saveSecureUser(null)
-          saveSecureSeller(null)
-          secureClear()
+          // Only clear if we were logged in before - avoid clearing on first guest load
+          if (user || seller) {
+            setUser(null)
+            setSeller(null)
+            saveSecureUser(null)
+            saveSecureSeller(null)
+            secureClear()
+          }
         }
       } catch (err) {
         console.error('❌ Global auth listener error:', err)
@@ -282,9 +290,11 @@ export const AppProvider = ({ children }) => {
         if (cachedSeller) {
           setSeller(cachedSeller)
           setUser(null)
+          setAuthLoading(false) // Faster readiness if cached
         } else if (cachedUser) {
           setUser(cachedUser)
           setSeller(null)
+          setAuthLoading(false)
         }
       } catch (err) {
         console.error('Optimistic load error:', err)
@@ -297,7 +307,7 @@ export const AppProvider = ({ children }) => {
       clearTimeout(authTimeout);
       subscription.unsubscribe();
     }
-  }, [])
+  }, [user?.id, seller?.id])
 
   // === APP READINESS LOGIC ===
   useEffect(() => {
@@ -378,57 +388,72 @@ export const AppProvider = ({ children }) => {
     const fetchInitialData = async () => {
       setDataLoading(prev => ({ ...prev, products: true, services: true }))
       
-      const productsPromise = supabase.from('products').select('*')
+      // 1. Essayer de charger depuis le cache pour une réactivité instantanée
+      const cachedProducts = cacheService.get('initial_products')
+      if (cachedProducts) {
+        console.log('📦 Loaded products from cache');
+        setProducts(cachedProducts.map(mapItemFromDB))
+        // Si on a du cache, on peut déjà débloquer l'UI si auth est prêt
+        setDataLoading(prev => ({ ...prev, products: false }))
+      }
+
+      // 2. Fetch optimisé (limité et colonnes spécifiques)
+      const productsPromise = supabase
+        .from('products')
+        .select(`
+          id, title, price, images, price_type, is_promoted, promotion_end_date, 
+          seller_id, seller_name, seller_city, seller_neighborhood, seller_avatar, 
+          created_at, stock, category, description, whatsapp, type, latitude, longitude
+        `)
+        .order('created_at', { ascending: false })
+        .limit(100)
         .then(({ data, error }) => {
           if (error) throw error;
-          if (data) setProducts(data.map(mapItemFromDB));
+          if (data) {
+            const mapped = data.map(mapItemFromDB)
+            setProducts(mapped);
+            cacheService.set('initial_products', data, 12) // Cache pendant 12h
+          }
         })
         .catch(err => console.error('Failed to load products:', err))
-        .finally(() => setDataLoading(prev => ({ ...prev, products: false })));
+        .finally(() => setDataLoading(prev => ({ ...prev, products: false, services: false })));
 
-      const ordersPromise = supabase.from('orders').select('*')
-        .then(({ data }) => {
-          if (data) setOrders(data.map(mapOrderFromDB))
-        })
-        .catch(err => console.error('Failed to load orders:', err))
-        .finally(() => setDataLoading(prev => ({ ...prev, orders: false })));
+      // 3. Charger le reste en arrière-plan sans bloquer l'initialisation
+      const fetchBackgroundData = async () => {
+        try {
+          // Orders (limité aux plus récents pour la vitesse)
+          supabase.from('orders').select('*').order('created_at', { ascending: false }).limit(20)
+            .then(({ data }) => data && setOrders(data.map(mapOrderFromDB)));
 
-      const profilesPromise = supabase.from('profiles').select('*')
-        .then(({ data }) => {
-          if (data) setAllUsers(data)
-        })
-        .catch(err => console.error('Failed to load profiles:', err))
-        .finally(() => setDataLoading(prev => ({ ...prev, users: false })));
+          // Reviews
+          supabase.from('reviews').select('*').limit(50)
+            .then(({ data }) => data && setReviews(data.map(r => ({
+              id: r.id,
+              productId: r.product_id,
+              reviewerName: r.reviewer_name,
+              reviewerId: r.reviewer_id,
+              rating: r.rating,
+              comment: r.comment,
+              createdAt: r.created_at
+            }))));
 
-      const reviewsPromise = supabase.from('reviews').select('*')
-        .then(({ data }) => {
-          if (data) setReviews(data.map(r => ({
-            id: r.id,
-            productId: r.product_id,
-            reviewerName: r.reviewer_name,
-            reviewerId: r.reviewer_id,
-            rating: r.rating,
-            comment: r.comment,
-            createdAt: r.created_at
-          })))
-        })
-        .catch(err => console.error('Failed to load reviews:', err));
+          // Profiles (seulement si admin ou en tâche de fond lente)
+          if (checkIsAdmin(seller || user)) {
+            supabase.from('profiles').select('*').limit(100)
+              .then(({ data }) => data && setAllUsers(data));
+          }
+        } catch (e) {
+          console.warn('Background fetch error:', e);
+        } finally {
+          setDataLoading(prev => ({ ...prev, orders: false, users: false }));
+        }
+      };
 
-      const reportsPromise = supabase.from('admin_notifications').select('*').eq('type', 'report')
-        .then(({ data }) => {
-          if (data) setReports(data.map(r => ({ ...r, ...r.data, id: r.id })))
-        })
-        .catch(err => console.error('Failed to load reports:', err));
-      
-      // Sécurité pour les services : ils partagent souvent le chargement avec les produits
-      // On s'assure que dataLoading.services repasse à false
-      const servicesSafety = Promise.resolve().then(() => {
-        setDataLoading(prev => ({ ...prev, services: false }));
-      });
-
-      // On n'attend pas forcément tout, mais on gère les états
-      await Promise.allSettled([productsPromise, ordersPromise, profilesPromise, reviewsPromise, reportsPromise, servicesSafety]);
+      // On lance le fetch background mais on n'attend pas sa fin pour products
+      fetchBackgroundData();
+      await productsPromise;
     }
+
     fetchInitialData()
 
     const productsSub = supabase
