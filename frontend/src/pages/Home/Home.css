@@ -583,6 +583,8 @@
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none; /* Hide scrollbar Firefox */
+    min-height: 380px; /* Force visibility for cards */
+    width: 100%;
   }
 
   .products-grid::-webkit-scrollbar,

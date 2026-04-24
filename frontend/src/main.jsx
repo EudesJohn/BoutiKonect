@@ -3,15 +3,17 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import { AppProvider } from './context/AppContext.jsx'
 import './index.css'
-console.log('🚀 BoutiKonect App Lifecycle: v2.8 DeepForce Deployment');
 
 // Forcer la mise à jour du Service Worker si une nouvelle version est disponible
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(registrations => {
-    registrations.forEach(registration => {
-      registration.update()
-    })
-  })
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration failed: ', err));
+  });
+
+  // Rechargement automatique lors de la mise à jour du Service Worker
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    window.location.reload();
+  });
 }
 
 const root = createRoot(document.getElementById('root'));

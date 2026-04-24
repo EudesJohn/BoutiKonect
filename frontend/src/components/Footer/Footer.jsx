@@ -78,7 +78,6 @@ export default function Footer() {
           <div className="footer-bottom-links">
             <Link to="/terms">Conditions d'utilisation</Link>
             <Link to="/privacy">Politique de confidentialité</Link>
-            <span style={{ opacity: 0.4, fontSize: '0.8rem', marginLeft: '10px' }}>v2.8 DeepForce</span>
           </div>
         </div>
       </div>
