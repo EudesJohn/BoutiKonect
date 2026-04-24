@@ -1,5 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+export const maxDuration = 60; // Autoriser jusqu'à 60 secondes d'exécution pour Gemini
+
 /**
  * Endpoint Serverless pour l'assistant IA Gemini (Root v2.0)
  */

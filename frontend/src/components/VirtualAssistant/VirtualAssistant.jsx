@@ -114,7 +114,7 @@ const VirtualAssistant = () => {
         
         // Timeout de sécurité au cas où l'API ne répondrait jamais
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error("Le serveur de l'assistant a mis trop de temps à répondre.")), 15000)
+          setTimeout(() => reject(new Error("Le serveur de l'assistant a mis trop de temps à répondre.")), 60000)
         );
 
         const response = await Promise.race([responsePromise, timeoutPromise]);
