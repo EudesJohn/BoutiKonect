@@ -3,6 +3,7 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import { AppProvider } from './context/AppContext.jsx'
 import './index.css'
+console.log('🚀 BoutiKonect App Lifecycle: v2.8 DeepForce Deployment');
 
 // Forcer la mise à jour du Service Worker si une nouvelle version est disponible
 if ('serviceWorker' in navigator) {
