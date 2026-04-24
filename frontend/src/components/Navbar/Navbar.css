@@ -71,6 +71,12 @@
   text-shadow: 0 0 10px rgba(255, 106, 0, 0.5);
 }
 
+.logo-domain {
+  color: #FF6A00;
+  font-weight: 900;
+  text-shadow: 0 0 15px rgba(255, 106, 0, 0.6);
+}
+
 /* Search Bar */
 .navbar-search {
   flex: 1;
