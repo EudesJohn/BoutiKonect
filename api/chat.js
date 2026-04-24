@@ -69,7 +69,7 @@ export default async function handler(request, response) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const systemInstruction = `
       Tu es l'assistant virtuel EXPERT de BoutiKonect.bj, la plateforme de référence pour le commerce et les services au Bénin.
