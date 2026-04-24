@@ -4,11 +4,15 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
  * Endpoint Serverless pour l'assistant IA Gemini (Root v2.0)
  */
 export default async function handler(request, response) {
-  // CORS Headers explicites
+  // CORS Headers — restreint au domaine de production
+  const allowedOrigins = ['https://bouti-konect.vercel.app'];
+  const origin = request.headers.origin || request.headers.referer || '';
+  const isAllowed = allowedOrigins.some(o => origin.startsWith(o));
+  
   response.setHeader('Access-Control-Allow-Credentials', 'true');
-  response.setHeader('Access-Control-Allow-Origin', '*');
-  response.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  response.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+  response.setHeader('Access-Control-Allow-Origin', isAllowed ? origin : allowedOrigins[0]);
+  response.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
 
    // Gestion du CORS Preflight
   if (request.method === 'OPTIONS') {

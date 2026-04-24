@@ -130,8 +130,18 @@ export const sendPasswordResetEmail = async (email) => {
  */
 export const changePassword = async (currentPassword, newPassword) => {
   try {
-    // Supabase ne demande pas forcément l'ancien mot de passe pour update, 
-    // mais on pourrait re-signer pour plus de sécurité si besoin.
+    // 1. Vérifier l'ancien mot de passe en re-signant l'utilisateur
+    const { data: sessionData } = await supabase.auth.getSession();
+    const email = sessionData?.session?.user?.email;
+    if (!email) throw new Error('Session expirée. Veuillez vous reconnecter.');
+
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+      email,
+      password: currentPassword
+    });
+    if (verifyError) throw new Error('Le mot de passe actuel est incorrect.');
+
+    // 2. Mettre à jour le mot de passe
     const { error } = await supabase.auth.updateUser({ password: newPassword })
     if (error) throw error
     return { success: true }

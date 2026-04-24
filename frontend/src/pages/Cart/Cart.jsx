@@ -89,6 +89,14 @@ export default function Cart() {
     setIsSubmitting(true)
     const currentUser = user || seller
     
+    // Bloquer les commandes sans authentification
+    if (!currentUser) {
+      setErrors({ general: 'Vous devez être connecté pour passer une commande.' })
+      setIsSubmitting(false)
+      navigate('/login')
+      return
+    }
+
     try {
       // Create an order for each product in cart
       const results = []

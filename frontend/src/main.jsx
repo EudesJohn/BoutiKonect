@@ -4,15 +4,15 @@ import App from './App.jsx'
 import { AppProvider } from './context/AppContext.jsx'
 import './index.css'
 
-// Forcer la mise à jour du Service Worker si une nouvelle version est disponible
+// VitePWA gère l'enregistrement du Service Worker automatiquement.
+// On écoute uniquement le changement de controller pour forcer le refresh.
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration failed: ', err));
-  });
-
-  // Rechargement automatique lors de la mise à jour du Service Worker
+  let refreshing = false;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    window.location.reload();
+    if (!refreshing) {
+      refreshing = true;
+      window.location.reload();
+    }
   });
 }
 

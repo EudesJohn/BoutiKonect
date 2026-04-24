@@ -3,7 +3,7 @@
  */
 import { supabase } from '../supabase/client'
 
-const ADMIN_EMAILS = [
+export const ADMIN_EMAILS = [
   'eudesjohn650@gmail.com',
   'BoutiKonectbj229@gmail.com',
   'maboutiquebj@gmail.com'

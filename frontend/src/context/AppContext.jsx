@@ -1,9 +1,9 @@
 import { createContext, useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { supabase } from '../supabase/client'
-import { isAdminConfigured, getAdminInfo } from '../services/adminAuth'
+import { isAdminConfigured, getAdminInfo, ADMIN_EMAILS } from '../services/adminAuth'
 import { logoutUser as authLogoutUser } from '../services/authService'
 import { cacheService } from '../services/cacheService'
-import { initSecureStorage, saveSecureUser, loadSecureUser, secureRemoveItem, saveSecureCart, loadSecureCart, secureSetItem, secureGetItem, loadSecureSeller, saveSecureSeller, secureClear } from '../services/secureStorage'
+import { saveSecureUser, loadSecureUser, secureRemoveItem, saveSecureCart, loadSecureCart, secureSetItem, secureGetItem, loadSecureSeller, saveSecureSeller, secureClear } from '../services/secureStorage'
 import { PROMOTION_PRICES } from '../services/paymentService'
 import { cities, categories, serviceCategories } from './constants'
 
@@ -18,11 +18,7 @@ const formatPrice = (price) => {
 }
 
 export const AppProvider = ({ children }) => {
-  const ADMIN_EMAILS = [
-    'eudesjohn650@gmail.com',
-    'BoutiKonectbj229@gmail.com',
-    'maboutiquebj@gmail.com'
-  ]
+  // ADMIN_EMAILS importé depuis adminAuth.js (source unique de vérité)
 
   const checkIsAdmin = (profile) => {
     if (!profile) return false;
@@ -307,7 +303,8 @@ export const AppProvider = ({ children }) => {
       clearTimeout(authTimeout);
       subscription.unsubscribe();
     }
-  }, [user?.id, seller?.id])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // === APP READINESS LOGIC ===
   useEffect(() => {
@@ -490,7 +487,7 @@ export const AppProvider = ({ children }) => {
         });
         if (payload.eventType === 'INSERT') setReviews(prev => [mapRes(payload.new), ...prev])
         else if (payload.eventType === 'UPDATE') setReviews(prev => prev.map(r => r.id === payload.new.id ? mapRes(payload.new) : r))
-        else if (payload.eventType === 'DELETE') setReviews(prev => prev.filter(r => r.id === payload.old.id))
+        else if (payload.eventType === 'DELETE') setReviews(prev => prev.filter(r => r.id !== payload.old.id))
       })
       .subscribe()
 
@@ -499,7 +496,8 @@ export const AppProvider = ({ children }) => {
       supabase.removeChannel(profilesSub)
       supabase.removeChannel(reviewsSub)
     }
-  }, [user?.id, seller?.id])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     const currentUser = seller || user
@@ -550,7 +548,8 @@ export const AppProvider = ({ children }) => {
       }
     };
     fetchRecs();
-  }, [seller, user, products]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seller?.id, user?.id]);
 
   // Nettoyage de l'ancien effet hideAppLoader redondant
   useEffect(() => {
