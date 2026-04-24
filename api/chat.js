@@ -56,7 +56,7 @@ export default async function handler(request, response) {
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
-...
+
     // Sécurisation du contexte pour éviter les injections ou les erreurs de parse
     const safeProducts = Array.isArray(context.products) ? context.products.slice(0, 10).map(p => ({ title: p.title, category: p.category, price: p.price })) : [];
     const safeServices = Array.isArray(context.services) ? context.services.slice(0, 10).map(s => ({ title: s.title, category: s.category, price: s.price })) : [];
