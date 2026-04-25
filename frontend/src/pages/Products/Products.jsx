@@ -321,8 +321,11 @@ export default function Products() {
               <div className="no-products">
                 <div className="no-products-icon">🔍</div>
                 <h3>Aucun produit trouvé</h3>
-                <p>Essayez de modifier vos filtres</p>
-                <button className="btn-clear-filters" onClick={clearFilters}>Effacer les filtres</button>
+                <p>Essayez de modifier vos filtres ou d'actualiser la page.</p>
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '1rem', flexWrap: 'wrap' }}>
+                  <button className="btn btn-outline" onClick={clearFilters}>Effacer les filtres</button>
+                  <button className="btn btn-primary" onClick={() => { localStorage.clear(); window.location.reload(); }}>Actualiser</button>
+                </div>
               </div>
             )}
             

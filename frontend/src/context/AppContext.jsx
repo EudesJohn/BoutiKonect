@@ -814,8 +814,12 @@ export const AppProvider = ({ children }) => {
         }
       }
       return true;
-    }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-  }, [products, filters, userLocation]);
+    }).sort((a, b) => {
+      const dateA = parseDate(a.created_at);
+      const dateB = parseDate(b.created_at);
+      return dateB.getTime() - dateA.getTime();
+    });
+  }, [products, filters, userLocation, parseDate]);
 
   const value = {
     seller, user, products, services, reviews, orders, allUsers, favorites, cart,
@@ -868,7 +872,11 @@ export const AppProvider = ({ children }) => {
     messages,
     deleteUser,
     resolveReport,
-    recommendations
+    recommendations,
+    hardRefresh: () => {
+      cacheService.clearAll();
+      window.location.reload();
+    }
   }
 
   return (

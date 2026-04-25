@@ -51,7 +51,11 @@ export default defineConfig({
         runtimeCaching: [
           {
             urlPattern: /^\/api\/.*$/,
-            handler: 'NetworkOnly', // Toujours aller sur le réseau pour l'API
+            handler: 'NetworkOnly',
+          },
+          {
+            urlPattern: /^https:\/\/.*\.supabase\.co\/.*$/,
+            handler: 'NetworkOnly',
           }
         ]
       }

@@ -49,7 +49,7 @@ export default function Home() {
   // Get recent products
   const recentProducts = [...products]
     .filter(p => p.type === 'product' || !p.type)
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .sort((a, b) => parseDate(b.createdAt) - parseDate(a.createdAt))
     .slice(0, 4)
 
   // ----------- SERVICES -----------
@@ -70,7 +70,7 @@ export default function Home() {
 
   // Get recent services
   const recentServices = [...services].sort((a, b) => 
-    new Date(b.createdAt) - new Date(a.createdAt)
+    parseDate(b.createdAt) - parseDate(a.createdAt)
   ).slice(0, 4)
 
   const containerVariants = {
@@ -325,11 +325,36 @@ export default function Home() {
               whileInView="visible"
               viewport={{ once: true, amount: 0.1 }}
             >
-              {featuredProducts.map((product, index) => (
-                <motion.div key={product.id} variants={itemVariants}>
-                  <ProductCard product={product} />
-                </motion.div>
-              ))}
+              {featuredProducts.length > 0 ? (
+                featuredProducts.map((product, index) => (
+                  <motion.div key={product.id} variants={itemVariants}>
+                    <ProductCard product={product} />
+                  </motion.div>
+                ))
+              ) : (
+                <div style={{ 
+                  gridColumn: '1 / -1', 
+                  textAlign: 'center', 
+                  padding: '3rem 1rem',
+                  background: 'rgba(255,255,255,0.02)',
+                  borderRadius: '12px',
+                  border: '1px dashed rgba(255,255,255,0.1)'
+                }}>
+                  <p style={{ color: 'var(--text-light)', marginBottom: '1rem' }}>
+                    Aucun produit trouvé. Cela peut être dû à un problème de connexion.
+                  </p>
+                  <button 
+                    onClick={() => {
+                      cacheService.clearAll();
+                      window.location.reload();
+                    }}
+                    className="btn btn-outline"
+                    style={{ padding: '0.5rem 1.5rem' }}
+                  >
+                    Actualiser la page
+                  </button>
+                </div>
+              )}
             </motion.div>
           )}
         </div>
