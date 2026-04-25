@@ -171,7 +171,7 @@ const VirtualAssistant = () => {
                   <img src={assistantAvatar} alt="AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0 }}>Assistant BoutiKonect <small style={{ fontSize: '10px', opacity: 0.7 }}>v2.3</small></h3>
+                  <h3 style={{ margin: 0 }}>Assistant BoutiKonect <small style={{ fontSize: '10px', opacity: 0.7 }}>v2.4</small></h3>
                   <span className="online-status">En ligne</span>
                 </div>
               </div>

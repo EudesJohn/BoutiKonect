@@ -14,7 +14,7 @@ import './ServiceDetail.css'
 export default function ServiceDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { getServiceById, fetchSingleProduct, dataLoading, user, seller, toggleFavorite, isFavorite, reviews: allReviews, createOrder, reportProduct, formatPrice } = useContext(AppContext)
+  const { getServiceById, fetchSingleProduct, dataLoading, user, seller, toggleFavorite, isFavorite, reviews: allReviews, createOrder, reportProduct, formatPrice, parseDate } = useContext(AppContext)
   
   const currentUser = user || seller
   const [service, setService] = useState(null)
@@ -49,16 +49,6 @@ export default function ServiceDetail() {
     }
   }, [service?.id, user?.id, seller?.id, service?.sellerId])
 
-  const parseDate = (dateValue) => {
-    if (!dateValue) return new Date();
-    if (typeof dateValue === 'object' && dateValue.toDate) {
-      return dateValue.toDate();
-    }
-    if (dateValue.seconds) {
-      return new Date(dateValue.seconds * 1000);
-    }
-    return new Date(dateValue);
-  }
 
   const reportReasons = [
     "Contenu inapproprié ou offensant",

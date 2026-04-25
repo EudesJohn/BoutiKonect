@@ -10,12 +10,19 @@ const UpdatePrompt = () => {
     updateServiceWorker,
   } = useRegisterSW({
     onRegistered(r) {
-      console.log('SW Registered: ', r);
-      // Optionnel : vérifier les mises à jour périodiquement
-      if (r) {
-        setInterval(() => {
-          r.update();
-        }, 60 * 60 * 1000); // Toutes les heures
+      try {
+        console.log('SW Registered: ', r);
+        if (r && typeof r.update === 'function') {
+          setInterval(() => {
+            try {
+              r.update();
+            } catch (e) {
+              console.warn('SW update check failed:', e);
+            }
+          }, 60 * 60 * 1000); 
+        }
+      } catch (err) {
+        console.error('SW registration callback error:', err);
       }
     },
     onRegisterError(error) {

@@ -11,7 +11,7 @@ import './ProductDetail.css'
 export default function ProductDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { getProductById, fetchSingleProduct, dataLoading, addToCart, toggleFavorite, isFavorite, createOrder, user, seller, reportProduct, reviews: allReviews, decrementProductStock, formatPrice } = useContext(AppContext)
+  const { getProductById, fetchSingleProduct, dataLoading, addToCart, toggleFavorite, isFavorite, createOrder, user, seller, reportProduct, reviews: allReviews, decrementProductStock, formatPrice, parseDate } = useContext(AppContext)
   const [localProduct, setLocalProduct] = useState(null)
   const [loadingLocalProduct, setLoadingLocalProduct] = useState(true)
   const [showOrderModal, setShowOrderModal] = useState(false)
@@ -58,16 +58,6 @@ export default function ProductDetail() {
     }
   }, [product?.id, user?.id, seller?.id, product?.sellerId])
 
-  const parseDate = (dateValue) => {
-    if (!dateValue) return new Date();
-    if (typeof dateValue === 'object' && dateValue.toDate) {
-      return dateValue.toDate();
-    }
-    if (dateValue.seconds) {
-      return new Date(dateValue.seconds * 1000);
-    }
-    return new Date(dateValue);
-  }
   
   const productFromState = useMemo(() => getProductById(id), [id, getProductById])
   const product = localProduct || productFromState
