@@ -8,6 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      selfDestroying: true, // Désactive le SW sur tous les clients et le supprime
       includeAssets: ['favicon.svg', 'vite.svg'],
       manifest: {
         name: 'BoutiKonect.bj - Ventes & Services au Bénin',
@@ -46,19 +47,6 @@ export default defineConfig({
           }
         ],
       },
-      workbox: {
-        navigateFallbackDenylist: [/^\/api/],
-        runtimeCaching: [
-          {
-            urlPattern: /^\/api\/.*$/,
-            handler: 'NetworkOnly',
-          },
-          {
-            urlPattern: /^https:\/\/.*\.supabase\.co\/.*$/,
-            handler: 'NetworkOnly',
-          }
-        ]
-      }
     })
   ],
   server: {

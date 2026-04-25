@@ -78,6 +78,24 @@ export const AppProvider = ({ children }) => {
 
   // GESTION DE LA SESSION SUPABASE
   useEffect(() => {
+    // Logic de réinitialisation d'urgence via URL (?reset=true)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('reset') === 'true') {
+      console.log('🧹 Emergency Reset triggered via URL');
+      cacheService.clearAll();
+      secureClear();
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          for (let registration of registrations) registration.unregister();
+        });
+      }
+      // Remove the parameter and reload
+      const newUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+      window.location.reload();
+      return;
+    }
+
     console.log('🏗️ Registering auth state listener');
     let isInitialized = false;
 
