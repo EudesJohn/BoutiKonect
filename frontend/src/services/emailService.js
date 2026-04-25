@@ -7,7 +7,7 @@ import authService from './authService'
 
 const getAppUrl = () => {
   const url = import.meta.env.VITE_APP_URL || window.location.origin;
-  return url.replace(/\/$/, '') || 'https://bouti-konect.vercel.app'; 
+  return url.replace(/\/$/, '') || 'https://boutikonect.vercel.app'; 
 };
 
 /**

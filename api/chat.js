@@ -7,7 +7,11 @@ export const maxDuration = 60; // Autoriser jusqu'à 60 secondes d'exécution po
  */
 export default async function handler(request, response) {
   // CORS Headers — restreint au domaine de production
-  const allowedOrigins = ['https://bouti-konect.vercel.app'];
+  const allowedOrigins = [
+    'https://bouti-konect.vercel.app', 
+    'https://boutikonect.vercel.app',
+    'https://maboutiquebj-85bf3.web.app'
+  ];
   const origin = request.headers.origin || request.headers.referer || '';
   const isAllowed = allowedOrigins.some(o => origin.startsWith(o));
   

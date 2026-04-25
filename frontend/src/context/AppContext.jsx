@@ -200,11 +200,19 @@ export const AppProvider = ({ children }) => {
 
     const authTimeout = setTimeout(() => {
       if (!isInitialized) {
-        console.warn('⚠️ Auth check timed out after 10s');
+        console.warn('⚠️ Auth check timed out after 10s (Check network or Supabase status)');
         setAuthLoading(false);
         isInitialized = true;
       }
-    }, 10000); // Réduit de 20s à 10s
+    }, 10000); 
+
+    // Early exit if supabase is not properly initialized
+    if (!supabase || !supabase.auth) {
+      console.error('🛑 Supabase client is invalid. initialization failed.');
+      setAuthLoading(false);
+      setDataLoading({ products: false, users: false, orders: false, services: false });
+      return;
+    }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log(`🔐 Auth event: ${event}`, { 
@@ -323,6 +331,11 @@ export const AppProvider = ({ children }) => {
         console.warn('⚠️ Safety Timeout: Forcing App Ready after 8s.');
         setIsAppReady(true);
         if (window.hideAppLoader) window.hideAppLoader();
+        
+        // Diagnostic for the user
+        if (dataLoading.products) {
+          showToast("La connexion est lente, chargement en arrière-plan...", "info");
+        }
       }
     }, 8000);
 
@@ -477,11 +490,19 @@ export const AppProvider = ({ children }) => {
 
     const profilesSub = supabase
       .channel('public:profiles')
-      .on('postgres_changes', { event: 'UPDATE', table: 'profiles' }, (payload) => {
-        const updatedProfile = payload.new
-        if (user && updatedProfile.id === user.id) setUser(prev => ({ ...prev, ...updatedProfile }))
-        if (seller && updatedProfile.id === seller.id) setSeller(prev => ({ ...prev, ...updatedProfile }))
-        setAllUsers(prev => prev.map(u => u.id === updatedProfile.id ? updatedProfile : u))
+      .on('postgres_changes', { event: '*', table: 'profiles' }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setAllUsers(prev => [payload.new, ...prev])
+        } else if (payload.eventType === 'UPDATE') {
+          const updatedProfile = payload.new
+          if (user && updatedProfile.id === user.id) setUser(prev => ({ ...prev, ...updatedProfile }))
+          if (seller && updatedProfile.id === seller.id) setSeller(prev => ({ ...prev, ...updatedProfile }))
+          setAllUsers(prev => prev.map(u => u.id === updatedProfile.id ? updatedProfile : u))
+        } else if (payload.eventType === 'DELETE') {
+          setAllUsers(prev => prev.filter(u => u.id !== payload.old.id))
+          if (user && payload.old.id === user.id) authLogoutUser()
+          if (seller && payload.old.id === seller.id) authLogoutUser()
+        }
       })
       .subscribe()
 
@@ -530,6 +551,22 @@ export const AppProvider = ({ children }) => {
       if (checkIsAdmin(currentUser)) {
         const { data: usersData } = await supabase.from('profiles').select('*')
         if (usersData) setAllUsers(usersData)
+
+        const { data: notificationsData } = await supabase
+          .from('admin_notifications')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(100)
+        
+        if (notificationsData) {
+          setReports(notificationsData.map(n => ({
+            id: n.id,
+            type: n.type,
+            ...n.data,
+            read: n.read,
+            createdAt: n.created_at
+          })))
+        }
       }
       setDataLoading(prev => ({ ...prev, orders: false, users: false }))
     }
@@ -538,14 +575,51 @@ export const AppProvider = ({ children }) => {
     const ordersSub = supabase
       .channel('public:orders')
       .on('postgres_changes', { event: '*', table: 'orders' }, (payload) => {
-        if (payload.eventType === 'INSERT' && (payload.new.seller_id === currentUser.id || payload.new.buyer_id === currentUser.id)) {
-          setOrders(prev => [payload.new, ...prev])
-          if (payload.new.seller_id === currentUser.id) showToast(`Nouvelle commande reçue !`, 'order')
+        const isAdmin = checkIsAdmin(currentUser)
+        const isRelated = payload.new?.seller_id === currentUser.id || payload.new?.buyer_id === currentUser.id || 
+                          payload.old?.seller_id === currentUser.id || payload.old?.buyer_id === currentUser.id;
+
+        if (payload.eventType === 'INSERT') {
+          if (isAdmin || isRelated) {
+            setOrders(prev => [mapOrderFromDB(payload.new), ...prev])
+            if (payload.new.seller_id === currentUser.id) showToast(`Nouvelle commande reçue !`, 'order')
+            else if (isAdmin) showToast(`Nouvelle commande sur la plateforme`, 'info')
+          }
+        } else if (payload.eventType === 'UPDATE') {
+          if (isAdmin || isRelated) {
+            setOrders(prev => prev.map(o => o.id === payload.new.id ? mapOrderFromDB(payload.new) : o))
+          }
+        } else if (payload.eventType === 'DELETE') {
+          setOrders(prev => prev.filter(o => o.id !== payload.old.id))
         }
       })
       .subscribe()
 
-    return () => supabase.removeChannel(ordersSub)
+    const adminSub = checkIsAdmin(currentUser) ? supabase
+      .channel('public:admin_notifications')
+      .on('postgres_changes', { event: '*', table: 'admin_notifications' }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          const newReport = {
+            id: payload.new.id,
+            type: payload.new.type,
+            ...payload.new.data,
+            read: payload.new.read,
+            createdAt: payload.new.created_at
+          }
+          setReports(prev => [newReport, ...prev])
+          showToast(`Nouveau signalement ou demande reçu`, 'warning')
+        } else if (payload.eventType === 'UPDATE') {
+          setReports(prev => prev.map(r => r.id === payload.new.id ? { ...r, read: payload.new.read } : r))
+        } else if (payload.eventType === 'DELETE') {
+          setReports(prev => prev.filter(r => r.id !== payload.old.id))
+        }
+      })
+      .subscribe() : null
+
+    return () => {
+      supabase.removeChannel(ordersSub)
+      if (adminSub) supabase.removeChannel(adminSub)
+    }
   }, [seller, user])
 
   useEffect(() => {
