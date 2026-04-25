@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { Store } from 'lucide-react'
 import './SplashScreen.css'
 
-export default function SplashScreen() {
+export default function SplashScreen({ dataLoading = {}, errors = {} }) {
   const [showBypass, setShowBypass] = React.useState(false)
 
   React.useEffect(() => {
@@ -63,6 +63,29 @@ export default function SplashScreen() {
         >
           Connexion sécurisée en cours...
         </motion.p>
+
+        {dataLoading.products && (
+          <div style={{
+            marginTop: '20px',
+            padding: '15px',
+            background: 'rgba(255, 23, 68, 0.1)',
+            border: '1px solid rgba(255, 23, 68, 0.2)',
+            borderRadius: '12px',
+            fontSize: '0.8rem',
+            color: '#ff80ab',
+            maxWidth: '300px'
+          }}>
+            <p style={{ margin: '0 0 10px 0' }}>🔍 Diagnostic de connexion :</p>
+            <p style={{ margin: '0', opacity: 0.8 }}>
+              {errors.products ? `Erreur: ${errors.products}` : "Tentative de connexion en cours..."}
+            </p>
+            {errors.products?.includes('fetch') && (
+              <p style={{ marginTop: '10px', fontSize: '0.75rem', color: '#fff' }}>
+                Note: Une erreur 'fetch' indique souvent un blocage réseau par votre opérateur ou un problème de DNS.
+              </p>
+            )}
+          </div>
+        )}
 
         {showBypass && (
           <motion.div 

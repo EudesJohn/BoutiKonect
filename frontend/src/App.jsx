@@ -47,7 +47,8 @@ function App() {
   const location = useLocation()
 
   if (!isAppReady) {
-    return <SplashScreen />
+    const { dataLoading, errors } = useContext(AppContext)
+    return <SplashScreen dataLoading={dataLoading} errors={errors} />
   }
 
   return (
