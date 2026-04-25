@@ -20,6 +20,17 @@
     <!-- Script FedaPay - Requis pour le paiement -->
     <script src="https://cdn.fedapay.com/checkout.js?v=1.1.7" defer></script>
     
+    <script>
+      // Force unregistration of all service workers on every load for now
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for(let registration of registrations) {
+            registration.unregister();
+            console.log('SW Unregistered aggressively');
+          }
+        });
+      }
+    </script>
     <title>BoutiKonect.bj - Marketplace Benin</title>
   </head>
   <body>
