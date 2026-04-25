@@ -4,6 +4,13 @@ import { Store } from 'lucide-react'
 import './SplashScreen.css'
 
 export default function SplashScreen() {
+  const [showBypass, setShowBypass] = React.useState(false)
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => setShowBypass(true), 6000)
+    return () => clearTimeout(timer)
+  }, [])
+
   return (
     <div className="splash-screen">
       <div className="splash-content">
@@ -36,6 +43,17 @@ export default function SplashScreen() {
         >
           Connexion sécurisée en cours...
         </motion.p>
+
+        {showBypass && (
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="splash-bypass-btn"
+            onClick={() => window.location.reload()}
+          >
+            Problème de connexion ? Réessayer
+          </motion.button>
+        )}
       </div>
       
       <div className="splash-footer">
