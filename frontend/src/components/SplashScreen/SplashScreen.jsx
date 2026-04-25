@@ -11,6 +11,26 @@ export default function SplashScreen() {
     return () => clearTimeout(timer)
   }, [])
 
+  const handleReset = async () => {
+    try {
+      // Nettoyer le cache applicatif
+      cacheService.clearAll();
+      
+      // Désenregistrer tous les Service Workers
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (let registration of registrations) {
+          await registration.unregister();
+        }
+      }
+      
+      // Recharger la page
+      window.location.reload(true);
+    } catch (e) {
+      window.location.reload();
+    }
+  }
+
   return (
     <div className="splash-screen">
       <div className="splash-content">
@@ -45,14 +65,25 @@ export default function SplashScreen() {
         </motion.p>
 
         {showBypass && (
-          <motion.button
+          <motion.div 
+            className="splash-actions"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="splash-bypass-btn"
-            onClick={() => window.location.reload()}
           >
-            Problème de connexion ? Réessayer
-          </motion.button>
+            <button
+              className="splash-bypass-btn"
+              onClick={() => window.location.reload()}
+            >
+              Réessayer
+            </button>
+            <button
+              className="splash-reset-btn"
+              onClick={handleReset}
+              title="Supprime les fichiers temporaires et redémarre"
+            >
+              Réinitialiser tout
+            </button>
+          </motion.div>
         )}
       </div>
       
