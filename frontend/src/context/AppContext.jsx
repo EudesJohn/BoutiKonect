@@ -29,7 +29,16 @@ export const AppProvider = ({ children }) => {
 
   const parseDate = useCallback((dateValue) => {
     if (!dateValue) return new Date();
-    return new Date(dateValue);
+    // Handle Supabase/ISO format and ensure it's compatible with all browsers
+    let normalizedDate = dateValue;
+    if (typeof dateValue === 'string') {
+      // Safari fix: replace space with 'T' if it looks like a date string but missing 'T'
+      if (dateValue.includes(' ') && !dateValue.includes('T')) {
+        normalizedDate = dateValue.replace(' ', 'T');
+      }
+    }
+    const d = new Date(normalizedDate);
+    return isNaN(d.getTime()) ? new Date() : d;
   }, []);
 
   const [seller, setSeller] = useState(null)
@@ -308,14 +317,14 @@ export const AppProvider = ({ children }) => {
 
   // === APP READINESS LOGIC ===
   useEffect(() => {
-    // Sécurité globale : force l'affichage après 25s même si tout n'est pas prêt
+    // Sécurité globale : force l'affichage après 8s même si tout n'est pas prêt
     const globalSafetyTimeout = setTimeout(() => {
       if (!isAppReady) {
-        console.warn('⚠️ Safety Timeout: Forcing App Ready after 25s.');
+        console.warn('⚠️ Safety Timeout: Forcing App Ready after 8s.');
         setIsAppReady(true);
         if (window.hideAppLoader) window.hideAppLoader();
       }
-    }, 25000);
+    }, 8000);
 
     // L'app est prête normalement quand l'auth et les produits sont là
     if (!authLoading && !dataLoading.products) {
@@ -381,40 +390,42 @@ export const AppProvider = ({ children }) => {
     persistCart()
   }, [cart])
 
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      setDataLoading(prev => ({ ...prev, products: true, services: true }))
-      
-      // 1. Chargement optimiste (Cache)
-      const cachedProducts = cacheService.get('initial_products')
-      if (cachedProducts) {
-        console.log('📦 Loaded products from cache (Optimistic)');
-        setProducts(cachedProducts.map(mapItemFromDB))
-        // NOTE: On laisse dataLoading.products à true pour que le Splash Screen attende le réseau
-      }
+  const fetchInitialData = async () => {
+    setDataLoading(prev => ({ ...prev, products: true, services: true }))
+    
+    // 1. Chargement optimiste (Cache)
+    const cachedProducts = cacheService.get('initial_products')
+    if (cachedProducts) {
+      console.log('📦 Loaded products from cache (Optimistic)');
+      setProducts(cachedProducts.map(mapItemFromDB))
+      // On permet à l'app de s'afficher plus vite si on a du cache
+      setDataLoading(prev => ({ ...prev, products: false, services: false }))
+    }
 
-      // 2. Fetch optimisé (limité)
-      const productsPromise = supabase
-        .from('products')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(100)
-        .then(({ data, error }) => {
-          if (error) {
-            console.error('❌ Failed to load products from network:', error);
-            throw error;
-          }
-          if (data) {
-            const mapped = data.map(mapItemFromDB)
-            setProducts(mapped);
-            cacheService.set('initial_products', data, 12) // Cache pendant 12h
-          }
-        })
-        .catch(err => {
-          console.error('Failed to load products:', err);
-          setErrors(prev => ({ ...prev, products: err.message }));
-        })
-        .finally(() => setDataLoading(prev => ({ ...prev, products: false, services: false })));
+    // 2. Fetch optimisé (limité)
+    const productsPromise = supabase
+      .from('products')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100)
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('❌ Failed to load products from network:', error);
+          throw error;
+        }
+        if (data) {
+          const mapped = data.map(mapItemFromDB)
+          setProducts(mapped);
+          cacheService.set('initial_products', data, 12) // Cache pendant 12h
+        }
+      })
+      .catch(err => {
+        console.error('Failed to load products:', err);
+        setErrors(prev => ({ ...prev, products: err.message }));
+      })
+      .finally(() => {
+        setDataLoading(prev => ({ ...prev, products: false, services: false }))
+      });
 
       // 3. Charger le reste en arrière-plan sans bloquer l'initialisation
       const fetchBackgroundData = async () => {

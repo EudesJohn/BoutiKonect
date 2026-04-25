@@ -5,8 +5,6 @@
   border-radius: var(--radius-lg);
   overflow: hidden;
   transition: var(--transition-normal);
-  writing-mode: horizontal-tb;
-  text-orientation: mixed;
 }
 
 .product-card:hover {

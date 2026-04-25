@@ -186,7 +186,7 @@ export default function Home() {
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.1 }}
           >
             <motion.div className="feature-card" variants={itemVariants}>
               <div className="feature-icon">
@@ -220,7 +220,7 @@ export default function Home() {
             className="section-header"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.1 }}
           >
             <h2>Catégories Populaires</h2>
 <p>Parcourez nos catégories pour trouver ce que vous recherchez</p>
@@ -231,7 +231,7 @@ export default function Home() {
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.1 }}
           >
             {categories.map((category, index) => (
               <motion.div
@@ -262,7 +262,7 @@ export default function Home() {
             className="section-header"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.1 }}
           >
             <h2>Catégories des services populaires</h2>
             <p>Découvrez les services les plus demandés près de chez vous</p>
@@ -273,7 +273,7 @@ export default function Home() {
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.1 }}
           >
             {serviceCategories.map((category, index) => (
               <motion.div
@@ -304,7 +304,7 @@ export default function Home() {
             className="section-header"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.1 }}
           >
             <div>
               <h2>Produits en Vedette</h2>
@@ -323,7 +323,7 @@ export default function Home() {
               variants={containerVariants}
               initial="hidden"
               whileInView="visible"
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.1 }}
             >
               {featuredProducts.map((product, index) => (
                 <motion.div key={product.id} variants={itemVariants}>
@@ -343,7 +343,7 @@ export default function Home() {
               className="section-header"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.1 }}
             >
               <div>
                 <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -359,7 +359,7 @@ export default function Home() {
               variants={containerVariants}
               initial="hidden"
               whileInView="visible"
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.1 }}
             >
               {recommendations.map((product) => (
                 <motion.div key={`rec-${product.id}`} variants={itemVariants}>
@@ -379,7 +379,7 @@ export default function Home() {
             className="section-header"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.1 }}
           >
             <div>
               <h2>Services en Vedette</h2>
@@ -398,7 +398,7 @@ export default function Home() {
               variants={containerVariants}
               initial="hidden"
               whileInView="visible"
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.1 }}
             >
               {displayServices.length > 0 ? (
                 displayServices.map((service) => (
@@ -425,7 +425,7 @@ export default function Home() {
               className="cta-content"
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.1 }}
             >
               <div className="cta-glow"></div>
               <h2>Commencez à Vendre ou Proposer vos Services</h2>
@@ -448,7 +448,7 @@ export default function Home() {
             className="section-header"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.1 }}
           >
             <div>
               <h2>Nouveautés</h2>
@@ -480,7 +480,7 @@ export default function Home() {
             className="section-header"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.1 }}
           >
             <div>
               <h2>Nouveaux Services</h2>

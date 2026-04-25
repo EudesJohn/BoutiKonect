@@ -576,26 +576,30 @@
 
   .products-grid,
   .recent-grid {
-    display: flex;
-    overflow-x: auto;
-    padding: var(--space-md) var(--space-sm);
-    gap: var(--space-md);
+    display: flex !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    padding: var(--space-md) var(--space-sm) !important;
+    gap: var(--space-md) !important;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none; /* Hide scrollbar Firefox */
-    min-height: 380px; /* Force visibility for cards */
-    width: 100%;
+    scrollbar-width: none;
+    min-height: 420px !important;
+    width: 100% !important;
+    opacity: 1 !important; /* Ensure visibility if animations fail */
   }
 
   .products-grid::-webkit-scrollbar,
   .recent-grid::-webkit-scrollbar {
-    display: none; /* Hide scrollbar Chrome/Safari */
+    display: none;
   }
 
   .products-grid > *,
   .recent-grid > * {
-    flex: 0 0 280px;
+    flex: 0 0 280px !important;
     scroll-snap-align: start;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
 
