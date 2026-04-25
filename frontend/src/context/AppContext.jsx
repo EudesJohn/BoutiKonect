@@ -463,6 +463,7 @@ export const AppProvider = ({ children }) => {
       await productsPromise;
     }
 
+  useEffect(() => {
     fetchInitialData()
 
     const productsSub = supabase
@@ -507,7 +508,7 @@ export const AppProvider = ({ children }) => {
       supabase.removeChannel(profilesSub)
       supabase.removeChannel(reviewsSub)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
