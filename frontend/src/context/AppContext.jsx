@@ -17,8 +17,7 @@ const formatPrice = (price) => {
   }).format(price)
 }
 
-export const AppProvider = ({ children }) => {
-  // ADMIN_EMAILS importé depuis adminAuth.js (source unique de vérité)
+
 
 // ============ FONCTIONS UTILITAIRES ET MAPPAGE (HORS COMPOSANT) ============
 
