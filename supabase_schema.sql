@@ -208,3 +208,8 @@ CREATE POLICY "Users can see their own history." ON user_history FOR SELECT USIN
 CREATE POLICY "Admins can see all history for analytics." ON user_history FOR SELECT USING (
   EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
 );
+
+-- 9. Enable Realtime Sync
+-- Cette commande indique à Supabase de diffuser les événements (INSERT, UPDATE, DELETE)
+-- en temps réel pour ces tables vers les clients abonnés.
+ALTER PUBLICATION supabase_realtime ADD TABLE products, profiles, orders, reviews, admin_notifications;

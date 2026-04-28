@@ -293,9 +293,29 @@ export const AppProvider = ({ children }) => {
         }
       }).subscribe()
 
+    const ordersSub = supabase.channel('public:orders')
+      .on('postgres_changes', { event: '*', table: 'orders' }, (payload) => {
+        if (payload.eventType === 'INSERT') setOrders(prev => [mapOrderFromDB(payload.new), ...prev])
+        else if (payload.eventType === 'UPDATE') setOrders(prev => prev.map(o => o.id === payload.new.id ? mapOrderFromDB(payload.new) : o))
+        else if (payload.eventType === 'DELETE') setOrders(prev => prev.filter(o => o.id !== payload.old.id))
+      }).subscribe()
+
+    const reviewsSub = supabase.channel('public:reviews')
+      .on('postgres_changes', { event: '*', table: 'reviews' }, (payload) => {
+        const mapReview = (r) => ({
+          id: r.id, productId: r.product_id, reviewerName: r.reviewer_name,
+          reviewerId: r.reviewer_id, rating: r.rating, comment: r.comment, createdAt: r.created_at
+        })
+        if (payload.eventType === 'INSERT') setReviews(prev => [mapReview(payload.new), ...prev])
+        else if (payload.eventType === 'UPDATE') setReviews(prev => prev.map(r => r.id === payload.new.id ? mapReview(payload.new) : r))
+        else if (payload.eventType === 'DELETE') setReviews(prev => prev.filter(r => r.id !== payload.old.id))
+      }).subscribe()
+
     return () => {
       supabase.removeChannel(productsSub)
       supabase.removeChannel(profilesSub)
+      supabase.removeChannel(ordersSub)
+      supabase.removeChannel(reviewsSub)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
