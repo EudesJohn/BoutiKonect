@@ -1,6 +1,6 @@
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { useContext } from 'react'
-import { AppContext } from './context/AppContextInstance'
+import { AppContext } from './context/AppContext'
 import Navbar from './components/Navbar/Navbar'
 import Footer from './components/Footer/Footer'
 import ScrollToTop from './components/ScrollToTop/ScrollToTop'
@@ -55,12 +55,12 @@ function App() {
       <ScrollToTop />
       <TopBarLoader />
       <Navbar />
-      
+
       {/* Toasts Portal */}
       <div className="toasts-portal">
         <AnimatePresence>
           {toasts.map(toast => (
-            <Toast 
+            <Toast
               key={toast.id}
               {...toast}
               onClose={() => removeToast(toast.id)}
