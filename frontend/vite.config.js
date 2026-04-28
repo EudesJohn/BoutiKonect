@@ -8,25 +8,27 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'logo.jpg'],
+      includeAssets: ['favicon.svg', 'apple-icon-180.png', 'logo.jpg'],
       manifest: {
         name: 'BoutiKonect',
         short_name: 'BoutiKonect',
         description: 'Ventes et Services au Bénin',
         theme_color: '#FF6A00',
+        background_color: '#0d1b2a',
+        display: 'standalone',
         icons: [
           {
-            src: 'pwa-192x192.png',
+            src: 'manifest-icon-192.maskable.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'manifest-icon-512.maskable.png',
             sizes: '512x512',
             type: 'image/png'
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'manifest-icon-512.maskable.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'

@@ -20,7 +20,7 @@ export default function ServicesPage() {
   
   const filteredServices = useMemo(() => {
     return getFilteredServices()
-  }, [filters, services, getFilteredServices])
+  }, [getFilteredServices])
   
   const totalPages = Math.ceil(filteredServices.length / ITEMS_PER_PAGE)
   const paginatedServices = useMemo(() => {
@@ -54,6 +54,7 @@ export default function ServicesPage() {
       // Clear category if it's not a service category (e.g. was set on products page)
       setFilters(prev => ({ ...prev, category: '' }))
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, setFilters])
 
   const formatPrice = (price) => {

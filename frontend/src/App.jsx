@@ -43,11 +43,10 @@ import Toast from './components/Toast/Toast'
 import { motion, AnimatePresence } from 'framer-motion'
 
 function App() {
-  const { seller, user, toasts, removeToast, isAppReady } = useContext(AppContext)
+  const { seller, user, toasts, removeToast, isAppReady, dataLoading, errors } = useContext(AppContext)
   const location = useLocation()
 
   if (!isAppReady) {
-    const { dataLoading, errors } = useContext(AppContext)
     return <SplashScreen dataLoading={dataLoading} errors={errors} />
   }
 

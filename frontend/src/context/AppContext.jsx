@@ -1,7 +1,7 @@
 import { createContext, useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { supabase } from '../supabase/client'
 import { isAdminConfigured, getAdminInfo } from '../services/adminAuth'
-import { logoutUser as authLogoutUser } from '../services/authService'
+import { logoutUser as authLogoutUser, loginUser as authLoginUser, registerUser as authRegisterUser } from '../services/authService'
 import { cacheService } from '../services/cacheService'
 import { saveSecureUser, loadSecureUser, secureRemoveItem, saveSecureCart, loadSecureCart, secureSetItem, secureGetItem, loadSecureSeller, saveSecureSeller, secureClear } from '../services/secureStorage'
 import { PROMOTION_PRICES } from '../services/paymentService'
@@ -10,6 +10,7 @@ import {
   formatPrice, checkIsAdmin, parseDate, cleanObject,
   mapItemFromDB, mapItemToDB, mapOrderFromDB, mapOrderToDB, getDistance
 } from './utils'
+import { useProductSearch } from '../hooks/useProductSearch'
 
 // Export AppContext early to avoid TDZ for components that import it
 export const AppContext = createContext()
@@ -176,6 +177,19 @@ export const AppProvider = ({ children }) => {
     return () => clearTimeout(globalSafetyTimeout);
   }, [authLoading, dataLoading.products, isAppReady])
 
+  // === FILTERS STATE ===
+  const [filters, setFilters] = useState({
+    city: '',
+    neighborhood: '',
+    category: '',
+    priceMin: '',
+    priceMax: '',
+    search: '',
+    promoted: false,
+    nearMe: false,
+    type: 'all'
+  })
+
   // === DATA STATE ===
   const [products, setProducts] = useState([])
   const [reviews, setReviews] = useState([])
@@ -320,6 +334,7 @@ export const AppProvider = ({ children }) => {
       }
     };
     fetchRecs();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seller?.id, user?.id]);
 
   // === HELPER METHODS ===
@@ -435,6 +450,21 @@ export const AppProvider = ({ children }) => {
 
   const deleteService = deleteProduct // Alias
 
+  const deleteUser = async (userId) => {
+    try {
+      // Supprimer le profil (les produits/commandes sont en cascade dans Supabase)
+      const { error } = await supabase.from('profiles').delete().eq('id', userId)
+      if (error) throw error
+      setAllUsers(prev => prev.filter(u => u.id !== userId))
+      showToast('Utilisateur supprimé', 'success')
+      return { success: true }
+    } catch (error) {
+      console.error('deleteUser error:', error)
+      showToast('Erreur lors de la suppression', 'error')
+      return { success: false, error: error.message }
+    }
+  }
+
   const resolveReport = async (reportId) => {
     // For now, just a stub or update review status if possible
     showToast("Signalement résolu", 'success')
@@ -455,6 +485,42 @@ export const AppProvider = ({ children }) => {
     })
   }, [])
 
+  // === SEARCH & FILTER ===
+  const { getFilteredProducts: _getFilteredProducts } = useProductSearch(products, filters)
+
+  const getFilteredProducts = useCallback(() => {
+    const now = new Date()
+    let results = _getFilteredProducts()
+
+    // Type filter (all / product / service)
+    if (filters.type === 'product') results = results.filter(p => !p.type || p.type === 'product')
+    else if (filters.type === 'service') results = results.filter(p => p.type === 'service')
+
+    // Promoted filter
+    if (filters.promoted) {
+      results = results.filter(p => {
+        const isPromoted = p.isPromoted === true || p.isPromoted === 'true'
+        const promoEnd = p.promotionEndDate ? parseDate(p.promotionEndDate) : null
+        return isPromoted && promoEnd && promoEnd > now
+      })
+    }
+
+    // Near me filter
+    if (filters.nearMe && userLocation) {
+      results = results.filter(p => {
+        if (!p.latitude || !p.longitude) return false
+        const dist = getDistance(userLocation.latitude, userLocation.longitude, p.latitude, p.longitude)
+        return dist !== null && dist <= 50
+      })
+    }
+
+    return results
+  }, [_getFilteredProducts, filters, userLocation])
+
+  const getFilteredServices = useCallback(() => {
+    return getFilteredProducts().filter(p => p.type === 'service')
+  }, [getFilteredProducts])
+
   const filteredProducts = useMemo(() => {
     return products.sort((a, b) => {
       const dateA = parseDate(a.created_at);
@@ -474,11 +540,20 @@ export const AppProvider = ({ children }) => {
     getReportedProducts,
     getAllReports,
     resolveReport,
+    deleteUser,
     messages: [], // Stub for now
     getCurrentLocation, formatPrice, parseDate, checkIsAdmin,
     setCart, setFavorites, setSeller, setUser, setIsAppReady,
     filteredProducts, recommendations,
-    logoutUser: authLogoutUser
+    logoutUser: authLogoutUser,
+    logoutSeller: authLogoutUser, // alias pour Navbar
+    loginUser: authLoginUser,
+    registerUser: authRegisterUser,
+    // Filters
+    filters, setFilters,
+    getFilteredProducts,
+    getFilteredServices,
+    userLocation
   }
 
   return (

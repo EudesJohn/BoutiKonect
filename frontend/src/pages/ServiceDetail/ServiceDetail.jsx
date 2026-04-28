@@ -47,6 +47,7 @@ export default function ServiceDetail() {
     if (service?.id) {
       trackView(service.id, user?.id || seller?.id, service.category, service.sellerId)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [service?.id, user?.id, seller?.id, service?.sellerId])
 
 

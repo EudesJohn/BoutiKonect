@@ -4,6 +4,11 @@ import { useState, useCallback, useEffect } from 'react'
  * Custom hook for authentication with brute force protection
  * Manages login attempts and rate limiting
  */
+
+// Constants for rate limiting — defined at module level so they are stable references
+const MAX_ATTEMPTS = 5
+const LOCKOUT_DURATION = 15 * 60 * 1000 // 15 minutes in milliseconds
+
 export const useAuth = () => {
   // Track login attempts per IP/identifier
   const [loginAttempts, setLoginAttempts] = useState(() => {
@@ -14,10 +19,7 @@ export const useAuth = () => {
   const [isLocked, setIsLocked] = useState(false)
   const [lockoutEndTime, setLockoutEndTime] = useState(null)
   
-  // Constants for rate limiting
-  const MAX_ATTEMPTS = 5
-  const LOCKOUT_DURATION = 15 * 60 * 1000 // 15 minutes in milliseconds
-  
+
   // Save attempts to localStorage
   useEffect(() => {
     localStorage.setItem('BoutiKonect_login_attempts', JSON.stringify(loginAttempts))
@@ -91,7 +93,7 @@ export const useAuth = () => {
       attempt => now - attempt.timestamp < LOCKOUT_DURATION
     )
     return Math.max(0, MAX_ATTEMPTS - validAttempts.length)
-  }, [loginAttempts, LOCKOUT_DURATION])
+  }, [loginAttempts])
   
   return {
     isLocked,

@@ -20,7 +20,7 @@ export default function Products() {
   
   const filteredProducts = useMemo(() => {
     return getFilteredProducts()
-  }, [filters, products, getFilteredProducts])
+  }, [getFilteredProducts])
   
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)
   const paginatedProducts = useMemo(() => {
@@ -54,7 +54,8 @@ export default function Products() {
       // Clear category if it's not a product category (e.g. was set on services page)
       setFilters(prev => ({ ...prev, category: '' }))
     }
-  }, [searchParams, setFilters, categories])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, setFilters])
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', minimumFractionDigits: 0 }).format(price)

@@ -56,6 +56,7 @@ export default function ProductDetail() {
     if (product?.id) {
       trackView(product.id, user?.id || seller?.id, product.category, product.sellerId)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product?.id, user?.id, seller?.id, product?.sellerId])
 
   

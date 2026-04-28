@@ -1,6 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Store } from 'lucide-react'
+import { cacheService } from '../../services/cacheService'
 import './SplashScreen.css'
 
 export default function SplashScreen({ dataLoading = {}, errors = {} }) {
