@@ -229,8 +229,9 @@ export const AppProvider = ({ children }) => {
     setDataLoading(prev => ({ ...prev, products: true, services: true }))
     
     const cachedProducts = cacheService.get('initial_products')
-    if (cachedProducts) {
-      setProducts(cachedProducts.map(mapItemFromDB))
+    if (cachedProducts && Array.isArray(cachedProducts)) {
+      const mappedCached = cachedProducts.map(mapItemFromDB).filter(Boolean);
+      setProducts(mappedCached);
       setDataLoading(prev => ({ ...prev, products: false, services: false }))
     }
 
@@ -239,7 +240,8 @@ export const AppProvider = ({ children }) => {
       .then(({ data, error }) => {
         if (error) throw error;
         if (data) {
-          setProducts(data.map(mapItemFromDB));
+          const mappedData = data.map(mapItemFromDB).filter(Boolean);
+          setProducts(mappedData);
           cacheService.set('initial_products', data, 12)
         }
       })
@@ -538,14 +540,17 @@ export const AppProvider = ({ children }) => {
   }, [_getFilteredProducts, filters, userLocation])
 
   const getFilteredServices = useCallback(() => {
-    return getFilteredProducts().filter(p => p.type === 'service')
+    const results = getFilteredProducts();
+    return Array.isArray(results) ? results.filter(p => p && p.type === 'service') : [];
   }, [getFilteredProducts])
 
   const filteredProducts = useMemo(() => {
-    return products.sort((a, b) => {
-      const dateA = parseDate(a.created_at);
-      const dateB = parseDate(b.created_at);
-      return dateB.getTime() - dateA.getTime();
+    if (!Array.isArray(products)) return [];
+    return [...products].sort((a, b) => {
+      if (!a || !b) return 0;
+      const dateA = parseDate(a.createdAt || a.created_at);
+      const dateB = parseDate(b.createdAt || b.created_at);
+      return (dateB.getTime() || 0) - (dateA.getTime() || 0);
     });
   }, [products])
 
