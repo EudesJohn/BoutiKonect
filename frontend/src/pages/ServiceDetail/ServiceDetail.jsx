@@ -61,7 +61,7 @@ export default function ServiceDetail() {
 
   // Filtrer les avis pour ce service
   const itemReviews = useMemo(() => 
-    allReviews.filter(r => r.productId === id), 
+    (allReviews || []).filter(r => r && r.productId === id), 
   [allReviews, id])
 
   // Calculer la note moyenne
@@ -216,10 +216,6 @@ export default function ServiceDetail() {
     }
   }
 
-  const displayImages = service?.images && service.images.length > 0
-    ? service.images
-    : ['https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&q=80']
-
   if (loading || (dataLoading.products && !service)) {
     return (
       <div className="service-loading-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: '20px' }}>
@@ -242,6 +238,10 @@ export default function ServiceDetail() {
       </div>
     )
   }
+
+  const displayImages = service.images && service.images.length > 0
+    ? service.images
+    : ['https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&q=80']
 
   return (
     <div className="service-detail-page">

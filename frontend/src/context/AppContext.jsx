@@ -283,14 +283,21 @@ export function AppProvider({ children }) {
     const productsSub = supabase.channel('public:products')
       .on('postgres_changes', { event: '*', table: 'products' }, (payload) => {
         if (payload.eventType === 'INSERT') {
-          const mapped = mapItemFromDB(payload.new);
-          if (mapped) setProducts(prev => [mapped, ...prev])
+          const mapped = mapItemFromDB(payload.new)
+          if (mapped) {
+            setProducts(prev => {
+              if (prev.find(p => p.id === mapped.id)) return prev
+              return [...prev, mapped]
+            })
+          }
+        } else if (payload.eventType === 'UPDATE') {
+          const mapped = mapItemFromDB(payload.new)
+          if (mapped) {
+            setProducts(prev => prev.map(p => p.id === mapped.id ? mapped : p))
+          }
+        } else if (payload.eventType === 'DELETE') {
+          setProducts(prev => prev.filter(p => p.id !== payload.old.id))
         }
-        else if (payload.eventType === 'UPDATE') {
-          const mapped = mapItemFromDB(payload.new);
-          if (mapped) setProducts(prev => prev.map(p => p.id === payload.new.id ? mapped : p))
-        }
-        else if (payload.eventType === 'DELETE') setProducts(prev => prev.filter(p => p.id !== payload.old.id))
       }).subscribe()
 
     const profilesSub = supabase.channel('public:profiles')
@@ -569,7 +576,7 @@ export function AppProvider({ children }) {
   }, [products])
 
   const value = {
-    seller, user, products, services: products.filter(p => p.type === 'service'), reviews, orders, allUsers, favorites, cart,
+    seller, user, products, services: (products || []).filter(p => p && p.type === 'service'), reviews, orders, allUsers, favorites, cart,
     toasts, showToast, removeToast, authLoading, dataLoading, isAppReady, errors,
     getProductById, getServiceById, fetchSingleProduct, addProduct, updateProduct, deleteProduct, deleteService,
     createOrder, addToCart, toggleFavorite, isFavorite, decrementProductStock, reportProduct,

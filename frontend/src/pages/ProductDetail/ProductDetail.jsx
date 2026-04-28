@@ -44,12 +44,8 @@ export default function ProductDetail() {
     "Autre"
   ]
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setNow(new Date())
-    }, 60000)
-    return () => clearInterval(timer)
-  }, [])
+  const productFromState = useMemo(() => getProductById(id), [id, getProductById])
+  const product = localProduct || productFromState
 
   // Tracking de la vue
   useEffect(() => {
@@ -59,9 +55,12 @@ export default function ProductDetail() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product?.id, user?.id, seller?.id, product?.sellerId])
 
-  
-  const productFromState = useMemo(() => getProductById(id), [id, getProductById])
-  const product = localProduct || productFromState
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(new Date())
+    }, 60000)
+    return () => clearInterval(timer)
+  }, [])
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -81,9 +80,9 @@ export default function ProductDetail() {
     loadProduct()
   }, [id, productFromState, fetchSingleProduct])
 
-  // Filtrer les avis pour ce produit
+  // Filtrer les avis pour ce service
   const itemReviews = useMemo(() => 
-    allReviews.filter(r => r.productId === id), 
+    (allReviews || []).filter(r => r && r.productId === id), 
   [allReviews, id])
 
   // Calculer la note moyenne
