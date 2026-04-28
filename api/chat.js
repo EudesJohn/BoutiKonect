@@ -75,7 +75,12 @@ export default async function handler(request, response) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    let model;
+    try {
+      model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    } catch (e) {
+      model = genAI.getGenerativeModel({ model: "gemini-pro" }); // Fallback for regions/keys where 1.5 is unavailable
+    }
 
     const systemInstruction = `
       Tu es l'assistant virtuel EXPERT de BoutiKonect.bj, la plateforme de référence pour le commerce et les services au Bénin.
@@ -107,8 +112,16 @@ export default async function handler(request, response) {
 
     const fullPrompt = `${systemInstruction}\n\nUtilisateur: ${prompt}`;
     
-    // Appel à l'API Gemini
-    const result = await model.generateContent(fullPrompt);
+    // Appel à l'API Gemini avec fallback automatique
+    let result;
+    try {
+      result = await model.generateContent(fullPrompt);
+    } catch (e) {
+      console.warn("[AI INFO] gemini-1.5-flash a échoué, tentative avec gemini-pro...", e.message);
+      const fallbackModel = genAI.getGenerativeModel({ model: "gemini-pro" });
+      result = await fallbackModel.generateContent(fullPrompt);
+    }
+    
     const aiResponse = await result.response;
     
     console.log(`[AI INFO] Réponse reçue de Gemini`);
