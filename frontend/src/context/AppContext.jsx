@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { supabase } from '../supabase/client'
 import { isAdminConfigured, getAdminInfo } from '../services/adminAuth'
 import { logoutUser as authLogoutUser, loginUser as authLoginUser, registerUser as authRegisterUser } from '../services/authService'
@@ -11,11 +11,13 @@ import {
   mapItemFromDB, mapItemToDB, mapOrderFromDB, mapOrderToDB, getDistance
 } from './utils'
 import { useProductSearch } from '../hooks/useProductSearch'
+import { AppContext } from './AppContextInstance'
 
-// Export AppContext early to avoid TDZ for components that import it
-export const AppContext = createContext()
-
-export const AppProvider = ({ children }) => {
+/**
+ * AppProvider - Gestionnaire central du state de l'application.
+ * Défini comme une fonction pour profiter du hoisting et éviter les erreurs de TDZ.
+ */
+export function AppProvider({ children }) {
   const [seller, setSeller] = useState(null)
   const [user, setUser] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
@@ -62,7 +64,6 @@ export const AppProvider = ({ children }) => {
     return profile;
   }, [])
 
-  // === DATA FETCHING METHODS ===
   const fetchInitialData = useCallback(async () => {
     setDataLoading(prev => ({ ...prev, products: true, services: true }))
     
@@ -588,3 +589,6 @@ export const AppProvider = ({ children }) => {
     </AppContext.Provider>
   )
 }
+
+// Ré-exportation du contexte pour compatibilité
+export { AppContext };

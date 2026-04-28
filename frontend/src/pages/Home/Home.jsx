@@ -1,7 +1,7 @@
 import { useContext } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { AppContext } from '../../context/AppContext'
+import { AppContext } from '../../context/AppContextInstance'
 import { categories, serviceCategories } from '../../context/constants'
 import { ArrowRight, Sparkles, Shield, MapPin, MessageCircle, ShoppingBag, Zap, Briefcase, Store, HelpCircle } from 'lucide-react'
 import ProductCard from '../../components/ProductCard/ProductCard'

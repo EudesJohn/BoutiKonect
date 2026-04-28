@@ -1,0 +1,277 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+collector.js
+deleteUser.js
+package.json
+promoteAdmin.js
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="collector.js">
+require('dotenv').config();
+const { createClient } = require('@supabase/supabase-js');
+
+// Configuration Supabase
+// Note: On utilise les variables préfixes VITE_ du frontend si copiées telles quelles
+const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Erreur: Variables SUPABASE_URL ou SUPABASE_KEY manquantes.');
+  process.exit(1);
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+/**
+ * Script Collecteur Immo (BoutiKonect)
+ * Version Supabase
+ */
+async function collectImmoData() {
+  console.log('--- Démarrage du Collecteur Immo ---');
+  
+  // Exemple de données à collecter (Simulation)
+  const sampleProperties = [
+    {
+      title: 'Villa Moderne à Fidjrossè',
+      description: 'Superbe villa avec 4 chambres, piscine et jardin.',
+      price: 45000000,
+      category: 'Immobilier',
+      type: 'service', // ou 'product' selon votre logique
+      seller_city: 'Cotonou',
+      seller_neighborhood: 'Fidjrossè',
+      price_type: 'Fixe',
+      images: ['https://images.unsplash.com/photo-1580587767513-39982dc50ac5?w=500']
+    },
+    {
+      title: 'Appartement Meublé Calavi',
+      description: 'Appartement tout confort près de l\'Université d\'Abomey-Calavi.',
+      price: 250000,
+      category: 'Immobilier',
+      type: 'service',
+      seller_city: 'Abomey-Calavi',
+      seller_neighborhood: 'Zogbadjè',
+      price_type: '/Mois',
+      images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=500']
+    }
+  ];
+
+  console.log(`Traitement de ${sampleProperties.length} annonces...`);
+
+  for (const property of sampleProperties) {
+    try {
+      // Vérification si l'annonce existe déjà par titre (exigence simplifiée)
+      const { data: existing } = await supabase
+        .from('products')
+        .select('id')
+        .eq('title', property.title)
+        .single();
+
+      if (existing) {
+        console.log(`[Skip] "${property.title}" existe déjà.`);
+        continue;
+      }
+
+      const { data, error } = await supabase
+        .from('products')
+        .insert([property])
+        .select();
+
+      if (error) throw error;
+      console.log(`[Success] "${property.title}" ajouté avec succès.`);
+    } catch (err) {
+      console.error(`[Erreur] Impossible d'ajouter "${property.title}":`, err.message);
+    }
+  }
+
+  console.log('--- Fin de la collecte ---');
+}
+
+// Lancement direct si exécuté via node
+if (require.main === module) {
+  collectImmoData();
+}
+
+module.exports = { collectImmoData };
+</file>
+
+<file path="deleteUser.js">
+require('dotenv').config();
+const { createClient } = require('@supabase/supabase-js');
+
+const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Erreur: Variables manquantes (URL ou SERVICE_ROLE_KEY).');
+  process.exit(1);
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+});
+
+/**
+ * Script pour supprimer un utilisateur au niveau Auth
+ * (Ce qui déclenche la cascade sur tout le reste)
+ */
+async function deleteUserAuth(userId) {
+  if (!userId) {
+    console.error('Veuillez fournir un userId.');
+    return;
+  }
+
+  console.log(`--- Suppression définitive de l'utilisateur : ${userId} ---`);
+
+  try {
+    // 1. Suppression au niveau Auth (nécessite la clé service_role)
+    const { data, error } = await supabase.auth.admin.deleteUser(userId);
+
+    if (error) throw error;
+
+    console.log(`[Succès] L'utilisateur ${userId} a été supprimé de Supabase Auth.`);
+    console.log('Toutes ses données (produits, commandes, avis) ont été nettoyées par cascade SQL.');
+
+  } catch (err) {
+    console.error('[Erreur]:', err.message);
+  }
+}
+
+// Utilisation via ligne de commande: node deleteUser.js [userId]
+const targetId = process.argv[2];
+if (targetId) {
+  deleteUserAuth(targetId);
+} else {
+  console.log('Utilisation: node deleteUser.js ID_UTILISATEUR');
+}
+
+module.exports = { deleteUserAuth };
+</file>
+
+<file path="promoteAdmin.js">
+require('dotenv').config();
+const { createClient } = require('@supabase/supabase-js');
+
+const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const adminEmail = process.env.VITE_ADMIN_EMAIL;
+
+if (!supabaseUrl || !supabaseKey || !adminEmail) {
+  console.error('Erreur: Variables manquantes (URL, KEY ou ADMIN_EMAIL).');
+  process.exit(1);
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+async function promoteToAdmin() {
+  console.log(`--- Promotion de ${adminEmail} au rang d'Administrateur ---`);
+
+  try {
+    // 1. Trouver le profil
+    const { data: profile, error: findError } = await supabase
+      .from('profiles')
+      .select('id, email, name')
+      .eq('email', adminEmail)
+      .single();
+
+    if (findError) {
+      if (findError.code === 'PGRST116') {
+        console.error(`[Erreur] Aucun profil trouvé pour ${adminEmail}. L'utilisateur doit d'abord s'inscrire sur le site.`);
+      } else {
+        throw findError;
+      }
+      return;
+    }
+
+    console.log(`Profil trouvé: ${profile.name} (ID: ${profile.id})`);
+
+    // 2. Mettre à jour les privilèges
+    const { data, error: updateError } = await supabase
+      .from('profiles')
+      .update({ 
+        is_admin: true, 
+        role: 'admin' 
+      })
+      .eq('id', profile.id)
+      .select();
+
+    if (updateError) throw updateError;
+
+    console.log(`[Succès] ${adminEmail} est maintenant Administrateur.`);
+    console.log('Données mises à jour:', data[0]);
+
+  } catch (err) {
+    console.error('[Erreur Fatale]:', err.message);
+  }
+}
+
+promoteToAdmin();
+</file>
+
+<file path="package.json">
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "collector.js",
+  "scripts": {
+    "start": "node collector.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.103.0",
+    "dotenv": "^17.4.1"
+  }
+}
+</file>
+
+</files>

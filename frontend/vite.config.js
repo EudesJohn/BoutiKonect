@@ -8,27 +8,24 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      selfDestroying: true,
       includeAssets: ['favicon.svg', 'apple-icon-180.png', 'logo.jpg'],
       manifest: {
         name: 'BoutiKonect',
         short_name: 'BoutiKonect',
-        description: 'Ventes et Services au Bénin',
+        description: 'Marketplace Bénin - Ventes et Services',
         theme_color: '#FF6A00',
-        background_color: '#0d1b2a',
+        background_color: '#ffffff',
         display: 'standalone',
+        orientation: 'portrait',
         icons: [
           {
-            src: 'manifest-icon-192.maskable.png',
+            src: '/pwa-192x192.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'manifest-icon-512.maskable.png',
-            sizes: '512x512',
-            type: 'image/png'
-          },
-          {
-            src: 'manifest-icon-512.maskable.png',
+            src: '/pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'
@@ -36,14 +33,10 @@ export default defineConfig({
         ]
       },
       workbox: {
-        navigateFallbackDenylist: [/^\/api/],
+        navigateFallbackDenylist: [/^\/api/, /supabase\.co/],
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.origin.includes('supabase.co'),
-            handler: 'NetworkOnly'
-          },
-          {
-            urlPattern: /\/api\/.*/i,
             handler: 'NetworkOnly'
           }
         ]
@@ -51,15 +44,12 @@ export default defineConfig({
     })
   ],
   server: {
-    hmr: {
-      host: 'localhost',
-    },
-    proxy: {
-      '/api': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
-        secure: false,
-      }
-    }
+    port: 3000,
+    host: true
   },
+  resolve: {
+    alias: {
+      '@': '/src'
+    }
+  }
 })

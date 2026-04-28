@@ -1,6 +1,6 @@
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { useContext } from 'react'
-import { AppContext } from './context/AppContext'
+import { AppContext } from './context/AppContextInstance'
 import Navbar from './components/Navbar/Navbar'
 import Footer from './components/Footer/Footer'
 import ScrollToTop from './components/ScrollToTop/ScrollToTop'
