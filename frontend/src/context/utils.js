@@ -40,8 +40,10 @@ export function cleanObject(obj) {
 
 export function mapItemFromDB(item) {
   if (!item) return null;
+  const rawImages = Array.isArray(item.images) ? item.images : (item.images ? [item.images] : []);
   return {
     ...item,
+    images: rawImages.length > 0 ? rawImages : ['https://via.placeholder.com/600'],
     sellerId: item.seller_id,
     sellerName: item.seller_name,
     sellerCity: item.seller_city,
