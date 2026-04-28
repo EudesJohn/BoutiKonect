@@ -77,9 +77,9 @@ export default async function handler(request, response) {
     const genAI = new GoogleGenerativeAI(apiKey);
     let model;
     try {
-      model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+      model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
     } catch (e) {
-      model = genAI.getGenerativeModel({ model: "gemini-pro" }); // Fallback for regions/keys where 1.5 is unavailable
+      model = genAI.getGenerativeModel({ model: "gemini-pro-latest" });
     }
 
     const systemInstruction = `
@@ -112,20 +112,14 @@ export default async function handler(request, response) {
 
     const fullPrompt = `${systemInstruction}\n\nUtilisateur: ${prompt}`;
     
-    // Appel à l'API Gemini avec fallback automatique robuste
+    // Appel à l'API Gemini avec le modèle de dernière génération
     let result;
     try {
       result = await model.generateContent(fullPrompt);
     } catch (e) {
-      console.warn("[AI INFO] gemini-1.5-flash-latest a échoué, tentative avec gemini-1.5-flash...", e.message);
-      try {
-        const fallback1 = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        result = await fallback1.generateContent(fullPrompt);
-      } catch (e2) {
-        console.warn("[AI INFO] gemini-1.5-flash a échoué, tentative finale avec gemini-1.0-pro...", e2.message);
-        const fallback2 = genAI.getGenerativeModel({ model: "gemini-1.0-pro" });
-        result = await fallback2.generateContent(fullPrompt);
-      }
+      console.warn("[AI INFO] gemini-flash-latest a échoué, tentative avec gemini-pro-latest...", e.message);
+      const fallbackModel = genAI.getGenerativeModel({ model: "gemini-pro-latest" });
+      result = await fallbackModel.generateContent(fullPrompt);
     }
     
     const aiResponse = await result.response;
