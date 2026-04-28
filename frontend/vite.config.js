@@ -34,6 +34,19 @@ export default defineConfig({
             purpose: 'any maskable'
           }
         ]
+      },
+      workbox: {
+        navigateFallbackDenylist: [/^\/api/],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+            handler: 'NetworkOnly'
+          },
+          {
+            urlPattern: /\/api\/.*/i,
+            handler: 'NetworkOnly'
+          }
+        ]
       }
     })
   ],
