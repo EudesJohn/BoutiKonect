@@ -37,9 +37,7 @@ export const AppProvider = ({ children }) => {
   const lastSessionId = useRef(null)
   const authControllerRef = useRef(null)
 
-  /**
-   * Fonction interne d'auto-réparation du statut vendeur
-   */
+  // === LIFTED FUNCTIONS (Avoid TDZ) ===
   const handleSellerAutoRepair = useCallback(async (profile, userId) => {
     try {
       const { count, error } = await supabase
@@ -63,6 +61,58 @@ export const AppProvider = ({ children }) => {
     }
     return profile;
   }, [])
+
+  // === DATA FETCHING METHODS ===
+  const fetchInitialData = useCallback(async () => {
+    setDataLoading(prev => ({ ...prev, products: true, services: true }))
+    
+    const cachedProducts = cacheService.get('initial_products')
+    if (cachedProducts && Array.isArray(cachedProducts)) {
+      const mappedCached = cachedProducts.map(mapItemFromDB).filter(Boolean);
+      setProducts(mappedCached);
+      setDataLoading(prev => ({ ...prev, products: false, services: false }))
+    }
+
+    const productsPromise = supabase
+      .from('products').select('*').order('created_at', { ascending: false }).limit(100)
+      .then(({ data, error }) => {
+        if (error) throw error;
+        if (data) {
+          const mappedData = data.map(mapItemFromDB).filter(Boolean);
+          setProducts(mappedData);
+          cacheService.set('initial_products', data, 12)
+        }
+      })
+      .catch(err => {
+        console.error('Failed to load products:', err);
+        setErrors(prev => ({ ...prev, products: err.message }));
+      })
+      .finally(() => {
+        setDataLoading(prev => ({ ...prev, products: false, services: false }))
+      });
+
+      const fetchBackgroundData = async () => {
+        try {
+          supabase.from('orders').select('*').order('created_at', { ascending: false }).limit(20)
+            .then(({ data }) => data && setOrders(data.map(mapOrderFromDB)));
+
+          supabase.from('reviews').select('*').limit(50)
+            .then(({ data }) => data && setReviews(data.map(r => ({
+              id: r.id, productId: r.product_id, reviewerName: r.reviewer_name,
+              reviewerId: r.reviewer_id, rating: r.rating, comment: r.comment, createdAt: r.created_at
+            }))));
+
+          if (checkIsAdmin(seller || user)) {
+            supabase.from('profiles').select('*').limit(100)
+              .then(({ data }) => data && setAllUsers(data));
+          }
+        } catch (e) { console.warn('BG fetch error:', e); }
+        finally { setDataLoading(prev => ({ ...prev, orders: false, users: false })); }
+      };
+
+      fetchBackgroundData();
+      await productsPromise;
+  }, [user, seller])
 
   // GESTION DE LA SESSION SUPABASE
   useEffect(() => {
@@ -224,60 +274,11 @@ export const AppProvider = ({ children }) => {
     persistCart()
   }, [cart])
 
-  // === DATA FETCHING METHODS ===
-  const fetchInitialData = useCallback(async () => {
-    setDataLoading(prev => ({ ...prev, products: true, services: true }))
-    
-    const cachedProducts = cacheService.get('initial_products')
-    if (cachedProducts && Array.isArray(cachedProducts)) {
-      const mappedCached = cachedProducts.map(mapItemFromDB).filter(Boolean);
-      setProducts(mappedCached);
-      setDataLoading(prev => ({ ...prev, products: false, services: false }))
+  useEffect(() => {
+    if (typeof fetchInitialData === 'function') {
+      fetchInitialData();
     }
 
-    const productsPromise = supabase
-      .from('products').select('*').order('created_at', { ascending: false }).limit(100)
-      .then(({ data, error }) => {
-        if (error) throw error;
-        if (data) {
-          const mappedData = data.map(mapItemFromDB).filter(Boolean);
-          setProducts(mappedData);
-          cacheService.set('initial_products', data, 12)
-        }
-      })
-      .catch(err => {
-        console.error('Failed to load products:', err);
-        setErrors(prev => ({ ...prev, products: err.message }));
-      })
-      .finally(() => {
-        setDataLoading(prev => ({ ...prev, products: false, services: false }))
-      });
-
-      const fetchBackgroundData = async () => {
-        try {
-          supabase.from('orders').select('*').order('created_at', { ascending: false }).limit(20)
-            .then(({ data }) => data && setOrders(data.map(mapOrderFromDB)));
-
-          supabase.from('reviews').select('*').limit(50)
-            .then(({ data }) => data && setReviews(data.map(r => ({
-              id: r.id, productId: r.product_id, reviewerName: r.reviewer_name,
-              reviewerId: r.reviewer_id, rating: r.rating, comment: r.comment, createdAt: r.created_at
-            }))));
-
-          if (checkIsAdmin(seller || user)) {
-            supabase.from('profiles').select('*').limit(100)
-              .then(({ data }) => data && setAllUsers(data));
-          }
-        } catch (e) { console.warn('BG fetch error:', e); }
-        finally { setDataLoading(prev => ({ ...prev, orders: false, users: false })); }
-      };
-
-      fetchBackgroundData();
-      await productsPromise;
-  }, [user, seller])
-
-  useEffect(() => {
-    fetchInitialData()
     const productsSub = supabase.channel('public:products')
       .on('postgres_changes', { event: '*', table: 'products' }, (payload) => {
         if (payload.eventType === 'INSERT') setProducts(prev => [mapItemFromDB(payload.new), ...prev])

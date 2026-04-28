@@ -39,7 +39,7 @@ export default defineConfig({
         navigateFallbackDenylist: [/^\/api/],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+            urlPattern: ({ url }) => url.origin.includes('supabase.co'),
             handler: 'NetworkOnly'
           },
           {
