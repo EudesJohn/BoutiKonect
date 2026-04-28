@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../../supabase/client'
-import { AppContext } from '../../context/AppContext'
+import { AppContext } from '../../context/AppContextInstance'
 import { motion } from 'framer-motion'
 import { Lock, CheckCircle, AlertCircle, RefreshCw, Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import './ResetPassword.css'

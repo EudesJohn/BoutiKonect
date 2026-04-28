@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react';
 import { motion } from 'framer-motion';
-import { AppContext } from '../../context/AppContext';
+import { AppContext } from '../../context/AppContextInstance';
 import { openFedaPayOverlay } from '../../services/paymentService';
 import { X, Zap, CheckCircle, Loader } from 'lucide-react';
 import './Publish.css';

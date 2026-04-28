@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { AppContext } from '../../context/AppContext'
+import { AppContext } from '../../context/AppContextInstance'
 import { openFedaPayOverlay, formatPrice } from '../../services/paymentService'
 import { CreditCard, Smartphone, CheckCircle, X, ArrowLeft, Loader, Wallet, Clock } from 'lucide-react'
 import './Payment.css'

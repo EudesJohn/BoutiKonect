@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { AppContext } from '../../context/AppContext'
+import { AppContext } from '../../context/AppContextInstance'
 import { getPromotionPrices } from '../../services/paymentService'
 import { Sparkles, Clock, AlertCircle, Phone, CreditCard } from 'lucide-react'
 

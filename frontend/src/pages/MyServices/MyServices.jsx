@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { AppContext } from '../../context/AppContext'
+import { AppContext } from '../../context/AppContextInstance'
 import { Briefcase, Trash2, ArrowLeft, Eye, Plus, Zap } from 'lucide-react'
 import PromoteModal from '../Publish/PromoteModal'
 import '../MyProducts/MyProducts.css'

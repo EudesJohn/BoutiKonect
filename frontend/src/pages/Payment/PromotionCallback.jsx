@@ -2,7 +2,7 @@ import { useEffect, useContext, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CheckCircle, XCircle, Loader } from 'lucide-react';
-import { AppContext } from '../../context/AppContext';
+import { AppContext } from '../../context/AppContextInstance';
 
 export default function PromotionCallback() {
   const [searchParams] = useSearchParams();

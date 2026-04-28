@@ -1,7 +1,7 @@
 import { useContext } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { AppContext } from '../../context/AppContext'
+import { AppContext } from '../../context/AppContextInstance'
 import { MessageCircle, ArrowRight, ShoppingBag } from 'lucide-react'
 import './Messages.css'
 
