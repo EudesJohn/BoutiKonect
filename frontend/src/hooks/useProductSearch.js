@@ -74,12 +74,8 @@ function buildSearchIndex(products) {
 
 // Hook principal pour la recherche optimisée
 export function useProductSearch(products, filters) {
-  const [searchIndex, setSearchIndex] = useState(() => buildSearchIndex(products))
-  
-  // Rebuild index when products change
-  useEffect(() => {
-    setSearchIndex(buildSearchIndex(products))
-  }, [products])
+  // Use useMemo for search index to avoid manual state updates
+  const searchIndex = useMemo(() => buildSearchIndex(products), [products])
   
   // Debounce the search filter
   const debouncedSearch = useDebounce(filters.search, 300)
@@ -97,38 +93,33 @@ export function useProductSearch(products, filters) {
       return cachedResults
     }
 
-    // Build index if not exists
-    if (searchIndex.size !== products.length) {
-      setSearchIndex(buildSearchIndex(products))
-    }
-
     // Filter products using index for faster search
     let results = products
 
     // Apply city filter
     if (debouncedFilters.city) {
-      results = results.filter(p => p.sellerCity === debouncedFilters.city)
+      results = results.filter(p => p && p.sellerCity === debouncedFilters.city)
     }
 
     // Apply neighborhood filter
     if (debouncedFilters.neighborhood) {
-      results = results.filter(p => p.sellerNeighborhood === debouncedFilters.neighborhood)
+      results = results.filter(p => p && p.sellerNeighborhood === debouncedFilters.neighborhood)
     }
 
     // Apply category filter
     if (debouncedFilters.category) {
-      results = results.filter(p => p.category === debouncedFilters.category)
+      results = results.filter(p => p && p.category === debouncedFilters.category)
     }
 
     // Apply price filters
     if (debouncedFilters.priceMin) {
       const minPrice = parseInt(debouncedFilters.priceMin)
-      results = results.filter(p => p.price >= minPrice)
+      results = results.filter(p => p && p.price >= minPrice)
     }
 
     if (debouncedFilters.priceMax) {
       const maxPrice = parseInt(debouncedFilters.priceMax)
-      results = results.filter(p => p.price <= maxPrice)
+      results = results.filter(p => p && p.price <= maxPrice)
     }
 
     // Apply search filter using index for large datasets
@@ -138,12 +129,14 @@ export function useProductSearch(products, filters) {
       if (products.length > 100) {
         // Use index for large datasets
         results = results.filter(p => {
+          if (!p) return false;
           const idx = searchIndex.get(p.id)
           return idx && idx.searchableText.includes(searchTerm)
         })
       } else {
         // Direct search for smaller datasets
         results = results.filter(p => {
+          if (!p) return false;
           return p.title?.toLowerCase().includes(searchTerm) || 
                  p.description?.toLowerCase().includes(searchTerm) ||
                  (p.sellerName && p.sellerName.toLowerCase().includes(searchTerm)) ||
@@ -153,8 +146,13 @@ export function useProductSearch(products, filters) {
       }
     }
 
-    // Cache the results
-    setCachedResults(cacheKey, results)
+    // Cache the results - but wait, this is still a side effect.
+    // In a pure useCallback called during render, we should ideally not do this.
+    // However, it's a Map update, not a React state update, so it's less likely to cause a loop,
+    // but still not great. We'll leave it for now but wrap it in a small check.
+    if (cacheKey) {
+      setCachedResults(cacheKey, results)
+    }
 
     return results
   }, [products, debouncedFilters, searchIndex])

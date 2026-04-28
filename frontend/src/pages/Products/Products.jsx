@@ -1,7 +1,7 @@
 import { useContext, useState, useEffect, useMemo, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { AppContext } from '../../context/AppContext'
+import { AppContext } from '../../context/AppContextInstance'
 import { cities, categories } from '../../context/constants'
 import { Filter, X, ChevronLeft, ChevronRight, Star, MapPin, Loader2 } from 'lucide-react'
 import ProductCard from '../../components/ProductCard/ProductCard'

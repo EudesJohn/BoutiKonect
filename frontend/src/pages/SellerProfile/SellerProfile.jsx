@@ -2,7 +2,7 @@
 import { useContext, useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { AppContext } from '../../context/AppContext'
+import { AppContext } from '../../context/AppContextInstance'
 import { MapPin, Package, MessageCircle, ArrowLeft, Store, Eye, Users, DollarSign, TrendingUp, ShoppingCart, Briefcase } from 'lucide-react'
 import ProductCard from '../../components/ProductCard/ProductCard'
 import ServiceCard from '../../components/ServiceCard/ServiceCard'

@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import { Navigate } from 'react-router-dom';
-import { AppContext } from '../../context/AppContext';
+import { AppContext } from '../../context/AppContextInstance';
 
 export default function GuestRoute({ children }) {
   const { user, seller, authLoading } = useContext(AppContext);

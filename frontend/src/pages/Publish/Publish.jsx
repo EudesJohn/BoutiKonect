@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { AppContext } from '../../context/AppContext'
+import { AppContext } from '../../context/AppContextInstance'
 import { categories, serviceCategories } from '../../context/constants'
 import { Plus, Image as ImageIcon, Trash2, CheckCircle, ArrowLeft, Package, Edit2, X, Store, MessageCircle, ShoppingBag, Zap, Briefcase, AlertTriangle, Loader2, MapPin } from 'lucide-react'
 import './Publish.css'

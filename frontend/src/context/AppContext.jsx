@@ -282,8 +282,14 @@ export function AppProvider({ children }) {
 
     const productsSub = supabase.channel('public:products')
       .on('postgres_changes', { event: '*', table: 'products' }, (payload) => {
-        if (payload.eventType === 'INSERT') setProducts(prev => [mapItemFromDB(payload.new), ...prev])
-        else if (payload.eventType === 'UPDATE') setProducts(prev => prev.map(p => p.id === payload.new.id ? mapItemFromDB(payload.new) : p))
+        if (payload.eventType === 'INSERT') {
+          const mapped = mapItemFromDB(payload.new);
+          if (mapped) setProducts(prev => [mapped, ...prev])
+        }
+        else if (payload.eventType === 'UPDATE') {
+          const mapped = mapItemFromDB(payload.new);
+          if (mapped) setProducts(prev => prev.map(p => p.id === payload.new.id ? mapped : p))
+        }
         else if (payload.eventType === 'DELETE') setProducts(prev => prev.filter(p => p.id !== payload.old.id))
       }).subscribe()
 
@@ -306,12 +312,18 @@ export function AppProvider({ children }) {
 
     const reviewsSub = supabase.channel('public:reviews')
       .on('postgres_changes', { event: '*', table: 'reviews' }, (payload) => {
-        const mapReview = (r) => ({
+        const mapReview = (r) => r ? ({
           id: r.id, productId: r.product_id, reviewerName: r.reviewer_name,
           reviewerId: r.reviewer_id, rating: r.rating, comment: r.comment, createdAt: r.created_at
-        })
-        if (payload.eventType === 'INSERT') setReviews(prev => [mapReview(payload.new), ...prev])
-        else if (payload.eventType === 'UPDATE') setReviews(prev => prev.map(r => r.id === payload.new.id ? mapReview(payload.new) : r))
+        }) : null
+        if (payload.eventType === 'INSERT') {
+          const mapped = mapReview(payload.new);
+          if (mapped) setReviews(prev => [mapped, ...prev])
+        }
+        else if (payload.eventType === 'UPDATE') {
+          const mapped = mapReview(payload.new);
+          if (mapped) setReviews(prev => prev.map(r => r.id === payload.new.id ? mapped : r))
+        }
         else if (payload.eventType === 'DELETE') setReviews(prev => prev.filter(r => r.id !== payload.old.id))
       }).subscribe()
 
@@ -591,4 +603,4 @@ export function AppProvider({ children }) {
 }
 
 // Ré-exportation du contexte pour compatibilité
-export { AppContext };
+// export { AppContext }; // Removed to avoid shadowing AppContextInstance

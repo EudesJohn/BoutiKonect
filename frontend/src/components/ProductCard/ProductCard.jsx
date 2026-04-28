@@ -2,7 +2,7 @@
 import { Link } from 'react-router-dom'
 import { useContext, useState } from 'react'
 import { motion } from 'framer-motion'
-import { AppContext } from '../../context/AppContext'
+import { AppContext } from '../../context/AppContextInstance'
 import { MapPin, Heart, ShoppingCart, MessageCircle, Eye, Star, X, Zap } from 'lucide-react'
 import './ProductCard.css'
 
@@ -11,7 +11,7 @@ import { useEffect } from 'react'
 export default function ProductCard({ product, showViews }) {
   const { addToCart, toggleFavorite, isFavorite, formatPrice, parseDate, user, seller } = useContext(AppContext)
   const [now, setNow] = useState(new Date())
-  const favorite = isFavorite(product.id)
+  const favorite = isFavorite(product?.id)
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -35,7 +35,7 @@ export default function ProductCard({ product, showViews }) {
   }
 
   // Generate WhatsApp message URL (same logic as ProductDetail)
-  const whatsappMessage = `Bonjour, je suis intéressé(e) par le produit "${product.title}" au prix de ${formatPrice(product.price)}. Est-il encore disponible?`
+  const whatsappMessage = `Bonjour, je suis intéressé(e) par le produit "${product?.title}" au prix de ${formatPrice(product?.price)}. Est-il encore disponible?`
   
   // Use fallback: whatsapp → sellerPhone → phone (same as ProductDetail)
   const vendorPhone = product.whatsapp || product.sellerPhone || product.phone || ''
@@ -61,11 +61,11 @@ export default function ProductCard({ product, showViews }) {
             />
           </div>
             <div className="product-badges">
-              {product.type === 'service' && <span className="badge badge-service">Service</span>}
+              {product?.type === 'service' && <span className="badge badge-service">Service</span>}
               
               {(() => {
-                const promoEnd = product.promotion_end_date ? parseDate(product.promotion_end_date) : null;
-                const isPromoted = product.is_promoted === true || product.is_promoted === 'true';
+                const promoEnd = product?.promotionEndDate ? parseDate(product.promotionEndDate) : null;
+                const isPromoted = product?.isPromoted === true || product?.isPromoted === 'true';
                 const isActive = isPromoted && promoEnd && promoEnd > now;
                 
                 if (!isActive) return null;
@@ -80,7 +80,7 @@ export default function ProductCard({ product, showViews }) {
                       <Star size={12} fill="currentColor" />
                       Vedette
                     </span>
-                    {(product.seller_id === user?.id || product.seller_id === seller?.id) && (
+                    {(product?.sellerId === user?.id || product?.sellerId === seller?.id) && (
                       <span className="promotion-timer" style={{ 
                         fontSize: '9px', 
                         background: 'rgba(0,0,0,0.7)', 
@@ -100,7 +100,7 @@ export default function ProductCard({ product, showViews }) {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 {(() => {
-                  const createdDate = parseDate(product.created_at);
+                  const createdDate = parseDate(product?.createdAt);
                   const diffInDays = (now - createdDate) / (1000 * 60 * 60 * 24);
                   if (diffInDays <= 3) {
                     return <span className="badge badge-primary">Nouveau</span>
@@ -108,7 +108,7 @@ export default function ProductCard({ product, showViews }) {
                   return null;
                 })()}
                 
-                {product.type !== 'service' && product.stock <= 0 && (
+                {product?.type !== 'service' && product?.stock <= 0 && (
                   <span className="badge badge-danger">Rupture</span>
                 )}
               </div>

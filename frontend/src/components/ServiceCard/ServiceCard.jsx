@@ -2,7 +2,7 @@ import { useState, useContext, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { MapPin, Heart, MessageCircle, Eye, Star, Briefcase, Zap } from 'lucide-react'
-import { AppContext } from '../../context/AppContext'
+import { AppContext } from '../../context/AppContextInstance'
 import { getItemRating } from '../../services/reviewsService'
 import './ServiceCard.css'
 

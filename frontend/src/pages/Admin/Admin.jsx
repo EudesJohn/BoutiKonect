@@ -1,5 +1,5 @@
 import { useContext, useState, useEffect } from 'react'
-import { AppContext } from '../../context/AppContext'
+import { AppContext } from '../../context/AppContextInstance'
 import { isAdminEmail, isAdminConfigured } from '../../services/adminAuth'
 import { motion } from 'framer-motion'
 import { Users, Package, AlertTriangle, Trash2, Check, ShoppingBag, MessageCircle, Phone, MapPin, Lock, Calendar, Mail, ShoppingCart, RefreshCw, Settings, DollarSign, Save, Edit2, X, Briefcase } from 'lucide-react'

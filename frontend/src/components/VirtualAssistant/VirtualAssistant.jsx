@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useContext } from 'react';
 import { MessageCircle, X, Send, User, Bot, HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { faqData } from './faqData';
-import { AppContext } from '../../context/AppContext';
+import { AppContext } from '../../context/AppContextInstance';
 import { aiService } from '../../services/aiService';
 import './VirtualAssistant.css';
 import assistantAvatar from '../../assets/stickers/assistant_avatar.png';

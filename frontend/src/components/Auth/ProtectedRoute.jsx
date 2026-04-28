@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { AppContext } from '../../context/AppContext';
+import { AppContext } from '../../context/AppContextInstance';
 
 export default function ProtectedRoute({ children }) {
   const { user, seller, authLoading, isAppReady } = useContext(AppContext);

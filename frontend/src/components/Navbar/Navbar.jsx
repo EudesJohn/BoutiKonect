@@ -1,6 +1,6 @@
 import { useState, useContext, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { AppContext } from '../../context/AppContext'
+import { AppContext } from '../../context/AppContextInstance'
 import { Search, ShoppingCart, User, Plus, LogOut, Store, Menu, X, Package, Briefcase } from 'lucide-react'
 import './Navbar.css'
 

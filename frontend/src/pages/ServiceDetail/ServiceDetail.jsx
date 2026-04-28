@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { AppContext } from '../../context/AppContext'
+import { AppContext } from '../../context/AppContextInstance'
 import { getItemReviews, getItemRating, addReview } from '../../services/reviewsService'
 import { trackView } from '../../services/analyticsService'
 import { 
@@ -44,7 +44,7 @@ export default function ServiceDetail() {
 
   // Tracking de la vue
   useEffect(() => {
-    if (service?.id) {
+    if (service && service.id) {
       trackView(service.id, user?.id || seller?.id, service.category, service.sellerId)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps

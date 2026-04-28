@@ -2,7 +2,7 @@
 import { useContext, useState, useEffect, useMemo } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { AppContext } from '../../context/AppContext'
+import { AppContext } from '../../context/AppContextInstance'
 import { getItemReviews, getItemRating, addReview } from '../../services/reviewsService'
 import { trackView } from '../../services/analyticsService'
 import { MapPin, ShoppingCart, MessageCircle, ArrowLeft, Share2, Heart, ChevronLeft, ChevronRight, X, Flag, Star, Send, Facebook, Copy } from 'lucide-react'
@@ -53,7 +53,7 @@ export default function ProductDetail() {
 
   // Tracking de la vue
   useEffect(() => {
-    if (product?.id) {
+    if (product && product.id) {
       trackView(product.id, user?.id || seller?.id, product.category, product.sellerId)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
