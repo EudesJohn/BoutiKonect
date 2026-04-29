@@ -280,10 +280,11 @@ export function AppProvider({ children }) {
   }, [cart])
 
   useEffect(() => {
-    if (typeof fetchInitialData === 'function') {
-      fetchInitialData();
-    }
+    console.log('🚀 BoutiKonect v2.5 (STABLE - 2026-04-29) loaded.');
+    fetchInitialData();
+  }, [fetchInitialData]);
 
+  useEffect(() => {
     const productsSub = supabase.channel('public:products')
       .on('postgres_changes', { event: '*', table: 'products' }, (payload) => {
         if (payload.eventType === 'INSERT') {
