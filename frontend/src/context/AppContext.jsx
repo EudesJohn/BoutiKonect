@@ -484,6 +484,35 @@ export function AppProvider({ children }) {
     return await confirmPromotionPayment(productId, plan, currentUser.id);
   };
 
+  const activatePromotionInstant = async (productId, days) => {
+    try {
+      const now = new Date();
+      const endDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+      
+      const { data, error } = await supabase
+        .from('products')
+        .update({
+          is_promoted: true,
+          promotion_end_date: endDate.toISOString()
+        })
+        .eq('id', productId)
+        .select();
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const updatedProduct = mapItemFromDB(data[0]);
+        setProducts(prev => prev.map(p => p.id === productId ? updatedProduct : p));
+        showToast("Félicitations ! Votre produit est maintenant en vedette.", "success");
+        return { success: true };
+      }
+      return { success: false, error: "Produit non trouvé." };
+    } catch (err) {
+      console.error('activatePromotionInstant error:', err);
+      return { success: false, error: err.message };
+    }
+  };
+
   // === HELPER METHODS ===
   const getProductById = useCallback((id) => products.find(p => p.id === id), [products])
   const getServiceById = useCallback((id) => products.find(p => p.id === id && p.type === 'service'), [products])
@@ -752,7 +781,7 @@ export function AppProvider({ children }) {
     createOrder, addToCart, removeFromCart, updateCartQuantity, clearCart, getCartTotal,
     toggleFavorite, isFavorite, decrementProductStock, reportProduct,
     getFavoriteProducts, getFavoriteServices, getSellerOrders, updateOrderStatus, updateProfile, upgradeToSeller,
-    PROMOTION_PRICES, promoteProduct,
+    PROMOTION_PRICES, promoteProduct, activatePromotionInstant,
     getAllUsers: () => allUsers,
     getAllProducts: () => products,
     getAllOrders: () => orders,
