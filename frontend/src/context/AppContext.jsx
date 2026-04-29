@@ -621,12 +621,17 @@ export function AppProvider({ children }) {
 
   const reportProduct = async (productId, reason, reporterId) => {
     try {
-      await supabase.from('admin_notifications').insert([{
+      const { error } = await supabase.from('admin_notifications').insert([{
         type: 'report',
         data: { productId, reason, reporterId },
         read: false
       }])
-    } catch (err) { console.error('Report error:', err) }
+      if (error) throw error
+      showToast("Signalement envoyé avec succès", 'success')
+    } catch (err) { 
+      console.error('Report error:', err)
+      showToast("Erreur lors de l'envoi du signalement", 'error')
+    }
   }
 
   const getReportedProducts = useCallback(() => {
