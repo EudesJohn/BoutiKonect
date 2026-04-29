@@ -100,6 +100,9 @@ CREATE TABLE orders (
   buyer_phone TEXT,
   buyer_address TEXT,
   status TEXT DEFAULT 'pending',
+  payment_id TEXT,                        -- ID de transaction FedaPay
+  payment_status TEXT DEFAULT 'pending',  -- pending, paid, failed
+  payment_method TEXT,                    -- fedapay, cash, etc.
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -125,6 +128,14 @@ CREATE POLICY "Sellers can view orders for their products." ON orders FOR SELECT
 DROP POLICY IF EXISTS "Anyone can insert an order (guest support)." ON orders;
 CREATE POLICY "Anyone can insert an order (guest support)." ON orders FOR INSERT TO public WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Sellers can update their orders." ON orders;
+CREATE POLICY "Sellers can update their orders." ON orders FOR UPDATE TO authenticated USING (auth.uid() = seller_id);
+
+DROP POLICY IF EXISTS "Admins can update all orders." ON orders;
+CREATE POLICY "Admins can update all orders." ON orders FOR UPDATE TO authenticated USING (
+  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
+);
+
 -- 5. Admin Notifications
 CREATE TABLE admin_notifications (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -138,12 +149,14 @@ CREATE TABLE admin_notifications (
 ALTER TABLE admin_notifications ENABLE ROW LEVEL SECURITY;
 
 -- Admin Notifications Policies
-CREATE POLICY "Only admins can view notifications." ON admin_notifications FOR SELECT USING (
+CREATE POLICY "Only admins can view notifications." ON admin_notifications FOR SELECT TO authenticated USING (
   EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
 );
-CREATE POLICY "Only admins can update notifications." ON admin_notifications FOR UPDATE USING (
+CREATE POLICY "Only admins can update notifications." ON admin_notifications FOR UPDATE TO authenticated USING (
   EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
 );
+-- Tout utilisateur authentifié peut insérer: signalements + confirmations de paiement promotion
+CREATE POLICY "Authenticated users can insert notifications." ON admin_notifications FOR INSERT TO authenticated WITH CHECK (true);
 
 -- 6. Trigger for profile creation on signup
 -- Note: This requires a Supabase function and trigger
@@ -232,4 +245,4 @@ CREATE POLICY "Admins can see all history for analytics." ON user_history FOR SE
 -- 9. Enable Realtime Sync
 -- Cette commande indique à Supabase de diffuser les événements (INSERT, UPDATE, DELETE)
 -- en temps réel pour ces tables vers les clients abonnés.
-ALTER PUBLICATION supabase_realtime ADD TABLE products, profiles, orders, reviews, admin_notifications;
+ALTER PUBLICATION supabase_realtime ADD TABLE products, profiles, orders, reviews, admin_notifications, user_history;

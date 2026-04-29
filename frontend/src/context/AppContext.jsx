@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
-// Vercel Trigger: 2026-04-29 - Forced stabilization redeploy
+// Vercel Trigger: 2026-04-29 - Fix RLS orders/notifications + Realtime admin + Promotion badge
 import { supabase } from '../supabase/client'
 import { isAdminConfigured, getAdminInfo } from '../services/adminAuth'
 import { logoutUser as authLogoutUser, loginUser as authLoginUser, registerUser as authRegisterUser } from '../services/authService'
@@ -286,7 +286,7 @@ export function AppProvider({ children }) {
 
   useEffect(() => {
     const productsSub = supabase.channel('public:products')
-      .on('postgres_changes', { event: '*', table: 'products' }, (payload) => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, (payload) => {
         if (payload.eventType === 'INSERT') {
           const mapped = mapItemFromDB(payload.new)
           if (mapped) {
@@ -309,7 +309,7 @@ export function AppProvider({ children }) {
       }).subscribe()
 
     const profilesSub = supabase.channel('public:profiles')
-      .on('postgres_changes', { event: '*', table: 'profiles' }, (payload) => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, (payload) => {
         if (payload.eventType === 'UPDATE') {
           const updatedProfile = payload.new
           setAllUsers(prev => prev.map(u => u.id === updatedProfile.id ? { ...u, ...updatedProfile } : u))
@@ -320,15 +320,16 @@ export function AppProvider({ children }) {
         }
       }).subscribe()
 
+    // Realtime pour les commandes - essentiel pour la visibilité vendeur
     const ordersSub = supabase.channel('public:orders')
-      .on('postgres_changes', { event: '*', table: 'orders' }, (payload) => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
         if (payload.eventType === 'INSERT') setOrders(prev => [mapOrderFromDB(payload.new), ...prev])
         else if (payload.eventType === 'UPDATE') setOrders(prev => prev.map(o => o.id === payload.new.id ? mapOrderFromDB(payload.new) : o))
         else if (payload.eventType === 'DELETE') setOrders(prev => prev.filter(o => o.id !== payload.old.id))
       }).subscribe()
 
     const reviewsSub = supabase.channel('public:reviews')
-      .on('postgres_changes', { event: '*', table: 'reviews' }, (payload) => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'reviews' }, (payload) => {
         const mapReview = (r) => r ? ({
           id: r.id, productId: r.product_id, reviewerName: r.reviewer_name,
           reviewerId: r.reviewer_id, rating: r.rating, comment: r.comment, createdAt: r.created_at
@@ -344,11 +345,24 @@ export function AppProvider({ children }) {
         else if (payload.eventType === 'DELETE') setReviews(prev => prev.filter(r => r.id !== payload.old.id))
       }).subscribe()
 
+    // Realtime pour les notifications admin - signalements en temps réel
+    const adminNotifSub = supabase.channel('public:admin_notifications')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'admin_notifications' }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setAdminNotifications(prev => [payload.new, ...prev])
+        } else if (payload.eventType === 'UPDATE') {
+          setAdminNotifications(prev => prev.map(n => n.id === payload.new.id ? payload.new : n))
+        } else if (payload.eventType === 'DELETE') {
+          setAdminNotifications(prev => prev.filter(n => n.id !== payload.old.id))
+        }
+      }).subscribe()
+
     return () => {
       supabase.removeChannel(productsSub)
       supabase.removeChannel(profilesSub)
       supabase.removeChannel(ordersSub)
       supabase.removeChannel(reviewsSub)
+      supabase.removeChannel(adminNotifSub)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -500,15 +514,27 @@ export function AppProvider({ children }) {
         .eq('id', productId)
         .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('activatePromotionInstant - Erreur RLS ou BD:', error);
+        // Si c'est une erreur RLS (42501), informer l'utilisateur clairement
+        if (error.code === '42501' || error.message?.includes('RLS') || error.message?.includes('security')) {
+          showToast("Erreur de droits. Vérifiez que vous êtes bien connecté en tant que vendeur.", "error");
+        } else {
+          showToast("Impossible d'activer la promotion: " + error.message, "error");
+        }
+        throw error;
+      }
 
       if (data && data.length > 0) {
         const updatedProduct = mapItemFromDB(data[0]);
         setProducts(prev => prev.map(p => p.id === productId ? updatedProduct : p));
-        showToast("Félicitations ! Votre produit est maintenant en vedette.", "success");
+        showToast("⭐ Félicitations ! Votre produit est maintenant en Vedette.", "success");
         return { success: true };
       }
-      return { success: false, error: "Produit non trouvé." };
+      // Si aucune ligne retournée, c'est souvent un problème RLS silencieux
+      console.warn('activatePromotionInstant: aucune ligne mise à jour pour le produit', productId);
+      showToast("Impossible d'activer la promotion. Vérifiez que ce produit vous appartient.", "warning");
+      return { success: false, error: "Produit non trouvé ou droits insuffisants." };
     } catch (err) {
       console.error('activatePromotionInstant error:', err);
       return { success: false, error: err.message };

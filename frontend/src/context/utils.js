@@ -97,23 +97,30 @@ export function mapOrderToDB(order) {
     paymentId, paymentStatus, paymentMethod, ...rest
   } = order;
 
-  return cleanObject({
-    product_id: productId || serviceId,
-    product_title: productTitle || serviceTitle,
-    product_image: productImage,
-    seller_id: sellerId,
-    seller_name: sellerName,
-    buyer_id: buyerId,
-    buyer_name: buyerName,
-    buyer_phone: buyerPhone,
-    buyer_address: buyerAddress,
-    price: order.price,
-    quantity: order.quantity,
+  // Colonnes de base toujours présentes dans la table orders
+  const dbOrder = {
+    product_id: productId || serviceId || null,
+    product_title: productTitle || serviceTitle || null,
+    product_image: productImage || null,
+    seller_id: sellerId || null,
+    seller_name: sellerName || null,
+    buyer_id: buyerId || null,
+    buyer_name: buyerName || null,
+    buyer_phone: buyerPhone || null,
+    buyer_address: buyerAddress || null,
+    price: order.price || null,
+    quantity: order.quantity || 1,
     status: order.status || 'pending',
-    payment_id: paymentId,
-    payment_status: paymentStatus,
-    payment_method: paymentMethod
-  });
+    // Colonnes de paiement (ajoutées via migration SQL fix_all_issues.sql)
+    payment_id: paymentId || null,
+    payment_status: paymentStatus || null,
+    payment_method: paymentMethod || null
+  };
+
+  // Filtrer les valeurs null/undefined pour éviter les erreurs PostgREST
+  return Object.fromEntries(
+    Object.entries(dbOrder).filter(([_, v]) => v !== null && v !== undefined && v !== '')
+  );
 }
 
 export function mapItemToDB(item) {
