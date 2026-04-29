@@ -43,3 +43,6 @@ firebase-debug*.log
 
 # OS
 Thumbs.db
+
+# Assistant
+.claude/
