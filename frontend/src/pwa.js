@@ -10,14 +10,23 @@ const updateSW = registerSW({
   },
   // Check for updates every 60 seconds
   onRegisteredSW(swUrl, r) {
-    r && setInterval(async () => {
-      if (!(!r.installing && navigator)) return
-      if (('connection' in navigator) && !navigator.onLine) return
-      const resp = await fetch(swUrl, {
-        cache: 'no-store',
-        headers: { 'cache': 'no-store', 'cache-control': 'no-cache' },
-      })
-      if (resp?.status === 200) await r.update()
-    }, 60000)
+    if (!r) return;
+    const interval = setInterval(async () => {
+      try {
+        if (!navigator.onLine) return;
+        // Check if registration is still valid
+        if (r.active || r.waiting || r.installing) {
+          const resp = await fetch(swUrl, {
+            cache: 'no-store',
+            headers: { 'cache': 'no-store', 'cache-control': 'no-cache' },
+          });
+          if (resp?.status === 200) await r.update();
+        } else {
+          clearInterval(interval);
+        }
+      } catch (err) {
+        console.warn('SW Update check failed (non-critical):', err);
+      }
+    }, 60000);
   }
 })

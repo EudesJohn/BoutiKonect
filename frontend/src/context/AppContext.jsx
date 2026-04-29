@@ -11,6 +11,7 @@ import {
   mapItemFromDB, mapItemToDB, mapOrderFromDB, mapOrderToDB, getDistance
 } from './utils'
 import { sendPasswordResetEmail, updateEmailWithVerification } from '../services/authService'
+import { confirmPromotionPayment } from '../services/paymentService'
 import { useProductSearch } from '../hooks/useProductSearch'
 import { AppContext } from './AppContextInstance'
 
@@ -440,6 +441,16 @@ export function AppProvider({ children }) {
     }
   };
 
+  const promoteProduct = async (productId, planKey) => {
+    const currentUser = seller || user;
+    if (!currentUser) return { success: false, error: 'Vous devez être connecté.' };
+    
+    const plan = PROMOTION_PRICES[planKey];
+    if (!plan) return { success: false, error: 'Plan invalide.' };
+
+    return await confirmPromotionPayment(productId, plan, currentUser.id);
+  };
+
   // === HELPER METHODS ===
   const getProductById = useCallback((id) => products.find(p => p.id === id), [products])
   const getServiceById = useCallback((id) => products.find(p => p.id === id && p.type === 'service'), [products])
@@ -641,6 +652,7 @@ export function AppProvider({ children }) {
     getProductById, getServiceById, fetchSingleProduct, addProduct, updateProduct, deleteProduct, deleteService,
     createOrder, addToCart, toggleFavorite, isFavorite, decrementProductStock, reportProduct,
     getFavoriteProducts, getFavoriteServices, getSellerOrders, updateOrderStatus, updateProfile, upgradeToSeller,
+    PROMOTION_PRICES, promoteProduct,
     getAllUsers: () => allUsers,
     getAllProducts: () => products,
     getAllOrders: () => orders,
