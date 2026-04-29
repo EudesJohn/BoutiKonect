@@ -1,4 +1,4 @@
-const Joi = require('joi');
+import Joi from 'joi';
 
 // Validation schema for admin actions
 const adminSchema = Joi.object({
@@ -16,16 +16,14 @@ const chatSchema = Joi.object({
   context: Joi.object().default({})
 });
 
-function validateAdminAction(payload) {
+export function validateAdminAction(payload) {
   return adminSchema.validate(payload, { abortEarly: false });
 }
 
-function validateCollect(payload) {
+export function validateCollect(payload) {
   return collectSchema.validate(payload, { abortEarly: false });
 }
 
-module.exports = {
-  validateAdminAction,
-  validateCollect,
-  validateChat,
-};
+export function validateChat(payload) {
+  return chatSchema.validate(payload, { abortEarly: false });
+}

@@ -3,8 +3,7 @@
  * Logs basic request metadata and catches unexpected errors.
  * Sensitive fields (e.g., passwords, tokens) are omitted from logs.
  */
-module.exports = {
-  withLogging: (handler) => {
+export const withLogging = (handler) => {
     return async (req, res) => {
       try {
         const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';

@@ -13,7 +13,7 @@ function getClientIp(req) {
   return req.socket?.remoteAddress || 'unknown';
 }
 
-async function rateLimiter(req, res) {
+export async function rateLimiter(req, res) {
   const limit = 5; // requests per minute
   const windowMs = 60 * 1000;
   const ip = getClientIp(req);
@@ -60,4 +60,3 @@ async function rateLimiter(req, res) {
   return true;
 }
 
-module.exports = { rateLimiter };
