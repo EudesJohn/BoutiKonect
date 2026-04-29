@@ -112,8 +112,7 @@ export function mapOrderToDB(order) {
     buyer_address: buyerAddress,
     seller_city: sellerCity,
     seller_neighborhood: sellerNeighborhood,
-    location: buyerAddress,
-    delivery_address: buyerAddress,
+    location: order.location || buyerAddress,
     payment_id: paymentId,
     payment_status: paymentStatus,
     payment_method: paymentMethod
