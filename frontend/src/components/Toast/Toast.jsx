@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, CheckCircle, AlertCircle, ShoppingBag, Bell } from 'lucide-react'
+import { X, CircleCheck as CheckCircle, CircleAlert as AlertCircle, ShoppingBag, Bell } from 'lucide-react'
 import './Toast.css'
 
 export default function Toast({ message, type = 'info', onClose, duration = 5000, onClick }) {

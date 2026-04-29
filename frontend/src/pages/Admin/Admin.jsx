@@ -2,7 +2,7 @@ import { useContext, useState, useEffect } from 'react'
 import { AppContext } from '../../context/AppContextInstance'
 import { isAdminEmail, isAdminConfigured } from '../../services/adminAuth'
 import { motion } from 'framer-motion'
-import { Users, Package, AlertTriangle, Trash2, Check, ShoppingBag, MessageCircle, Phone, MapPin, Lock, Calendar, Mail, ShoppingCart, RefreshCw, Settings, DollarSign, Save, Edit2, X, Briefcase } from 'lucide-react'
+import { Users, Package, TriangleAlert as AlertTriangle, Trash2, Check, ShoppingBag, MessageCircle, Phone, MapPin, Lock, Calendar, Mail, ShoppingCart, RefreshCw, Settings, DollarSign, Save, Edit2, X, Briefcase } from 'lucide-react'
 import './Admin.css'
 
 // Default promotion prices
