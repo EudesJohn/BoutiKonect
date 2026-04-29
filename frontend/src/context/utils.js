@@ -85,8 +85,6 @@ export function mapOrderFromDB(order) {
     buyerName: order.buyer_name,
     buyerPhone: order.buyer_phone,
     buyerAddress: order.buyer_address,
-    sellerCity: order.seller_city,
-    sellerNeighborhood: order.seller_neighborhood,
     createdAt: order.created_at
   }
 }
@@ -110,9 +108,6 @@ export function mapOrderToDB(order) {
     buyer_name: buyerName,
     buyer_phone: buyerPhone,
     buyer_address: buyerAddress,
-    seller_city: sellerCity,
-    seller_neighborhood: sellerNeighborhood,
-    location: order.location || buyerAddress,
     payment_id: paymentId,
     payment_status: paymentStatus,
     payment_method: paymentMethod
