@@ -1,18 +1,49 @@
 const { createClient } = require('@supabase/supabase-js');
+const crypto = require('crypto');
+const Joi = require('joi');
+const { rateLimiter } = require('../utils/rateLimit');
+const { validateCollect } = require('../utils/validation');
+const { withLogging } = require('../utils/withLogging');
 
 // Config Supabase
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const cronSecret = process.env.CRON_SECRET;
+
+// Helper for timing-safe comparison
+function safeCompare(a, b) {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
 
 module.exports = async (req, res) => {
+  return withLogging(async (req, res) => {
+    // Rate limiting for collect endpoint
+    if (!rateLimiter(req, res)) return; // response handled inside
+    // Validate request (currently empty schema)
+    const { error } = validateCollect(req.body || {});
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+    // Existing logic follows
+
   // 1. Sécurité (Token secret ou Cron auto)
   const authHeader = req.headers.authorization;
-  const cronSecret = process.env.CRON_SECRET;
   const isCron = req.headers['x-vercel-cron'] === '1';
 
   // Si on a un CRON_SECRET défini, on vérifie l'autorisation
-  if (cronSecret && !isCron && authHeader !== `Bearer ${cronSecret}`) {
-    return res.status(401).json({ error: 'Non autorisé' });
+  if (cronSecret && !isCron) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Non autorisé' });
+    }
+    const token = authHeader.slice(7); // Remove 'Bearer ' prefix
+    if (!safeCompare(token, cronSecret)) {
+      return res.status(401).json({ error: 'Non autorisé' });
+    }
   }
 
   if (!supabaseUrl || !supabaseKey) {
@@ -23,7 +54,7 @@ module.exports = async (req, res) => {
 
   try {
     console.log('--- Démarrage de la collecte API (Root) ---');
-    
+
     // Logic remains identical to frontend version to ensure feature parity
     const sampleProperties = [
       {
@@ -59,15 +90,16 @@ module.exports = async (req, res) => {
       addedCount++;
     }
 
-    return res.status(200).json({ 
-      success: true, 
-      added: addedCount, 
+    return res.status(200).json({
+      success: true,
+      added: addedCount,
       skipped: skippedCount,
       message: 'Collecte terminée avec succès (Root)'
     });
 
   } catch (error) {
+    // Log error internally (avoid leaking details to client)
     console.error('Erreur Collecte Root:', error);
-    return res.status(500).json({ success: false, error: error.message });
+    return res.status(500).json({ success: false, error: 'Erreur interne du serveur' });
   }
 };
