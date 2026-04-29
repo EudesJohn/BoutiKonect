@@ -251,6 +251,7 @@ export function AppProvider({ children }) {
   const [favorites, setFavorites] = useState([])
   const [cart, setCart] = useState([])
   const [recommendations, setRecommendations] = useState([])
+  const [adminNotifications, setAdminNotifications] = useState([])
 
   // === LOAD LOCAL STORAGE ===
   useEffect(() => {
@@ -293,10 +294,13 @@ export function AppProvider({ children }) {
             })
           }
         } else if (payload.eventType === 'UPDATE') {
-          const mapped = mapItemFromDB(payload.new)
-          if (mapped) {
-            setProducts(prev => prev.map(p => p.id === mapped.id ? mapped : p))
-          }
+          setProducts(prev => prev.map(p => {
+            if (p.id === payload.new.id) {
+              // Merge with existing product to avoid losing fields not in the payload
+              return mapItemFromDB({ ...p, ...payload.new })
+            }
+            return p
+          }))
         } else if (payload.eventType === 'DELETE') {
           setProducts(prev => prev.filter(p => p.id !== payload.old.id))
         }
@@ -306,9 +310,11 @@ export function AppProvider({ children }) {
       .on('postgres_changes', { event: '*', table: 'profiles' }, (payload) => {
         if (payload.eventType === 'UPDATE') {
           const updatedProfile = payload.new
+          setAllUsers(prev => prev.map(u => u.id === updatedProfile.id ? { ...u, ...updatedProfile } : u))
+          
+          // Also update current user if needed
           if (user && updatedProfile.id === user.id) setUser(prev => ({ ...prev, ...updatedProfile }))
           if (seller && updatedProfile.id === seller.id) setSeller(prev => ({ ...prev, ...updatedProfile }))
-          setAllUsers(prev => prev.map(u => u.id === updatedProfile.id ? updatedProfile : u))
         }
       }).subscribe()
 
@@ -353,15 +359,28 @@ export function AppProvider({ children }) {
     }
     const fetchUserData = async () => {
       setDataLoading(prev => ({ ...prev, orders: true, users: true }))
-      const { data: ordersData } = await supabase.from('orders').select('*')
-        .or(`seller_id.eq.${currentUser.id},buyer_id.eq.${currentUser.id}`)
-        .order('created_at', { ascending: false })
+      
+      const isAdmin = checkIsAdmin(currentUser)
+      
+      // Fetch orders: all if admin, else only user's orders
+      let ordersQuery = supabase.from('orders').select('*')
+      if (!isAdmin) {
+        ordersQuery = ordersQuery.or(`seller_id.eq.${currentUser.id},buyer_id.eq.${currentUser.id}`)
+      }
+      
+      const { data: ordersData } = await ordersQuery.order('created_at', { ascending: false })
       if (ordersData) setOrders(ordersData.map(mapOrderFromDB))
 
-      if (checkIsAdmin(currentUser)) {
+      if (isAdmin) {
         const { data: usersData } = await supabase.from('profiles').select('*')
         if (usersData) setAllUsers(usersData)
+        
+        const { data: notificationsData } = await supabase.from('admin_notifications')
+          .select('*')
+          .order('created_at', { ascending: false })
+        if (notificationsData) setAdminNotifications(notificationsData)
       }
+      
       setDataLoading(prev => ({ ...prev, orders: false, users: false }))
     }
     fetchUserData()
@@ -547,20 +566,45 @@ export function AppProvider({ children }) {
   }
 
   const getReportedProducts = useCallback(() => {
-    const reportedIds = reviews.filter(r => r.rating <= 2).map(r => r.productId)
-    // Also check admin_notifications if available
-    return products.filter(p => reportedIds.includes(p.id))
-  }, [products, reviews])
+    // Collect IDs from low ratings
+    const lowRatingProductIds = reviews.filter(r => r.rating <= 2).map(r => r.productId)
+    
+    // Collect IDs from admin notifications
+    const reportNotificationIds = adminNotifications
+      .filter(n => n.type === 'report' && n.data?.productId)
+      .map(n => n.data.productId)
+    
+    const allReportedIds = [...new Set([...lowRatingProductIds, ...reportNotificationIds])]
+    return products.filter(p => allReportedIds.includes(p.id))
+  }, [products, reviews, adminNotifications])
 
   const getAllReports = useCallback(() => {
-    return reviews.filter(r => r.rating <= 2).map(r => ({
+    // Reports from reviews
+    const reviewReports = reviews.filter(r => r.rating <= 2).map(r => ({
       id: r.id,
       productId: r.productId,
       reason: r.comment,
       status: 'pending',
-      createdAt: r.createdAt
+      createdAt: r.createdAt,
+      source: 'review'
     }))
-  }, [reviews])
+    
+    // Reports from admin notifications
+    const directReports = adminNotifications
+      .filter(n => n.type === 'report')
+      .map(n => ({
+        id: n.id,
+        productId: n.data?.productId,
+        reason: n.data?.reason || 'Signalement direct',
+        status: n.read ? 'resolved' : 'pending',
+        createdAt: n.created_at,
+        source: 'notification'
+      }))
+      
+    return [...reviewReports, ...directReports].sort((a, b) => 
+      new Date(b.createdAt) - new Date(a.createdAt)
+    )
+  }, [reviews, adminNotifications])
 
   const deleteService = deleteProduct // Alias
 
