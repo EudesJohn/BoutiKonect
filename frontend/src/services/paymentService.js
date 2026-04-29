@@ -17,7 +17,7 @@ export const getPromotionPrices = () => PROMOTION_PRICES;
 /**
  * Ouvre l'overlay de paiement FedaPay.
  */
-export const openFedaPayOverlay = ({ amount, description, customer }) => {
+export const openFedaPayOverlay = ({ amount, description, customer, callbackUrl }) => {
   return new Promise((resolve) => {
     if (!window.FedaPay) {
       resolve({ success: false, error: "Le SDK FedaPay n'est pas chargé." });
@@ -28,7 +28,8 @@ export const openFedaPayOverlay = ({ amount, description, customer }) => {
       public_key: FEDAPAY_PUBLIC_KEY,
       transaction: {
         amount: amount,
-        description: description || "Paiement BoutiKonect"
+        description: description || "Paiement BoutiKonect",
+        callback_url: callbackUrl || window.location.href
       },
       customer: {
         email: customer.email,

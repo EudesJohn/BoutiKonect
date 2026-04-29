@@ -6,7 +6,7 @@ import { X, Zap, CircleCheck as CheckCircle, Loader2 as Loader } from 'lucide-re
 import './Publish.css';
 
 export default function PromoteModal({ product, onClose }) {
-  const { PROMOTION_PRICES, promoteProduct, seller } = useContext(AppContext);
+  const { PROMOTION_PRICES, promoteProduct, activatePromotionInstant, seller } = useContext(AppContext);
   const [selectedPlan, setSelectedPlan] = useState('week');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -29,43 +29,41 @@ export default function PromoteModal({ product, onClose }) {
       phone: seller?.whatsapp || seller?.phone || '',
     };
     
+    // Préparer les données pour le callback au cas où il y aurait une redirection
+    const promoData = {
+      productId: product.id,
+      plan: plan,
+      uid: seller?.id,
+      type: product.type
+    };
+    sessionStorage.setItem('fedapay_promotion_data', JSON.stringify(promoData));
+
     // 1. Ouvrir l'overlay de paiement
     const paymentResult = await openFedaPayOverlay({
       amount: plan.price,
       description: `Promotion de l'annonce : ${product.title} (${plan.name})`,
-      customer: userInfo
+      customer: userInfo,
+      callbackUrl: `${window.location.origin}/promotion/success`
     });
 
     if (!paymentResult.success) {
       setError(paymentResult.error || "Le paiement a été annulé.");
+      sessionStorage.removeItem('fedapay_promotion_data');
       setLoading(false);
       return;
     }
 
-    // 2. Si le paiement est réussi, enregistrer la promotion
+    // 2. Si le paiement est réussi, enregistrer la promotion officiellement (admin)
     const result = await promoteProduct(product.id, selectedPlan);
     
     if (result && result.success) {
-      // 3. [MODE TEST/SANDBOX] Activer immédiatement la promotion pour le feedback visuel
-      // Puisque le vendeur a le droit d'éditer ses propres produits (RLS), on peut le faire ici
-      const endDate = new Date();
-      endDate.setDate(endDate.getDate() + plan.days);
-
-      try {
-        const { error: updateError } = await (await import('../../supabase/client')).supabase
-          .from('products')
-          .update({
-            is_promoted: true,
-            promotion_end_date: endDate.toISOString()
-          })
-          .eq('id', product.id);
-        
-        if (updateError) console.error("Erreur activation immédiate:", updateError);
-      } catch (e) {
-        console.error("Erreur lors de l'activation automatique:", e);
+      // Activation immédiate via le context
+      if (activatePromotionInstant) {
+        await activatePromotionInstant(product.id, plan.days);
       }
-
+      
       setSuccess(true);
+      sessionStorage.removeItem('fedapay_promotion_data');
     } else {
       setError(result?.error || "Le plan de promotion n'a pas pu être enregistré malgré le paiement.");
     }
