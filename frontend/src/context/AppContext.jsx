@@ -561,9 +561,9 @@ export function AppProvider({ children }) {
   const createOrder = async (orderData) => {
     try {
       const dbOrder = mapOrderToDB(orderData)
-      const { data, error } = await supabase.from('orders').insert([dbOrder]).select()
+      const { error } = await supabase.from('orders').insert([dbOrder])
       if (error) throw error
-      return { success: true, data: data[0] }
+      return { success: true }
     } catch (error) { return { success: false, error: error.message } }
   }
 
