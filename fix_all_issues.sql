@@ -66,50 +66,29 @@ USING (
 
 -- ============================================================
 -- PROBLÈME 3 : VISIBILITÉ VENDEUR - Realtime pour orders
--- La table orders doit être incluse dans la publication
--- supabase_realtime avec la table user_history.
+-- On s'assure que user_history et admin_notifications sont dans la publication
 -- ============================================================
 
--- Ajouter user_history à la publication Realtime (si pas déjà fait)
--- Note: orders, products, profiles, reviews sont déjà dans la publication
--- selon le schéma initial. On s'assure que user_history est aussi inclus.
-ALTER PUBLICATION supabase_realtime ADD TABLE user_history;
+DO $$
+BEGIN
+    -- Ajout de user_history si pas déjà présent
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' 
+        AND tablename = 'user_history'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE user_history;
+    END IF;
 
--- Vérification : lister les tables dans la publication
--- SELECT * FROM pg_publication_tables WHERE pubname = 'supabase_realtime';
-
--- ============================================================
--- PROBLÈME 4 : SIGNALEMENTS ADMIN - Policy d'insertion
--- (identique au problème 1, déjà corrigé ci-dessus)
--- Mais on s'assure aussi que les admins peuvent voir et gérer
--- toutes les notifications en temps réel.
--- ============================================================
-
--- Vérifier que la policy SELECT pour admins existe bien
-DROP POLICY IF EXISTS "Only admins can view notifications." ON admin_notifications;
-
-CREATE POLICY "Only admins can view notifications." 
-ON admin_notifications 
-FOR SELECT 
-TO authenticated
-USING (
-  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
-);
-
--- Vérifier que la policy UPDATE pour admins existe bien
-DROP POLICY IF EXISTS "Only admins can update notifications." ON admin_notifications;
-
-CREATE POLICY "Only admins can update notifications." 
-ON admin_notifications 
-FOR UPDATE 
-TO authenticated
-USING (
-  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
-);
-
--- Ajouter admin_notifications à la publication Realtime pour que
--- les admins voient les signalements en temps réel
-ALTER PUBLICATION supabase_realtime ADD TABLE admin_notifications;
+    -- Ajout de admin_notifications si pas déjà présent
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' 
+        AND tablename = 'admin_notifications'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE admin_notifications;
+    END IF;
+END $$;
 
 -- =============================================================
 -- RÉSUMÉ DES CORRECTIONS APPLIQUÉES:
