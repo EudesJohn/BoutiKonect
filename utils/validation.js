@@ -10,6 +10,12 @@ const adminSchema = Joi.object({
 // Validation schema for collect endpoint (currently no payload expected)
 const collectSchema = Joi.object({});
 
+// Validation schema for chat endpoint
+const chatSchema = Joi.object({
+  prompt: Joi.string().min(1).required(),
+  context: Joi.object().default({})
+});
+
 function validateAdminAction(payload) {
   return adminSchema.validate(payload, { abortEarly: false });
 }
@@ -21,4 +27,5 @@ function validateCollect(payload) {
 module.exports = {
   validateAdminAction,
   validateCollect,
+  validateChat,
 };

@@ -35,8 +35,8 @@ export default function ResetPassword() {
   const handleResetPassword = async (e) => {
     e.preventDefault()
     
-    if (newPassword.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères.')
+    if (newPassword.length < 8) {
+      setError('Le mot de passe doit contenir au moins 8 caractères.')
       return
     }
     

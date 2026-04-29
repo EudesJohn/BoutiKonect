@@ -24,7 +24,7 @@ CREATE TABLE profiles (
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
 -- Profiles Policies
-CREATE POLICY "Public profiles are viewable by everyone." ON profiles FOR SELECT USING (true);
+CREATE POLICY "Profiles are viewable by owners and admins." ON profiles FOR SELECT USING (auth.uid() = id OR (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)));
 CREATE POLICY "Users can update their own profile." ON profiles FOR UPDATE USING (auth.uid() = id);
 
 -- 2. Products (Includes Services)
