@@ -85,6 +85,8 @@ export function mapOrderFromDB(order) {
     buyerName: order.buyer_name,
     buyerPhone: order.buyer_phone,
     buyerAddress: order.buyer_address,
+    sellerCity: order.seller_city,
+    sellerNeighborhood: order.seller_neighborhood,
     createdAt: order.created_at
   }
 }
@@ -93,7 +95,7 @@ export function mapOrderToDB(order) {
   if (!order) return null;
   const {
     productId, productTitle, productImage, serviceId, serviceTitle,
-    sellerId, sellerName, buyerId, buyerName, buyerPhone, buyerAddress,
+    sellerId, sellerName, sellerCity, sellerNeighborhood, buyerId, buyerName, buyerPhone, buyerAddress,
     paymentId, paymentStatus, paymentMethod, ...rest
   } = order;
 
@@ -108,6 +110,8 @@ export function mapOrderToDB(order) {
     buyer_name: buyerName,
     buyer_phone: buyerPhone,
     buyer_address: buyerAddress,
+    seller_city: sellerCity,
+    seller_neighborhood: sellerNeighborhood,
     location: buyerAddress,
     delivery_address: buyerAddress,
     payment_id: paymentId,

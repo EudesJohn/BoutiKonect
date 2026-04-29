@@ -173,46 +173,55 @@ export default function ServiceDetail() {
     e.preventDefault()
     setSubmittingOrder(true)
     
-    const orderData = {
-      type: 'service',
-      serviceId: id,
-      serviceTitle: service.title,
-      price: service.price,
-      priceType: service.priceType,
-      sellerId: service.sellerId,
-      sellerName: service.sellerName,
-      buyerId: currentUser?.id || 'guest',
-      buyerName: orderForm.name,
-      buyerPhone: orderForm.phone,
-      details: orderForm.details,
-      location: orderForm.location,
-      status: 'pending',
-      createdAt: new Date().toISOString()
-    }
-
-    const result = await createOrder(orderData)
-    setSubmittingOrder(false)
-    
-    if (result && result.success) {
-      setOrderSuccess(true)
-      
-      // WhatsApp Redirect
-      if (service.whatsapp) {
-        const message = `Bonjour ${service.sellerName}, je viens de confirmer ma prestation pour "${service.title}" sur BoutiKonect.\n\nClient: ${orderForm.name}\nTel: ${orderForm.phone}\nLieu: ${orderForm.location}\nBesoin: ${orderForm.details}`
-        const whatsappUrl = `https://wa.me/${service.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`
-        
-        setTimeout(() => {
-          window.open(whatsappUrl, '_blank')
-        }, 1500)
+    try {
+      const orderData = {
+        type: 'service',
+        serviceId: id,
+        serviceTitle: service.title,
+        price: service.price,
+        priceType: service.priceType,
+        sellerId: service.sellerId,
+        sellerName: service.sellerName,
+        sellerCity: service.sellerCity,
+        sellerNeighborhood: service.sellerNeighborhood,
+        buyerId: currentUser?.id || 'guest',
+        buyerName: orderForm.name,
+        buyerPhone: orderForm.phone,
+        details: orderForm.details,
+        location: orderForm.location,
+        quantity: 1,
+        status: 'pending',
+        createdAt: new Date().toISOString()
       }
 
-      setTimeout(() => {
-        setShowOrderModal(false)
-        setOrderSuccess(false)
-        setOrderForm({ name: '', phone: '', details: '', location: '' })
-      }, 3000)
-    } else {
-      alert("Erreur lors de l'envoi de la commande.")
+      const result = await createOrder(orderData)
+      
+      if (result && result.success) {
+        setOrderSuccess(true)
+        
+        // WhatsApp Redirect
+        if (service.whatsapp) {
+          const message = `Bonjour ${service.sellerName}, je viens de confirmer ma prestation pour "${service.title}" sur BoutiKonect.\n\nClient: ${orderForm.name}\nTel: ${orderForm.phone}\nLieu: ${orderForm.location}\nBesoin: ${orderForm.details}`
+          const whatsappUrl = `https://wa.me/${service.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`
+          
+          setTimeout(() => {
+            window.open(whatsappUrl, '_blank')
+          }, 1500)
+        }
+
+        setTimeout(() => {
+          setShowOrderModal(false)
+          setOrderSuccess(false)
+          setOrderForm({ name: '', phone: '', details: '', location: '' })
+        }, 3000)
+      } else {
+        alert("Erreur lors de l'envoi de la commande : " + (result?.error || "Erreur inconnue"))
+      }
+    } catch (error) {
+      console.error("Order error:", error)
+      alert("Une erreur imprévue est survenue.")
+    } finally {
+      setSubmittingOrder(false)
     }
   }
 

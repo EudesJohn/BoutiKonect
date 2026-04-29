@@ -122,18 +122,15 @@ export default function Cart() {
           total: item.price * item.quantity
         }
         const result = await createOrder(order)
-        results.push({ item, success: result?.success })
+        results.push({ item, success: result?.success, error: result?.error })
       }
       
       const failures = results.filter(r => !r.success)
       if (failures.length > 0) {
-        const failedTitles = failures.map(f => f.item.title).join(', ')
-        alert(`Certains articles n'ont pas pu être commandés : ${failedTitles}. Veuillez réessayer pour ces articles.`)
-        // Keep failed items in cart? For now, we clear the whole cart only if all succeeded
-        // or we can just proceed if at least some succeeded. 
-        // Best approach: If any failed, don't clear cart for those.
+        const failedInfo = failures.map(f => `${f.item.title} (${f.error || 'Erreur inconnue'})`).join('\n')
+        alert(`Certains articles n'ont pas pu être commandés :\n${failedInfo}\n\nVeuillez réessayer pour ces articles.`)
+        
         if (failures.length === cart.length) {
-          setIsSubmitting(false)
           return
         }
       }
@@ -156,7 +153,7 @@ export default function Cart() {
       clearCart()
     } catch (error) {
       console.error("Erreur commande:", error)
-      alert("Une erreur est survenue lors de la validation de votre commande.")
+      alert("Une erreur imprévue est survenue lors de la validation de votre commande.")
     } finally {
       setIsSubmitting(false)
     }

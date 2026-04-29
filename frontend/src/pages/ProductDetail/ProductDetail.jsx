@@ -174,33 +174,40 @@ export default function ProductDetail() {
       return
     }
 
-    const currentUser = user || seller
-    const orderResult = await createOrder({
-      productId: product.id,
-      productTitle: product.title,
-      productImage: product.images[0],
-      price: product.price,
-      quantity: 1,
-      sellerId: product.sellerId,
-      sellerName: product.sellerName,
-      buyerId: currentUser?.id || 'anonymous_guest',
-      buyerName: orderForm.name,
-      buyerPhone: orderForm.phone,
-      buyerAddress: orderForm.address
-    })
-    
-    if (orderResult && orderResult.success) {
-      // Décrémenter le stock si c'est un produit physique
-      if (product.stock !== undefined) {
-        decrementProductStock(product.id, 1)
-      }
+    try {
+      const currentUser = user || seller
+      const orderResult = await createOrder({
+        productId: product.id,
+        productTitle: product.title,
+        productImage: product.images[0],
+        price: product.price,
+        quantity: 1,
+        sellerId: product.sellerId,
+        sellerName: product.sellerName,
+        sellerCity: product.sellerCity,
+        sellerNeighborhood: product.sellerNeighborhood,
+        buyerId: currentUser?.id || 'anonymous_guest',
+        buyerName: orderForm.name,
+        buyerPhone: orderForm.phone,
+        buyerAddress: orderForm.address
+      })
+      
+      if (orderResult && orderResult.success) {
+        // Décrémenter le stock si c'est un produit physique
+        if (product.stock !== undefined) {
+          decrementProductStock(product.id, 1)
+        }
 
-      alert(`Commande confirmée!\n\nProduit: ${product.title}\nPrix: ${formatPrice(product.price)}\nClient: ${orderForm.name}\nTéléphone: ${orderForm.phone}\nAdresse: ${orderForm.address}\n\nLe vendeur a été notifié et traitera votre commande.`)
-      setShowOrderModal(false)
-      setOrderForm({ name: '', phone: '', address: '' })
-      navigate('/')
-    } else {
-      alert("Désolé, une erreur est survenue lors de la création de votre commande. Veuillez réessayer.")
+        alert(`Commande confirmée!\n\nProduit: ${product.title}\nPrix: ${formatPrice(product.price)}\nClient: ${orderForm.name}\nTéléphone: ${orderForm.phone}\nAdresse: ${orderForm.address}\n\nLe vendeur a été notifié et traitera votre commande.`)
+        setShowOrderModal(false)
+        setOrderForm({ name: '', phone: '', address: '' })
+        navigate('/')
+      } else {
+        alert("Désolé, une erreur est survenue lors de la création de votre commande : " + (orderResult?.error || "Erreur inconnue"))
+      }
+    } catch (error) {
+      console.error("Order error:", error)
+      alert("Une erreur imprévue est survenue.")
     }
   }
 
