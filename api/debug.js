@@ -32,7 +32,7 @@ export default async function handler(request, response) {
   try {
     const hasKey = !!process.env.GEMINI_API_KEY;
     const keyPrefix = hasKey ? process.env.GEMINI_API_KEY.substring(0, 5) + "..." : "MISSING";
-    
+
     // Test import dynamic
     let aiModuleLoaded = false;
     try {

@@ -31,75 +31,75 @@ module.exports = async (req, res) => {
     }
     // Existing logic follows
 
-  // 1. Sécurité (Token secret ou Cron auto)
-  const authHeader = req.headers.authorization;
-  const isCron = req.headers['x-vercel-cron'] === '1';
+    // 1. Sécurité (Token secret ou Cron auto)
+    const authHeader = req.headers.authorization;
+    const isCron = req.headers['x-vercel-cron'] === '1';
 
-  // Si on a un CRON_SECRET défini, on vérifie l'autorisation
-  if (cronSecret && !isCron) {
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Non autorisé' });
-    }
-    const token = authHeader.slice(7); // Remove 'Bearer ' prefix
-    if (!safeCompare(token, cronSecret)) {
-      return res.status(401).json({ error: 'Non autorisé' });
-    }
-  }
-
-  if (!supabaseUrl || !supabaseKey) {
-    return res.status(500).json({ error: 'Configuration Supabase manquante' });
-  }
-
-  const supabase = createClient(supabaseUrl, supabaseKey);
-
-  try {
-    console.log('--- Démarrage de la collecte API (Root) ---');
-
-    // Logic remains identical to frontend version to ensure feature parity
-    const sampleProperties = [
-      {
-        title: 'Villa Moderne à Fidjrossè (Root API)',
-        description: 'Superbe villa avec 4 chambres, piscine et jardin.',
-        price: 45000000,
-        category: 'Immobilier',
-        type: 'service',
-        seller_city: 'Cotonou',
-        seller_neighborhood: 'Fidjrossè',
-        price_type: 'Fixe',
-        images: ['https://images.unsplash.com/photo-1580587767513-39982dc50ac5?w=500']
+    // Si on a un CRON_SECRET défini, on vérifie l'autorisation
+    if (cronSecret && !isCron) {
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Non autorisé' });
       }
-    ];
-
-    let addedCount = 0;
-    let skippedCount = 0;
-
-    for (const property of sampleProperties) {
-      const { data: existing } = await supabase
-        .from('products')
-        .select('id')
-        .eq('title', property.title)
-        .single();
-
-      if (existing) {
-        skippedCount++;
-        continue;
+      const token = authHeader.slice(7); // Remove 'Bearer ' prefix
+      if (!safeCompare(token, cronSecret)) {
+        return res.status(401).json({ error: 'Non autorisé' });
       }
-
-      const { error } = await supabase.from('products').insert([property]);
-      if (error) throw error;
-      addedCount++;
     }
 
-    return res.status(200).json({
-      success: true,
-      added: addedCount,
-      skipped: skippedCount,
-      message: 'Collecte terminée avec succès (Root)'
-    });
+    if (!supabaseUrl || !supabaseKey) {
+      return res.status(500).json({ error: 'Configuration Supabase manquante' });
+    }
 
-  } catch (error) {
-    // Log error internally (avoid leaking details to client)
-    console.error('Erreur Collecte Root:', error);
-    return res.status(500).json({ success: false, error: 'Erreur interne du serveur' });
-  }
-};
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    try {
+      console.log('--- Démarrage de la collecte API (Root) ---');
+
+      // Logic remains identical to frontend version to ensure feature parity
+      const sampleProperties = [
+        {
+          title: 'Villa Moderne à Fidjrossè (Root API)',
+          description: 'Superbe villa avec 4 chambres, piscine et jardin.',
+          price: 45000000,
+          category: 'Immobilier',
+          type: 'service',
+          seller_city: 'Cotonou',
+          seller_neighborhood: 'Fidjrossè',
+          price_type: 'Fixe',
+          images: ['https://images.unsplash.com/photo-1580587767513-39982dc50ac5?w=500']
+        }
+      ];
+
+      let addedCount = 0;
+      let skippedCount = 0;
+
+      for (const property of sampleProperties) {
+        const { data: existing } = await supabase
+          .from('products')
+          .select('id')
+          .eq('title', property.title)
+          .single();
+
+        if (existing) {
+          skippedCount++;
+          continue;
+        }
+
+        const { error } = await supabase.from('products').insert([property]);
+        if (error) throw error;
+        addedCount++;
+      }
+
+      return res.status(200).json({
+        success: true,
+        added: addedCount,
+        skipped: skippedCount,
+        message: 'Collecte terminée avec succès (Root)'
+      });
+
+    } catch (error) {
+      // Log error internally (avoid leaking details to client)
+      console.error('Erreur Collecte Root:', error);
+      return res.status(500).json({ success: false, error: 'Erreur interne du serveur' });
+    }
+  };

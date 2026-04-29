@@ -8,8 +8,8 @@ export default async function handler(request, response) {
     // Existing logic (none needed)
     return res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
   })(request, response);
-  return response.status(200).json({ 
-    status: 'BoutiKonect API is Healthy (Root v2.0)', 
+  return response.status(200).json({
+    status: 'BoutiKonect API is Healthy (Root v2.0)',
     timestamp: new Date().toISOString()
   });
 }
