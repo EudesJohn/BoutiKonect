@@ -10,6 +10,7 @@ import {
   formatPrice, checkIsAdmin, parseDate, cleanObject,
   mapItemFromDB, mapItemToDB, mapOrderFromDB, mapOrderToDB, getDistance
 } from './utils'
+import { sendPasswordResetEmail, updateEmailWithVerification } from '../services/authService'
 import { useProductSearch } from '../hooks/useProductSearch'
 import { AppContext } from './AppContextInstance'
 
@@ -380,6 +381,65 @@ export function AppProvider({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seller?.id, user?.id]);
 
+  // === DATA HELPERS ===
+  const getFavoriteProducts = useCallback(() => {
+    return products.filter(p => favorites.includes(p.id) && (p.type === 'product' || !p.type));
+  }, [products, favorites]);
+
+  const getFavoriteServices = useCallback(() => {
+    return products.filter(p => favorites.includes(p.id) && p.type === 'service');
+  }, [products, favorites]);
+
+  const getSellerOrders = useCallback((sellerId) => {
+    return orders.filter(o => o.sellerId === sellerId);
+  }, [orders]);
+
+  const updateOrderStatus = async (orderId, status) => {
+    try {
+      const { error } = await supabase.from('orders').update({ status }).eq('id', orderId);
+      if (error) throw error;
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
+      showToast('Statut mis à jour', 'success');
+      return { success: true };
+    } catch (error) {
+      console.error('updateOrderStatus error:', error);
+      showToast('Erreur lors de la mise à jour', 'error');
+      return { success: false, error: error.message };
+    }
+  };
+
+  const updateProfile = async (userId, profileData) => {
+    try {
+      const dbProfile = cleanObject({
+        name: profileData.name,
+        phone: profileData.phone,
+        city: profileData.city,
+        neighborhood: profileData.neighborhood,
+        avatar: profileData.avatar,
+        whatsapp: profileData.whatsapp
+      });
+      const { error } = await supabase.from('profiles').update(dbProfile).eq('id', userId);
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      console.error('updateProfile error:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  const upgradeToSeller = async (userId, sellerData = {}) => {
+    try {
+      const { error } = await supabase.from('profiles').update({ is_seller: true, ...sellerData }).eq('id', userId);
+      if (error) throw error;
+      showToast('Félicitations ! Vous êtes maintenant vendeur.', 'success');
+      return { success: true };
+    } catch (error) {
+      console.error('upgradeToSeller error:', error);
+      showToast('Erreur lors de la mise à jour', 'error');
+      return { success: false, error: error.message };
+    }
+  };
+
   // === HELPER METHODS ===
   const getProductById = useCallback((id) => products.find(p => p.id === id), [products])
   const getServiceById = useCallback((id) => products.find(p => p.id === id && p.type === 'service'), [products])
@@ -580,6 +640,7 @@ export function AppProvider({ children }) {
     toasts, showToast, removeToast, authLoading, dataLoading, isAppReady, errors,
     getProductById, getServiceById, fetchSingleProduct, addProduct, updateProduct, deleteProduct, deleteService,
     createOrder, addToCart, toggleFavorite, isFavorite, decrementProductStock, reportProduct,
+    getFavoriteProducts, getFavoriteServices, getSellerOrders, updateOrderStatus, updateProfile, upgradeToSeller,
     getAllUsers: () => allUsers,
     getAllProducts: () => products,
     getAllOrders: () => orders,
@@ -595,6 +656,8 @@ export function AppProvider({ children }) {
     logoutSeller: authLogoutUser, // alias pour Navbar
     loginUser: authLoginUser,
     registerUser: authRegisterUser,
+    resetPassword: sendPasswordResetEmail,
+    updateEmailWithVerification,
     // Filters
     filters, setFilters,
     getFilteredProducts,
