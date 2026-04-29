@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
-// Vercel Trigger: 2026-04-29 - Fix RLS orders/notifications + Realtime admin + Promotion badge
+// Vercel Trigger: 2026-04-29 - FINAL STABLE - Promotions + RLS Orders + Realtime Seller/Admin
 import { supabase } from '../supabase/client'
 import { isAdminConfigured, getAdminInfo } from '../services/adminAuth'
 import { logoutUser as authLogoutUser, loginUser as authLoginUser, registerUser as authRegisterUser } from '../services/authService'
