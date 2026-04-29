@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { AppContext } from '../../context/AppContextInstance'
 import { cities } from '../../context/constants'
-import { MapPin, User, Phone, Lock, Store, ArrowRight, CheckCircle, Mail, ArrowLeft, Info } from 'lucide-react'
+import { MapPin, User, Phone, Lock, Store, ArrowRight, CircleCheck as CheckCircle, Mail, ArrowLeft, Info } from 'lucide-react'
 import './Register.css'
 
 export default function Register() {

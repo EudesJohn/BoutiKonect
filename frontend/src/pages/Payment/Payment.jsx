@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { AppContext } from '../../context/AppContextInstance'
 import { openFedaPayOverlay, formatPrice } from '../../services/paymentService'
-import { CreditCard, Smartphone, CheckCircle, X, ArrowLeft, Loader2 as Loader, Wallet, Clock } from 'lucide-react'
+import { CreditCard, Smartphone, CircleCheck as CheckCircle, X, ArrowLeft, Loader2 as Loader, Wallet, Clock } from 'lucide-react'
 import './Payment.css'
 
 export default function Payment() {

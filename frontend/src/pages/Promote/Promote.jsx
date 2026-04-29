@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { AppContext } from '../../context/AppContextInstance'
 import { getPromotionPrices } from '../../services/paymentService'
-import { Sparkles, Clock, AlertCircle, Phone, CreditCard } from 'lucide-react'
+import { Sparkles, Clock, CircleAlert as AlertCircle, Phone, CreditCard } from 'lucide-react'
 
 export default function Promote() {
   const { id } = useParams()

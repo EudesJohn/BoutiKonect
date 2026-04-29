@@ -1,7 +1,7 @@
 import { useEffect, useContext, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CheckCircle, XCircle, Loader2 as Loader } from 'lucide-react';
+import { CircleCheck as CheckCircle, CircleX as XCircle, Loader2 as Loader } from 'lucide-react';
 import { AppContext } from '../../context/AppContextInstance';
 
 export default function PaymentCallback() {

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Scale, Shield, Users, ShoppingCart, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Scale, Shield, Users, ShoppingCart, CircleAlert as AlertCircle } from 'lucide-react'
 import './Terms.css'
 
 export default function Terms() {

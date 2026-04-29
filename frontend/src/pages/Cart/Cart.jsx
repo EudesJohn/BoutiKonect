@@ -2,7 +2,7 @@ import { useContext, useState, useMemo, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { AppContext } from '../../context/AppContextInstance'
-import { ShoppingCart, Trash2, Minus, Plus, ArrowLeft, MapPin, CheckCircle, AlertTriangle, Package } from 'lucide-react'
+import { ShoppingCart, Trash2, Minus, Plus, ArrowLeft, MapPin, CircleCheck as CheckCircle, TriangleAlert as AlertTriangle, Package } from 'lucide-react'
 import { validateName, validatePhone, validateAddress } from '../../utils/validation'
 import './Cart.css'
 

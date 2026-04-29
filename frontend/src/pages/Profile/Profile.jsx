@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { AppContext } from '../../context/AppContextInstance'
 import { cities } from '../../context/constants'
 import { changePassword as authChangePassword } from '../../services/authService'
-import { User, Mail, Phone, MapPin, Package, Heart, LogOut, ShoppingBag, Trash2, Plus, Bell, CheckCircle, XCircle, Clock, Camera, Save, X, Edit2, Lock, Store, TrendingUp, DollarSign, ShoppingCart, Briefcase, ShieldCheck } from 'lucide-react'
+import { User, Mail, Phone, MapPin, Package, Heart, LogOut, ShoppingBag, Trash2, Plus, Bell, CircleCheck as CheckCircle, CircleX as XCircle, Clock, Camera, Save, X, Edit2, Lock, Store, TrendingUp, DollarSign, ShoppingCart, Briefcase, ShieldCheck } from 'lucide-react'
 import './Profile.css'
 
 export default function Profile() {

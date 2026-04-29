@@ -6,7 +6,7 @@ import { getItemReviews, getItemRating, addReview } from '../../services/reviews
 import { trackView } from '../../services/analyticsService'
 import { 
   MapPin, Clock, ShieldCheck, MessageCircle, Phone, 
-  Share2, AlertTriangle, ArrowLeft, Star, ChevronLeft, ChevronRight, X, Heart, Send,
+  Share2, TriangleAlert as AlertTriangle, ArrowLeft, Star, ChevronLeft, ChevronRight, X, Heart, Send,
   Flag, Facebook, Copy
 } from 'lucide-react'
 import './ServiceDetail.css'

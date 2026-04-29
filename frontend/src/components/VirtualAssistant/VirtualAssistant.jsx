@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { MessageCircle, X, Send, User, Bot, HelpCircle } from 'lucide-react';
+import { MessageCircle, X, Send, User, Bot, CircleHelp as HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { faqData } from './faqData';
 import { AppContext } from '../../context/AppContextInstance';

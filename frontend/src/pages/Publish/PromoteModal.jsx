@@ -2,7 +2,7 @@ import { useContext, useState } from 'react';
 import { motion } from 'framer-motion';
 import { AppContext } from '../../context/AppContextInstance';
 import { openFedaPayOverlay } from '../../services/paymentService';
-import { X, Zap, CheckCircle, Loader2 as Loader } from 'lucide-react';
+import { X, Zap, CircleCheck as CheckCircle, Loader2 as Loader } from 'lucide-react';
 import './Publish.css';
 
 export default function PromoteModal({ product, onClose }) {

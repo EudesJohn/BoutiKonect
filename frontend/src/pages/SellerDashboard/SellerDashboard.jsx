@@ -2,7 +2,7 @@ import { useContext, useMemo, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { AppContext } from '../../context/AppContextInstance'
-import { Package, ShoppingCart, DollarSign, CheckCircle } from 'lucide-react'
+import { Package, ShoppingCart, DollarSign, CircleCheck as CheckCircle } from 'lucide-react'
 import './SellerDashboard.css'
 
 export default function SellerDashboard() {

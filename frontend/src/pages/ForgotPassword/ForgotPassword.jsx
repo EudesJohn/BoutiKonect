@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Mail, ArrowLeft, CheckCircle, Lock, RefreshCw, KeyRound } from 'lucide-react'
+import { Mail, ArrowLeft, CircleCheck as CheckCircle, Lock, RefreshCw, KeyRound } from 'lucide-react'
 import { sendPasswordResetLink } from '../../services/emailService'
 import './ForgotPassword.css'
 
