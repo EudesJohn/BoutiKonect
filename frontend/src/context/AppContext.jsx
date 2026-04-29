@@ -535,6 +535,27 @@ export function AppProvider({ children }) {
     showToast("Ajouté au panier", 'success')
   }
 
+  const removeFromCart = (id) => {
+    setCart(prev => prev.filter(item => item.id !== id))
+    showToast("Retiré du panier", 'info')
+  }
+
+  const updateCartQuantity = (id, quantity) => {
+    if (quantity <= 0) {
+      removeFromCart(id)
+      return
+    }
+    setCart(prev => prev.map(item => item.id === id ? { ...item, quantity } : item))
+  }
+
+  const clearCart = () => {
+    setCart([])
+  }
+
+  const getCartTotal = () => {
+    return cart.reduce((total, item) => total + (item.price * (item.quantity || 1)), 0)
+  }
+
   const toggleFavorite = (id) => {
     setFavorites(prev => {
       const isFav = prev.includes(id)
@@ -694,7 +715,8 @@ export function AppProvider({ children }) {
     seller, user, products, services: (products || []).filter(p => p && p.type === 'service'), reviews, orders, allUsers, favorites, cart,
     toasts, showToast, removeToast, authLoading, dataLoading, isAppReady, errors,
     getProductById, getServiceById, fetchSingleProduct, addProduct, updateProduct, deleteProduct, deleteService,
-    createOrder, addToCart, toggleFavorite, isFavorite, decrementProductStock, reportProduct,
+    createOrder, addToCart, removeFromCart, updateCartQuantity, clearCart, getCartTotal,
+    toggleFavorite, isFavorite, decrementProductStock, reportProduct,
     getFavoriteProducts, getFavoriteServices, getSellerOrders, updateOrderStatus, updateProfile, upgradeToSeller,
     PROMOTION_PRICES, promoteProduct,
     getAllUsers: () => allUsers,
