@@ -203,8 +203,8 @@ CREATE TABLE user_history (
 ALTER TABLE user_history ENABLE ROW LEVEL SECURITY;
 
 -- User History Policies
-CREATE POLICY "Users can insert their own history." ON user_history FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can see their own history." ON user_history FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert their own history." ON user_history FOR INSERT WITH CHECK (auth.uid()::uuid = user_id);
+CREATE POLICY "Users can see their own history." ON user_history FOR SELECT USING (auth.uid()::uuid = user_id);
 CREATE POLICY "Admins can see all history for analytics." ON user_history FOR SELECT USING (
   EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
 );
