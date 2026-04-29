@@ -98,7 +98,6 @@ export function mapOrderToDB(order) {
   } = order;
 
   return cleanObject({
-    ...rest,
     product_id: productId || serviceId,
     product_title: productTitle || serviceTitle,
     product_image: productImage,
@@ -108,6 +107,9 @@ export function mapOrderToDB(order) {
     buyer_name: buyerName,
     buyer_phone: buyerPhone,
     buyer_address: buyerAddress,
+    price: order.price,
+    quantity: order.quantity,
+    status: order.status || 'pending',
     payment_id: paymentId,
     payment_status: paymentStatus,
     payment_method: paymentMethod
