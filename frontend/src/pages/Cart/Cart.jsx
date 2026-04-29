@@ -121,6 +121,7 @@ export default function Cart() {
           price: item.price,
           total: item.price * item.quantity
         }
+        console.log("Creating order for seller:", item.sellerId, "Product:", item.title);
         const result = await createOrder(order)
         results.push({ item, success: result?.success, error: result?.error })
       }
