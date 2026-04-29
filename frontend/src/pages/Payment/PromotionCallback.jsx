@@ -23,14 +23,16 @@ export default function PromotionCallback() {
           const rawPromoData = sessionStorage.getItem('fedapay_promotion_data');
           if (rawPromoData) {
             const promoData = JSON.parse(rawPromoData);
+            console.log("Données de promotion trouvées:", promoData);
             
             // Activation immédiate côté client pour le confort utilisateur
-            activatePromotionInstant(promoData.productId, promoData.plan.days);
+            const result = await activatePromotionInstant(promoData.productId, promoData.plan.days);
+            console.log("Résultat activation immédiate:", result);
             
             // Confirmer au serveur sans rouvrir le popup
             const { confirmPromotionPayment } = await import('../../services/paymentService');
             const transactionId = searchParams.get('id') || searchParams.get('transaction_id');
-            await confirmPromotionPayment(promoData.productId, promoData.plan, currentUser?.uid || promoData.uid, transactionId);
+            await confirmPromotionPayment(promoData.productId, promoData.plan, currentUser?.id || promoData.uid || promoData.id, transactionId);
 
             sessionStorage.removeItem('fedapay_promotion_data');
             setPromoItem(promoData);
@@ -75,16 +77,16 @@ export default function PromotionCallback() {
             <>
               <CheckCircle size={64} style={{ color: '#2ecc71', margin: '0 auto var(--space-lg)' }} />
               <h2>{message}</h2>
-              <div style={{ marginTop: 'var(--space-xl)', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+              <div style={{ marginTop: 'var(--space-xl)', display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
                 <Link to="/" className="btn btn-primary">Retour à l'accueil</Link>
                 {promoItem && (
-                  <Link 
-                    to={promoItem.type === 'service' ? `/service/${promoItem.productId}` : `/product/${promoItem.productId}`} 
+                  <button 
+                    onClick={() => activatePromotionInstant(promoItem.productId, promoItem.plan.days)}
                     className="btn btn-outline"
                     style={{ borderColor: '#FFD700', color: '#FFD700' }}
                   >
-                    Voir mon annonce
-                  </Link>
+                    🚀 Réactiver / Forcer
+                  </button>
                 )}
                 <Link to="/profile" className="btn btn-outline">Mon Profil</Link>
               </div>
