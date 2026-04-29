@@ -21,36 +21,64 @@ export default function PromotionCallback() {
       if (fedapayStatus === 'approved' || fedapayStatus === 'successful') {
         try {
           const rawPromoData = sessionStorage.getItem('fedapay_promotion_data');
+
           if (rawPromoData) {
-            const promoData = JSON.parse(rawPromoData);
-            console.log("Données de promotion trouvées:", promoData);
-            
-            // Activation immédiate côté client pour le confort utilisateur
+            let promoData;
+
+            // Validation: parser et vérifier la structure de promoData
+            try {
+              promoData = JSON.parse(rawPromoData);
+            } catch {
+              throw new Error('Données de promotion corrompues dans le stockage local.');
+            }
+
+            // Vérification des champs obligatoires pour éviter les erreurs silencieuses
+            if (!promoData?.productId || typeof promoData.productId !== 'string' || promoData.productId.length < 10) {
+              throw new Error('ID de produit manquant ou invalide dans les données de promotion.');
+            }
+            if (!promoData?.plan?.days || typeof promoData.plan.days !== 'number' || promoData.plan.days <= 0) {
+              throw new Error('Plan de promotion invalide (durée manquante).');
+            }
+            if (!promoData?.plan?.price || typeof promoData.plan.price !== 'number' || promoData.plan.price <= 0) {
+              throw new Error('Plan de promotion invalide (prix manquant).');
+            }
+
+            console.log('Données de promotion validées:', { productId: promoData.productId, days: promoData.plan.days });
+
+            // Activation immédiate côté client
             const result = await activatePromotionInstant(promoData.productId, promoData.plan.days);
-            console.log("Résultat activation immédiate:", result);
-            
+            console.log('Résultat activation immédiate:', result);
+
             // Confirmer au serveur sans rouvrir le popup
             const { confirmPromotionPayment } = await import('../../services/paymentService');
             const transactionId = searchParams.get('id') || searchParams.get('transaction_id');
-            await confirmPromotionPayment(promoData.productId, promoData.plan, currentUser?.id || promoData.uid || promoData.id, transactionId);
+            const userId = currentUser?.id || promoData.uid || promoData.id || null;
+            await confirmPromotionPayment(promoData.productId, promoData.plan, userId, transactionId);
 
             sessionStorage.removeItem('fedapay_promotion_data');
             setPromoItem(promoData);
+          } else {
+            console.warn('Aucune donnée de promotion en session. L\'utilisateur revient peut-être d\'une autre page.');
           }
-          
+
           setStatus('success');
           setMessage('Paiement réussi ! Votre produit/service est maintenant mis en avant.');
         } catch (err) {
-          console.error("Erreur post-promotion:", err);
+          console.error('Erreur post-promotion:', err);
           setStatus('error');
-          setMessage("Le paiement a réussi mais une erreur s'est produite lors de l'application de la promotion.");
+          // Afficher le message d'erreur réel à l'utilisateur pour faciliter le débogage
+          setMessage(
+            err.message?.includes('invalid') || err.message?.includes('manquant') || err.message?.includes('corrompu')
+              ? `Erreur de données: ${err.message}`
+              : "Le paiement a réussi mais une erreur s'est produite lors de l'application de la promotion. Contactez le support."
+          );
         }
       } else if (fedapayStatus === 'canceled' || fedapayStatus === 'declined') {
         setStatus('error');
         setMessage('Le paiement a été annulé ou refusé.');
       } else {
         setStatus('error');
-        setMessage('Statut de paiement inconnu.');
+        setMessage(`Statut de paiement inconnu: "${fedapayStatus || 'non spécifié'}". Veuillez réessayer.`);
       }
     };
 

@@ -1,5 +1,20 @@
 import { ADMIN_EMAILS } from '../services/adminAuth'
 
+/**
+ * Sécurise une chaîne contre les injections XSS avant envoi en base
+ */
+export function sanitizeText(value) {
+  if (value === null || value === undefined) return null;
+  if (typeof value !== 'string') return String(value);
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .trim();
+}
+
 export function formatPrice(price) {
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
@@ -97,24 +112,29 @@ export function mapOrderToDB(order) {
     paymentId, paymentStatus, paymentMethod, ...rest
   } = order;
 
+  // Normaliser payment_status en minuscules pour correspondre à la contrainte CHECK SQL
+  const normalizedPaymentStatus = paymentStatus
+    ? paymentStatus.toLowerCase().trim()
+    : null;
+
   // Colonnes de base toujours présentes dans la table orders
   const dbOrder = {
-    product_id: productId || serviceId || null,
-    product_title: productTitle || serviceTitle || null,
-    product_image: productImage || null,
-    seller_id: sellerId || null,
-    seller_name: sellerName || null,
-    buyer_id: buyerId || null,
-    buyer_name: buyerName || null,
-    buyer_phone: buyerPhone || null,
-    buyer_address: buyerAddress || null,
-    price: order.price || null,
-    quantity: order.quantity || 1,
-    status: order.status || 'pending',
+    product_id:      productId || serviceId || null,
+    product_title:   sanitizeText(productTitle || serviceTitle),
+    product_image:   productImage || null,
+    seller_id:       sellerId || null,
+    seller_name:     sanitizeText(sellerName),
+    buyer_id:        buyerId || null,
+    buyer_name:      sanitizeText(buyerName),
+    buyer_phone:     buyerPhone ? buyerPhone.replace(/[^\d+\-\s]/g, '').trim() : null,
+    buyer_address:   sanitizeText(buyerAddress),
+    price:           order.price || null,
+    quantity:        order.quantity || 1,
+    status:          order.status || 'pending',
     // Colonnes de paiement (ajoutées via migration SQL fix_all_issues.sql)
-    payment_id: paymentId || null,
-    payment_status: paymentStatus || null,
-    payment_method: paymentMethod || null
+    payment_id:      paymentId || null,
+    payment_status:  normalizedPaymentStatus,
+    payment_method:  paymentMethod || null
   };
 
   // Filtrer les valeurs null/undefined pour éviter les erreurs PostgREST

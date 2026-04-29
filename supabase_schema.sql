@@ -24,8 +24,11 @@ CREATE TABLE profiles (
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
 -- Profiles Policies
-CREATE POLICY "Profiles are viewable by owners and admins." ON profiles FOR SELECT USING (auth.uid() = id OR (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)));
-CREATE POLICY "Users can update their own profile." ON profiles FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY profiles_select_owner_or_admin ON profiles FOR SELECT USING (
+  auth.uid() = id OR
+  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
+);
+CREATE POLICY profiles_update_owner ON profiles FOR UPDATE USING (auth.uid() = id);
 
 -- 2. Products (Includes Services)
 CREATE TABLE products (
@@ -55,16 +58,21 @@ CREATE TABLE products (
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 
 -- Products Policies
-CREATE POLICY "Products are viewable by everyone." ON products FOR SELECT USING (true);
-CREATE POLICY "Sellers can insert their own products." ON products FOR INSERT WITH CHECK (auth.uid() = seller_id);
-CREATE POLICY "Sellers can update their own products." ON products FOR UPDATE USING (auth.uid() = seller_id);
-CREATE POLICY "Sellers can delete their own products." ON products FOR DELETE USING (auth.uid() = seller_id);
-CREATE POLICY "Admins can delete any product/service." ON products FOR DELETE USING (
+CREATE POLICY products_select_public   ON products FOR SELECT USING (true);
+CREATE POLICY products_insert_seller   ON products FOR INSERT WITH CHECK (auth.uid() = seller_id);
+CREATE POLICY products_update_seller   ON products FOR UPDATE USING (auth.uid() = seller_id);
+CREATE POLICY products_delete_seller   ON products FOR DELETE USING (auth.uid() = seller_id);
+CREATE POLICY products_delete_admin    ON products FOR DELETE USING (
   EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
 );
-CREATE POLICY "Admins can update any product/service." ON products FOR UPDATE USING (
+CREATE POLICY products_update_admin    ON products FOR UPDATE USING (
   EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
 );
+
+-- Index sur les clés étrangères de products
+CREATE INDEX IF NOT EXISTS idx_products_seller_id   ON products(seller_id);
+CREATE INDEX IF NOT EXISTS idx_products_is_promoted ON products(is_promoted) WHERE is_promoted = true;
+CREATE INDEX IF NOT EXISTS idx_products_category    ON products(category);
 
 -- 3. Reviews
 CREATE TABLE reviews (
@@ -81,60 +89,77 @@ CREATE TABLE reviews (
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 
 -- Reviews Policies
-CREATE POLICY "Reviews are viewable by everyone." ON reviews FOR SELECT USING (true);
-CREATE POLICY "Authenticated users can insert reviews." ON reviews FOR INSERT WITH CHECK (auth.uid() = reviewer_id);
-CREATE POLICY "Users can delete their own reviews." ON reviews FOR DELETE USING (auth.uid() = reviewer_id);
+CREATE POLICY reviews_select_public     ON reviews FOR SELECT USING (true);
+CREATE POLICY reviews_insert_auth       ON reviews FOR INSERT WITH CHECK (auth.uid() = reviewer_id);
+CREATE POLICY reviews_delete_owner      ON reviews FOR DELETE USING (auth.uid() = reviewer_id);
+
+-- Index reviews
+CREATE INDEX IF NOT EXISTS idx_reviews_product_id ON reviews(product_id);
 
 -- 4. Orders
 CREATE TABLE orders (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  product_id UUID REFERENCES products(id) ON DELETE SET NULL,
-  product_title TEXT,
-  product_image TEXT,
-  price NUMERIC,
-  quantity INTEGER DEFAULT 1,
-  seller_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-  seller_name TEXT,
-  buyer_id UUID REFERENCES profiles(id) ON DELETE CASCADE, -- Can be NULL for guest orders
-  buyer_name TEXT,
-  buyer_phone TEXT,
-  buyer_address TEXT,
-  status TEXT DEFAULT 'pending',
-  payment_id TEXT,                        -- ID de transaction FedaPay
-  payment_status TEXT DEFAULT 'pending',  -- pending, paid, failed
-  payment_method TEXT,                    -- fedapay, cash, etc.
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  id              UUID    DEFAULT gen_random_uuid() PRIMARY KEY,
+  product_id      UUID    REFERENCES products(id) ON DELETE SET NULL,
+  product_title   TEXT,
+  product_image   TEXT,
+  price           NUMERIC,
+  quantity        INTEGER DEFAULT 1,
+  seller_id       UUID    REFERENCES profiles(id) ON DELETE CASCADE,
+  seller_name     TEXT,
+  buyer_id        UUID    REFERENCES profiles(id) ON DELETE CASCADE, -- NULL = commande invité
+  buyer_name      TEXT,
+  buyer_phone     TEXT,
+  buyer_address   TEXT,
+  status          TEXT    DEFAULT 'pending',
+  payment_id      TEXT,                                    -- ID transaction FedaPay
+  payment_status  TEXT    DEFAULT 'pending'                -- Valeurs: pending | paid | failed
+                  CONSTRAINT orders_payment_status_check
+                  CHECK (payment_status IN ('pending', 'paid', 'failed') OR payment_status IS NULL),
+  payment_method  TEXT,                                    -- fedapay | cash | etc.
+  created_at      TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Index sur clés étrangères et colonnes de filtrage fréquentes
+CREATE INDEX IF NOT EXISTS idx_orders_seller_id  ON orders(seller_id);
+CREATE INDEX IF NOT EXISTS idx_orders_buyer_id   ON orders(buyer_id);
+CREATE INDEX IF NOT EXISTS idx_orders_product_id ON orders(product_id);
+CREATE INDEX IF NOT EXISTS idx_orders_status     ON orders(status);
+CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
 
 -- Enable RLS for orders
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 
--- Orders Policies
-DROP POLICY IF EXISTS "Admins can view all orders." ON orders;
-CREATE POLICY "Admins can view all orders." ON orders FOR SELECT TO authenticated USING (
-  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
-);
+-- Orders Policies (noms snake_case, sans apostrophes)
+DROP POLICY IF EXISTS orders_select_admin   ON orders;
+DROP POLICY IF EXISTS orders_select_buyer   ON orders;
+DROP POLICY IF EXISTS orders_select_seller  ON orders;
+DROP POLICY IF EXISTS orders_insert_public  ON orders;
+DROP POLICY IF EXISTS orders_update_seller  ON orders;
+DROP POLICY IF EXISTS orders_update_admin   ON orders;
 
-DROP POLICY IF EXISTS "Buyers can view their own orders." ON orders;
-CREATE POLICY "Buyers can view their own orders." ON orders FOR SELECT TO public USING (
-  auth.uid() = buyer_id OR buyer_id IS NULL
-);
+CREATE POLICY orders_select_admin
+  ON orders FOR SELECT TO authenticated
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true));
 
-DROP POLICY IF EXISTS "Sellers can view orders for their products." ON orders;
-CREATE POLICY "Sellers can view orders for their products." ON orders FOR SELECT TO authenticated USING (
-  auth.uid() = seller_id
-);
+CREATE POLICY orders_select_buyer
+  ON orders FOR SELECT TO public
+  USING (auth.uid() = buyer_id OR buyer_id IS NULL);
 
-DROP POLICY IF EXISTS "Anyone can insert an order (guest support)." ON orders;
-CREATE POLICY "Anyone can insert an order (guest support)." ON orders FOR INSERT TO public WITH CHECK (true);
+CREATE POLICY orders_select_seller
+  ON orders FOR SELECT TO authenticated
+  USING (auth.uid() = seller_id);
 
-DROP POLICY IF EXISTS "Sellers can update their orders." ON orders;
-CREATE POLICY "Sellers can update their orders." ON orders FOR UPDATE TO authenticated USING (auth.uid() = seller_id);
+CREATE POLICY orders_insert_public
+  ON orders FOR INSERT TO public
+  WITH CHECK (true);
 
-DROP POLICY IF EXISTS "Admins can update all orders." ON orders;
-CREATE POLICY "Admins can update all orders." ON orders FOR UPDATE TO authenticated USING (
-  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
-);
+CREATE POLICY orders_update_seller
+  ON orders FOR UPDATE TO authenticated
+  USING (auth.uid() = seller_id);
+
+CREATE POLICY orders_update_admin
+  ON orders FOR UPDATE TO authenticated
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true));
 
 -- 5. Admin Notifications
 CREATE TABLE admin_notifications (
@@ -148,15 +173,23 @@ CREATE TABLE admin_notifications (
 -- Enable RLS for admin_notifications
 ALTER TABLE admin_notifications ENABLE ROW LEVEL SECURITY;
 
--- Admin Notifications Policies
-CREATE POLICY "Only admins can view notifications." ON admin_notifications FOR SELECT TO authenticated USING (
-  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
-);
-CREATE POLICY "Only admins can update notifications." ON admin_notifications FOR UPDATE TO authenticated USING (
-  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
-);
--- Tout utilisateur authentifié peut insérer: signalements + confirmations de paiement promotion
-CREATE POLICY "Authenticated users can insert notifications." ON admin_notifications FOR INSERT TO authenticated WITH CHECK (true);
+-- Admin Notifications Policies (snake_case)
+CREATE POLICY admin_notif_select_admin
+  ON admin_notifications FOR SELECT TO authenticated
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true));
+
+CREATE POLICY admin_notif_update_admin
+  ON admin_notifications FOR UPDATE TO authenticated
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true));
+
+-- Tout utilisateur authentifié peut insérer: signalements + confirmations de paiement
+CREATE POLICY admin_notif_insert_authenticated
+  ON admin_notifications FOR INSERT TO authenticated
+  WITH CHECK (true);
+
+-- Index notifications
+CREATE INDEX IF NOT EXISTS idx_admin_notif_type ON admin_notifications(type);
+CREATE INDEX IF NOT EXISTS idx_admin_notif_read ON admin_notifications(read) WHERE read = false;
 
 -- 6. Trigger for profile creation on signup
 -- Note: This requires a Supabase function and trigger
@@ -243,6 +276,23 @@ CREATE POLICY "Admins can see all history for analytics." ON user_history FOR SE
 );
 
 -- 9. Enable Realtime Sync
--- Cette commande indique à Supabase de diffuser les événements (INSERT, UPDATE, DELETE)
--- en temps réel pour ces tables vers les clients abonnés.
-ALTER PUBLICATION supabase_realtime ADD TABLE products, profiles, orders, reviews, admin_notifications, user_history;
+-- Diffuse les événements (INSERT, UPDATE, DELETE) en temps réel
+DO $$
+BEGIN
+  -- Tables déjà incluses par défaut dans Supabase: products, profiles, orders, reviews
+  -- On s'assure que admin_notifications et user_history le sont aussi
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime' AND tablename = 'admin_notifications'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE admin_notifications;
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime' AND tablename = 'user_history'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE user_history;
+  END IF;
+END $$;
+-- Pour une installation fraîche (sans DO block):
+-- ALTER PUBLICATION supabase_realtime ADD TABLE products, profiles, orders, reviews, admin_notifications, user_history;

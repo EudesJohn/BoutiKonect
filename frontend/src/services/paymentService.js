@@ -1,7 +1,11 @@
 import { supabase } from '../supabase/client'
 
-// FedaPay Public Key (Sandbox by default)
-const FEDAPAY_PUBLIC_KEY = import.meta.env.VITE_FEDAPAY_PUBLIC_KEY || 'pk_sandbox_G8pu2tZrQ2XvxN-IfsN6Ubar';
+// Clé publique FedaPay - OBLIGATOIREMENT définie dans les variables d'environnement Vercel/Vite
+// Ne jamais hardcoder une clé ici. Configurez VITE_FEDAPAY_PUBLIC_KEY dans votre .env
+const FEDAPAY_PUBLIC_KEY = import.meta.env.VITE_FEDAPAY_PUBLIC_KEY;
+if (!FEDAPAY_PUBLIC_KEY) {
+  console.error('❌ VITE_FEDAPAY_PUBLIC_KEY est manquante. Les paiements FedaPay ne fonctionneront pas.');
+}
 
 /**
  * Prix des promotions (en XOF)
