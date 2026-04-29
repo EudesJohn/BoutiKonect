@@ -31,7 +31,7 @@ export function cleanObject(obj) {
   if (!obj) return {};
   const newObj = {}
   Object.keys(obj).forEach(key => {
-    if (obj[key] !== undefined && obj[key] !== null) {
+    if (obj[key] !== undefined && obj[key] !== null && obj[key] !== '') {
       newObj[key] = obj[key]
     }
   })

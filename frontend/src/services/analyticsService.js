@@ -7,8 +7,8 @@ export const trackView = async (productId, userId, category = 'Divers', sellerId
   if (!productId) return;
   
   try {
-    // Si l'utilisateur est connecté, on enregistre dans sa table d'historique
-    if (userId) {
+    // Si l'utilisateur est connecté et l'ID est valide, on enregistre dans sa table d'historique
+    if (userId && userId !== '') {
       const { error } = await supabase.from('user_history').insert([{
         user_id: userId,
         product_id: productId,

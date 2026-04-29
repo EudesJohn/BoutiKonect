@@ -107,12 +107,23 @@ CREATE TABLE orders (
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 
 -- Orders Policies
-CREATE POLICY "Admins can view all orders." ON orders FOR SELECT USING (
+DROP POLICY IF EXISTS "Admins can view all orders." ON orders;
+CREATE POLICY "Admins can view all orders." ON orders FOR SELECT TO authenticated USING (
   EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
 );
-CREATE POLICY "Buyers can view their own orders." ON orders FOR SELECT USING (auth.uid() = buyer_id);
-CREATE POLICY "Sellers can view orders for their products." ON orders FOR SELECT USING (auth.uid() = seller_id);
-CREATE POLICY "Anyone can insert an order (guest support)." ON orders FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Buyers can view their own orders." ON orders;
+CREATE POLICY "Buyers can view their own orders." ON orders FOR SELECT TO public USING (
+  auth.uid() = buyer_id OR buyer_id IS NULL
+);
+
+DROP POLICY IF EXISTS "Sellers can view orders for their products." ON orders;
+CREATE POLICY "Sellers can view orders for their products." ON orders FOR SELECT TO authenticated USING (
+  auth.uid() = seller_id
+);
+
+DROP POLICY IF EXISTS "Anyone can insert an order (guest support)." ON orders;
+CREATE POLICY "Anyone can insert an order (guest support)." ON orders FOR INSERT TO public WITH CHECK (true);
 
 -- 5. Admin Notifications
 CREATE TABLE admin_notifications (
@@ -203,9 +214,18 @@ CREATE TABLE user_history (
 ALTER TABLE user_history ENABLE ROW LEVEL SECURITY;
 
 -- User History Policies
-CREATE POLICY "Users can insert their own history." ON user_history FOR INSERT WITH CHECK (auth.uid()::uuid = user_id);
-CREATE POLICY "Users can see their own history." ON user_history FOR SELECT USING (auth.uid()::uuid = user_id);
-CREATE POLICY "Admins can see all history for analytics." ON user_history FOR SELECT USING (
+DROP POLICY IF EXISTS "Users can insert their own history." ON user_history;
+CREATE POLICY "Users can insert their own history." ON user_history FOR INSERT TO public WITH CHECK (
+  (auth.uid() IS NOT NULL AND auth.uid() = user_id) OR (user_id IS NULL)
+);
+
+DROP POLICY IF EXISTS "Users can see their own history." ON user_history;
+CREATE POLICY "Users can see their own history." ON user_history FOR SELECT TO authenticated USING (
+  auth.uid() = user_id
+);
+
+DROP POLICY IF EXISTS "Admins can see all history for analytics." ON user_history;
+CREATE POLICY "Admins can see all history for analytics." ON user_history FOR SELECT TO authenticated USING (
   EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
 );
 
