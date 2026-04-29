@@ -16,8 +16,16 @@ console.log('🚀 Initializing Supabase with URL from environment variables.')
 let supabase;
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error('❌ Supabase configuration missing. Ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set.');
-  // Export a placeholder that will cause clear failure if used without config
-  supabase = null;
+  // Create a client with empty strings to avoid import‑time crashes; calls will fail at runtime.
+  supabase = createClient(supabaseUrl || '', supabaseAnonKey || '', {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+      storageKey: 'boutikonect-auth-token',
+      storage: window.localStorage
+    }
+  })
 } else {
   supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
