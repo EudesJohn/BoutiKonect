@@ -118,7 +118,7 @@ export default function Profile() {
     await logoutUser(); 
     setUser(null); 
     setSeller(null); 
-    navigate('/'); 
+    window.location.href = '/'; 
   }
 
   const handleEditClick = () => {

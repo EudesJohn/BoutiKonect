@@ -46,7 +46,7 @@ export default function Navbar() {
     await logoutUser() // wait for network request and lock release FIRST
     setUser(null)
     setSeller(null)
-    navigate('/')
+    window.location.href = '/' // Force full reload to wipe Supabase memory state
   }
 
   const closeDropdown = () => {
