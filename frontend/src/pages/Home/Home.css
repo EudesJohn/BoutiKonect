@@ -522,12 +522,13 @@
   }
 
   .hero-btn {
-    width: 85%;
-    max-width: 320px;
-    padding: 10px 16px;
-    font-size: 0.85rem;
+    width: 280px; /* Taille fixe pour tous les boutons */
+    max-width: 95vw;
+    padding: 10px 10px;
+    font-size: 0.8rem;
     border-radius: 50px;
     box-shadow: 0 4px 15px rgba(255, 106, 0, 0.3);
+    white-space: normal;
   }
 
   .hero-stats {
