@@ -866,6 +866,17 @@ export function AppProvider({ children }) {
       setAuthLoading(true);
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
+      
+      // FIX: Explicitly fetch profile to prevent race conditions with onAuthStateChange.
+      // Since local storage caching was removed, we must await the DB fetch before navigating.
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
+      if (profile) {
+        const finalProfile = await handleSellerAutoRepair(profile, data.user.id);
+        setUser(finalProfile);
+        if (finalProfile.is_seller) { setSeller(finalProfile); }
+        else { setSeller(null); }
+      }
+      
       showToast("Connexion réussie", "success");
       return { success: true, user: data.user };
     } catch (err) {
