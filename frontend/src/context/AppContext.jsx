@@ -506,17 +506,17 @@ export function AppProvider({ children }) {
       
       // 1. Forcer la récupération de la session pour s'assurer que le JWT est envoyé
       let { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      let { data: { user: freshUser } } = await supabase.auth.getUser();
       
-      if (!session || sessionError) {
-        console.warn('⚠️ Session manquante ou erreur, tentative de rafraîchissement...');
-        const { data: { user: freshUser } } = await supabase.auth.getUser();
-        const { data: { session: freshSession } } = await supabase.auth.getSession();
-        session = freshSession;
-      }
-
-      if (!session) {
-        console.error('❌ Impossible de restaurer la session. L\'utilisateur est anonyme.');
-        return { success: false, error: "Votre session a expiré. Veuillez vous reconnecter pour valider l'activation." };
+      if (!session && freshUser) {
+        console.log('✅ Utilisateur trouvé via getUser(), poursuite de l\'activation...');
+      } else if (!session && !freshUser) {
+        console.warn('⚠️ Aucun utilisateur trouvé, tentative finale de rafraîchissement...');
+        const { data: { session: secondSession } } = await supabase.auth.getSession();
+        if (!secondSession) {
+          console.error('❌ Impossible de restaurer la session. L\'utilisateur est anonyme.');
+          return { success: false, error: "Votre session a expiré ou est introuvable. Veuillez vous reconnecter pour valider l'activation." };
+        }
       }
 
       console.log('✅ Session active pour:', session.user.id);

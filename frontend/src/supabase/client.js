@@ -22,7 +22,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
-      storageKey: 'boutikonect-auth-token',
       storage: window.localStorage
     }
   })
@@ -32,7 +31,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
-      storageKey: 'boutikonect-auth-token',
       storage: window.localStorage
     }
   })

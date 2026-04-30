@@ -7,7 +7,7 @@ import { AppContext } from '../../context/AppContextInstance';
 export default function PromotionCallback() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { activatePromotionInstant, user, seller } = useContext(AppContext);
+  const { activatePromotionInstant, user, seller, authLoading, isAppReady } = useContext(AppContext);
   const currentUser = seller || user;
   
   const [status, setStatus] = useState('processing'); 
@@ -82,8 +82,10 @@ export default function PromotionCallback() {
       }
     };
 
-    handleCallback();
-  }, [searchParams, activatePromotionInstant, currentUser]);
+    if (isAppReady && !authLoading) {
+      handleCallback();
+    }
+  }, [searchParams, activatePromotionInstant, currentUser, isAppReady, authLoading]);
 
   return (
     <div className="payment-page">
@@ -126,8 +128,11 @@ export default function PromotionCallback() {
               <XCircle size={64} style={{ color: '#e74c3c', margin: '0 auto var(--space-lg)' }} />
               <h2>Transaction échouée</h2>
               <p>{message}</p>
-              <div style={{ marginTop: 'var(--space-xl)' }}>
+              <div style={{ marginTop: 'var(--space-xl)', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
                 <Link to="/my-products" className="btn btn-primary">Retour aux produits</Link>
+                {message.includes('session') && (
+                  <Link to="/login" className="btn btn-outline">Se connecter</Link>
+                )}
               </div>
             </>
           )}
