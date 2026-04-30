@@ -6,7 +6,7 @@ import { X, Zap, CircleCheck as CheckCircle, Loader2 as Loader } from 'lucide-re
 import './Publish.css';
 
 export default function PromoteModal({ product, onClose }) {
-  const { PROMOTION_PRICES, promoteProduct, activatePromotionInstant, seller } = useContext(AppContext);
+  const { PROMOTION_PRICES, activatePromotionInstant, seller } = useContext(AppContext);
   const [selectedPlan, setSelectedPlan] = useState('week');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -15,7 +15,14 @@ export default function PromoteModal({ product, onClose }) {
   const handlePromote = async () => {
     setLoading(true);
     setError(null);
-    
+
+    // Vérification préalable : clé FedaPay présente ?
+    if (!import.meta.env.VITE_FEDAPAY_PUBLIC_KEY) {
+      setError("❌ Configuration de paiement manquante (clé FedaPay). Contactez l'administrateur.");
+      setLoading(false);
+      return;
+    }
+
     const plan = PROMOTION_PRICES[selectedPlan];
     if (!plan) {
       setError("Plan de promotion invalide.");
@@ -28,8 +35,8 @@ export default function PromoteModal({ product, onClose }) {
       email: seller?.email || 'client@example.com',
       phone: seller?.whatsapp || seller?.phone || '',
     };
-    
-    // Préparer les données pour le callback au cas où il y aurait une redirection
+
+    // Sauvegarder en sessionStorage pour récupérer si FedaPay redirige
     const promoData = {
       productId: product.id,
       plan: plan,
@@ -38,10 +45,10 @@ export default function PromoteModal({ product, onClose }) {
     };
     sessionStorage.setItem('fedapay_promotion_data', JSON.stringify(promoData));
 
-    // 1. Ouvrir l'overlay de paiement
+    // ÉTAPE 1 : Ouvrir l'overlay de paiement FedaPay
     const paymentResult = await openFedaPayOverlay({
       amount: plan.price,
-      description: `Promotion de l'annonce : ${product.title} (${plan.name})`,
+      description: `Promotion : ${product.title} (${plan.name})`,
       customer: userInfo,
       callbackUrl: `${window.location.origin}/promotion/success`
     });
@@ -53,19 +60,26 @@ export default function PromoteModal({ product, onClose }) {
       return;
     }
 
-    // 2. Si le paiement est réussi, enregistrer la promotion officiellement (admin)
-    const result = await promoteProduct(product.id, selectedPlan);
-    
-    if (result && result.success) {
-      // Activation immédiate via le context
-      if (activatePromotionInstant) {
-        await activatePromotionInstant(product.id, plan.days);
-      }
-      
-      setSuccess(true);
+    // ÉTAPE 2 : Paiement validé par FedaPay → Activer le badge Vedette IMMÉDIATEMENT en BDD
+    // On appelle directement activatePromotionInstant (met is_promoted=true dans products)
+    // Sans passer par promoteProduct qui ne faisait PAS la mise à jour BDD
+    const activationResult = await activatePromotionInstant(product.id, plan.days);
+
+    if (activationResult && activationResult.success) {
       sessionStorage.removeItem('fedapay_promotion_data');
+      setSuccess(true);
+
+      // ÉTAPE 3 (non-bloquante) : Notifier l'admin en arrière-plan
+      try {
+        const { confirmPromotionPayment } = await import('../../services/paymentService');
+        await confirmPromotionPayment(product.id, plan, seller?.id, paymentResult.transactionId);
+      } catch (notifErr) {
+        console.warn('[PromoteModal] Notification admin non envoyée (non bloquant):', notifErr.message);
+      }
     } else {
-      setError(result?.error || "Le plan de promotion n'a pas pu être enregistré malgré le paiement.");
+      // Paiement OK mais activation échouée (ex: RLS, produit introuvable)
+      const errMsg = activationResult?.error || "Erreur d'activation";
+      setError(`Paiement reçu ✓ mais activation échouée: ${errMsg}. Notez l'ID de transaction FedaPay: ${paymentResult.transactionId || 'N/A'} et contactez le support.`);
     }
     setLoading(false);
   };
@@ -88,8 +102,8 @@ export default function PromoteModal({ product, onClose }) {
         {success ? (
           <motion.div className="promotion-success" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <CheckCircle size={64} className="success-icon" />
-            <h3>Annonce promue !</h3>
-            <p>Votre annonce apparaîtra désormais en tête des résultats.</p>
+            <h3>⭐ Annonce promue avec succès !</h3>
+            <p>Votre annonce apparaît désormais en tête des résultats pendant <strong>{PROMOTION_PRICES[selectedPlan]?.name || 'la durée choisie'}</strong>.</p>
           </motion.div>
         ) : (
           <>
@@ -149,4 +163,3 @@ export default function PromoteModal({ product, onClose }) {
     </div>
   );
 }
-

@@ -789,7 +789,19 @@ export function AppProvider({ children }) {
       })
     }
 
-    return results
+    // Sort results: Promoted first, then recent
+    return results.sort((a, b) => {
+      const isAPromoted = (a.isPromoted === true || a.isPromoted === 'true') && parseDate(a.promotionEndDate) > now;
+      const isBPromoted = (b.isPromoted === true || b.isPromoted === 'true') && parseDate(b.promotionEndDate) > now;
+
+      if (isAPromoted && !isBPromoted) return -1;
+      if (!isAPromoted && isBPromoted) return 1;
+
+      // Both promoted or both not: sort by date
+      const dateA = parseDate(a.createdAt || a.created_at);
+      const dateB = parseDate(b.createdAt || b.created_at);
+      return dateB.getTime() - dateA.getTime();
+    });
   }, [_getFilteredProducts, filters, userLocation])
 
   const getFilteredServices = useCallback(() => {
@@ -799,8 +811,16 @@ export function AppProvider({ children }) {
 
   const filteredProducts = useMemo(() => {
     if (!Array.isArray(products)) return [];
+    const now = new Date();
     return [...products].sort((a, b) => {
       if (!a || !b) return 0;
+      
+      const isAPromoted = (a.isPromoted === true || a.isPromoted === 'true') && parseDate(a.promotionEndDate) > now;
+      const isBPromoted = (b.isPromoted === true || b.isPromoted === 'true') && parseDate(b.promotionEndDate) > now;
+
+      if (isAPromoted && !isBPromoted) return -1;
+      if (!isAPromoted && isBPromoted) return 1;
+
       const dateA = parseDate(a.createdAt || a.created_at);
       const dateB = parseDate(b.createdAt || b.created_at);
       return (dateB.getTime() || 0) - (dateA.getTime() || 0);
