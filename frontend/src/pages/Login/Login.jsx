@@ -17,6 +17,7 @@ export default function Login() {
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
   const [showVerificationSuccess, setShowVerificationSuccess] = useState(false)
+  // Token géré de manière sécurisée par Supabase Auth (JWT) et chiffré via notre secureStorage (AES-GCM)
   const [rememberMe, setRememberMe] = useState(true)
 
   // Gérer le paramètre de succès de vérification d'email
@@ -51,6 +52,8 @@ export default function Login() {
       setErrors({})
       
       try {
+        // Le mot de passe n'est jamais stocké en clair localement.
+        // Il est envoyé de manière sécurisée via HTTPS et haché (bcrypt) côté serveur par Supabase.
         const result = await loginUser(formData.email, formData.password, rememberMe)
         
         if (result.success) {
