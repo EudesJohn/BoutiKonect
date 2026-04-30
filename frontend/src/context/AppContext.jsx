@@ -502,42 +502,56 @@ export function AppProvider({ children }) {
 
   const activatePromotionInstant = async (productId, days) => {
     try {
-      const now = new Date();
-      const endDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+      console.log('🚀 Activation promotion pour:', productId, 'pour', days, 'jours');
       
-      const { data, error } = await supabase
-        .from('products')
-        .update({
-          is_promoted: true,
-          promotion_end_date: endDate.toISOString()
-        })
-        .eq('id', productId)
-        .select();
+      // Utilisation du RPC pour bypasser les problèmes RLS client-side
+      const { data: rpcSuccess, error: rpcError } = await supabase.rpc('activate_product_promotion', {
+        p_product_id: productId,
+        p_days: days
+      });
 
-      if (error) {
-        console.error('activatePromotionInstant - Erreur RLS ou BD:', error);
-        // Si c'est une erreur RLS (42501), informer l'utilisateur clairement
-        if (error.code === '42501' || error.message?.includes('RLS') || error.message?.includes('security')) {
-          showToast("Erreur de droits. Vérifiez que vous êtes bien connecté en tant que vendeur.", "error");
-        } else {
-          showToast("Impossible d'activer la promotion: " + error.message, "error");
+      if (rpcError) {
+        console.error('activatePromotionInstant - Erreur RPC:', rpcError);
+        // Fallback sur l'update classique si le RPC n'est pas encore déployé
+        if (rpcError.message?.includes('not found') || rpcError.message?.includes('function')) {
+          console.log('⚠️ RPC non trouvé, fallback sur update classique...');
+          const now = new Date();
+          const endDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+          
+          const { data, error } = await supabase
+            .from('products')
+            .update({ is_promoted: true, promotion_end_date: endDate.toISOString() })
+            .eq('id', productId)
+            .select();
+
+          if (error) throw error;
+          if (!data || data.length === 0) throw new Error("Produit non trouvé ou droits insuffisants.");
+          
+          // Mise à jour state local
+          const updatedProduct = mapItemFromDB(data[0]);
+          setProducts(prev => prev.map(p => p.id === productId ? updatedProduct : p));
+          showToast("⭐ Badge Vedette activé !", "success");
+          return { success: true };
         }
-        throw error;
+        throw rpcError;
       }
 
-      if (data && data.length > 0) {
-        const updatedProduct = mapItemFromDB(data[0]);
-        setProducts(prev => prev.map(p => p.id === productId ? updatedProduct : p));
+      if (rpcSuccess) {
+        // Rafraîchir le produit localement
+        const { data: refreshed } = await supabase.from('products').select('*').eq('id', productId).single();
+        if (refreshed) {
+          const mapped = mapItemFromDB(refreshed);
+          setProducts(prev => prev.map(p => p.id === productId ? mapped : p));
+        }
         showToast("⭐ Félicitations ! Votre produit est maintenant en Vedette.", "success");
         return { success: true };
+      } else {
+        console.warn('activatePromotionInstant: RPC a retourné false pour', productId);
+        return { success: false, error: "Le serveur a refusé l'activation. Vérifiez que ce produit vous appartient." };
       }
-      // Si aucune ligne retournée, c'est souvent un problème RLS silencieux
-      console.warn('activatePromotionInstant: aucune ligne mise à jour pour le produit', productId);
-      showToast("Impossible d'activer la promotion. Vérifiez que ce produit vous appartient.", "warning");
-      return { success: false, error: "Produit non trouvé ou droits insuffisants." };
     } catch (err) {
       console.error('activatePromotionInstant error:', err);
-      return { success: false, error: err.message };
+      return { success: false, error: err.message || "Erreur de communication avec la base de données." };
     }
   };
 
