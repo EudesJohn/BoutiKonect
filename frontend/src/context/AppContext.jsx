@@ -502,10 +502,27 @@ export function AppProvider({ children }) {
 
   const activatePromotionInstant = async (productId, days) => {
     try {
-      console.log('🚀 Activation promotion pour:', productId, 'pour', days, 'jours');
+      console.log('🚀 Tentative d\'activation promotion pour:', productId);
       
-      // Utilisation du RPC pour bypasser les problèmes RLS client-side
-      const { data: rpcSuccess, error: rpcError } = await supabase.rpc('activate_product_promotion', {
+      // 1. Forcer la récupération de la session pour s'assurer que le JWT est envoyé
+      let { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (!session || sessionError) {
+        console.warn('⚠️ Session manquante ou erreur, tentative de rafraîchissement...');
+        const { data: { user: freshUser } } = await supabase.auth.getUser();
+        const { data: { session: freshSession } } = await supabase.auth.getSession();
+        session = freshSession;
+      }
+
+      if (!session) {
+        console.error('❌ Impossible de restaurer la session. L\'utilisateur est anonyme.');
+        return { success: false, error: "Votre session a expiré. Veuillez vous reconnecter pour valider l'activation." };
+      }
+
+      console.log('✅ Session active pour:', session.user.id);
+      
+      // 2. Appel RPC avec la session garantie
+      const { data: rpcStatus, error: rpcError } = await supabase.rpc('activate_product_promotion', {
         p_product_id: productId,
         p_days: days
       });
