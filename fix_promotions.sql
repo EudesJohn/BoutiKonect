@@ -20,6 +20,8 @@ CREATE POLICY products_update_admin
 -- Cela permet de bypasser d'éventuels problèmes de droits côté client
 -- tout en vérifiant l'identité à l'intérieur de la fonction.
 
+DROP FUNCTION IF EXISTS activate_product_promotion(UUID, INTEGER);
+
 CREATE OR REPLACE FUNCTION activate_product_promotion(p_product_id UUID, p_days INTEGER)
 RETURNS TEXT
 LANGUAGE plpgsql
