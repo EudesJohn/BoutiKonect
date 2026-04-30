@@ -181,8 +181,9 @@ export function AppProvider({ children }) {
           }
         } else if (profile) {
           const finalProfile = await handleSellerAutoRepair(profile, session.user.id);
-          if (finalProfile.is_seller) { setSeller(finalProfile); setUser(null); }
-          else { setUser(finalProfile); setSeller(null); }
+          setUser(finalProfile);
+          if (finalProfile.is_seller) { setSeller(finalProfile); }
+          else { setSeller(null); }
           saveSecureUser(finalProfile);
           saveSecureSeller(finalProfile.is_seller ? finalProfile : null);
         }
@@ -198,7 +199,7 @@ export function AppProvider({ children }) {
     const loadOptimisticUser = async () => {
       try {
         const [cachedUser, cachedSeller] = await Promise.all([loadSecureUser(), loadSecureSeller()])
-        if (cachedSeller) { setSeller(cachedSeller); setUser(null); setAuthLoading(false); }
+        if (cachedSeller) { setSeller(cachedSeller); setUser(cachedSeller); setAuthLoading(false); }
         else if (cachedUser) { setUser(cachedUser); setSeller(null); setAuthLoading(false); }
       } catch (err) { console.error('Optimistic load error:', err) }
     }
@@ -671,12 +672,28 @@ export function AppProvider({ children }) {
 
   const decrementProductStock = async (id, amount = 1) => {
     try {
-      const product = products.find(p => p.id === id)
-      if (product && product.stock !== undefined) {
-        const newStock = Math.max(0, product.stock - amount)
-        await supabase.from('products').update({ stock: newStock }).eq('id', id)
+      const { data: success, error } = await supabase.rpc('decrement_product_stock', {
+        p_product_id: id,
+        p_amount: amount
+      });
+      
+      if (error) throw error;
+      
+      if (success) {
+        // Rafraîchir l'état local du produit
+        const { data: refreshed } = await supabase.from('products').select('*').eq('id', id).single();
+        if (refreshed) {
+          const mapped = mapItemFromDB(refreshed);
+          setProducts(prev => prev.map(p => p.id === id ? mapped : p));
+        }
+        return { success: true };
+      } else {
+        return { success: false, error: 'Stock insuffisant ou erreur lors de la mise à jour' };
       }
-    } catch (err) { console.error('Stock decrement error:', err) }
+    } catch (err) { 
+      console.error('Stock decrement error:', err);
+      return { success: false, error: err.message };
+    }
   }
 
   const reportProduct = async (productId, reason, reporterId) => {
@@ -812,12 +829,15 @@ export function AppProvider({ children }) {
       })
     }
 
-    // Near me filter
+    // Near me filter (Refined: Fallback to city coordinates if exact ones are missing)
     if (filters.nearMe && userLocation) {
       results = results.filter(p => {
-        if (!p.latitude || !p.longitude) return false
-        const dist = getDistance(userLocation.latitude, userLocation.longitude, p.latitude, p.longitude)
-        return dist !== null && dist <= 50
+        const pLat = p.latitude || cities.find(c => c.name === p.sellerCity)?.lat;
+        const pLng = p.longitude || cities.find(c => c.name === p.sellerCity)?.lng;
+        
+        if (!pLat || !pLng) return false;
+        const dist = getDistance(userLocation.latitude, userLocation.longitude, pLat, pLng);
+        return dist !== null && dist <= 50;
       })
     }
 

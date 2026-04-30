@@ -163,6 +163,19 @@ export default function Publish() {
         return
       }
 
+      // 🛡️ SÉCURITÉ : Sanitization des images pour prévenir les injections (XSS via URL)
+      const isValidImageFormat = (img) => {
+        if (!img || typeof img !== 'string') return false;
+        // Autoriser uniquement HTTP, HTTPS, et Data URI (image)
+        return /^https?:\/\//i.test(img) || /^data:image\/[a-zA-Z0-9+.-]+;base64,/i.test(img);
+      };
+
+      if (!itemData.images.every(isValidImageFormat)) {
+        setErrors({ general: "Erreur de sécurité : Format d'image invalide détecté. Veuillez utiliser uniquement des images valides." })
+        setIsSubmitting(false)
+        return
+      }
+
       let result;
       try {
         if (editingProduct) {

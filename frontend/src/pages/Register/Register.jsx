@@ -70,7 +70,11 @@ if (!formData.password.trim()) newErrors.password = 'Le mot de passe est requis'
   const handleSubmit = async (e) => {
     e.preventDefault()
     
-    if (!validateStep3()) return
+    // SÉCURITÉ: Valider toutes les étapes, même si l'utilisateur soumet depuis l'étape 1 via "Entrée"
+    if (!validateStep1() || !validateStep2() || !validateStep3()) {
+      setErrors(prev => ({ ...prev, general: "Veuillez corriger les erreurs dans le formulaire." }))
+      return
+    }
     
     setLoading(true)
     setErrors({})

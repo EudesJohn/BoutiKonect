@@ -6,6 +6,7 @@ import { AppContext } from '../../context/AppContextInstance'
 import { getItemReviews, getItemRating, addReview } from '../../services/reviewsService'
 import { trackView } from '../../services/analyticsService'
 import { MapPin, ShoppingCart, MessageCircle, ArrowLeft, Share2, Heart, ChevronLeft, ChevronRight, X, Flag, Star, Send, Facebook, Copy } from 'lucide-react'
+import { supabase } from '../../supabase/client'
 import './ProductDetail.css'
 
 export default function ProductDetail() {
@@ -168,6 +169,25 @@ export default function ProductDetail() {
       alert("Vous devez être connecté pour passer une commande.")
       return
     }
+
+    // 1. Vérification du stock en temps réel (Atomic check)
+    try {
+      const { data: freshProduct, error: fetchError } = await supabase
+        .from('products')
+        .select('stock')
+        .eq('id', product.id)
+        .single();
+        
+      if (fetchError) throw fetchError;
+      
+      if (freshProduct.stock !== undefined && freshProduct.stock < 1) {
+        alert("Désolé, ce produit vient d'être vendu et est maintenant en rupture de stock.");
+        setShowOrderModal(false);
+        return;
+      }
+    } catch (err) {
+      console.error('Error checking stock:', err);
+    }
     
     if (product.stock !== undefined && product.stock < 1) {
       alert("Désolé, ce produit est actuellement en rupture de stock.")
@@ -193,9 +213,13 @@ export default function ProductDetail() {
       })
       
       if (orderResult && orderResult.success) {
-        // Décrémenter le stock si c'est un produit physique
+        // 2. Décrémenter le stock via RPC atomique
         if (product.stock !== undefined) {
-          decrementProductStock(product.id, 1)
+          const stockResult = await decrementProductStock(product.id, 1)
+          if (!stockResult.success) {
+            console.error("Stock update failed:", stockResult.error)
+            // L'ordre est déjà créé, mais on log l'erreur
+          }
         }
 
         alert(`Commande confirmée!\n\nProduit: ${product.title}\nPrix: ${formatPrice(product.price)}\nClient: ${orderForm.name}\nTéléphone: ${orderForm.phone}\nAdresse: ${orderForm.address}\n\nLe vendeur a été notifié et traitera votre commande.`)

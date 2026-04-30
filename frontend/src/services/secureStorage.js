@@ -225,39 +225,32 @@ const SENSITIVE_KEYS = {
 }
 
 /**
- * Sauvegarde l'utilisateur de manière sécurisée
+ * Sauvegarde l'utilisateur de manière sécurisée (DÉSACTIVÉ POUR SÉCURITÉ)
+ * Nous ne mettons plus les profils en cache local pour éviter les fuites.
  */
 export const saveSecureUser = async (user) => {
-  if (user) {
-    await secureSetItem(SENSITIVE_KEYS.USER, user, true)
-  } else {
-    secureRemoveItem(SENSITIVE_KEYS.USER)
-  }
+  secureRemoveItem(SENSITIVE_KEYS.USER)
 }
 
 /**
- * Charge l'utilisateur de manière sécurisée
+ * Charge l'utilisateur de manière sécurisée (DÉSACTIVÉ)
  */
 export const loadSecureUser = async () => {
-  return secureGetItem(SENSITIVE_KEYS.USER, true)
+  return null;
 }
 
 /**
- * Sauvegarde le vendeur de manière sécurisée
+ * Sauvegarde le vendeur de manière sécurisée (DÉSACTIVÉ POUR SÉCURITÉ)
  */
 export const saveSecureSeller = async (seller) => {
-  if (seller) {
-    await secureSetItem(SENSITIVE_KEYS.SELLER, seller, true)
-  } else {
-    secureRemoveItem(SENSITIVE_KEYS.SELLER)
-  }
+  secureRemoveItem(SENSITIVE_KEYS.SELLER)
 }
 
 /**
- * Charge le vendeur de manière sécurisée
+ * Charge le vendeur de manière sécurisée (DÉSACTIVÉ)
  */
 export const loadSecureSeller = async () => {
-  return secureGetItem(SENSITIVE_KEYS.SELLER, true)
+  return null;
 }
 
 /**
