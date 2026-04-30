@@ -863,7 +863,6 @@ export function AppProvider({ children }) {
 
   const authLoginUser = async (email, password, rememberMe = true) => {
     try {
-      setAuthLoading(true);
       const result = await authServiceLogin(email, password, rememberMe);
       
       if (!result.success) {
@@ -887,14 +886,11 @@ export function AppProvider({ children }) {
       console.error('Login error:', err);
       showToast(err.message || "Erreur de connexion", "error");
       return { success: false, error: err.message || "Erreur de connexion" };
-    } finally {
-      setAuthLoading(false);
     }
   };
 
   const authRegisterUser = async (email, password, metadata) => {
     try {
-      setAuthLoading(true);
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -907,8 +903,6 @@ export function AppProvider({ children }) {
       console.error('Register error:', err);
       showToast(err.message, "error");
       return { success: false, error: err.message };
-    } finally {
-      setAuthLoading(false);
     }
   };
 

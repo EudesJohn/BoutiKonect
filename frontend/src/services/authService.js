@@ -79,13 +79,34 @@ export const loginUser = async (email, password, rememberMe = true) => {
     if (error) throw error
 
     // Récupérer le profil complet
-    const { data: profile, error: profileError } = await supabase
+    let { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', data.user.id)
       .single()
 
-    if (profileError) throw profileError
+    if (profileError) {
+      if (profileError.code === 'PGRST116') {
+        console.warn('⚠️ Profil non trouvé. Création automatique...');
+        const newProfile = {
+          id: data.user.id,
+          name: data.user.user_metadata?.name || data.user.email.split('@')[0],
+          email: data.user.email,
+          phone: data.user.user_metadata?.phone || '',
+          is_seller: false
+        };
+        const { data: createdProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert([newProfile])
+          .select()
+          .single();
+          
+        if (createError) throw createError;
+        profile = createdProfile;
+      } else {
+        throw profileError;
+      }
+    }
 
     return { success: true, user: profile }
   } catch (error) {
