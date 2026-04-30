@@ -25,7 +25,11 @@ const updateSW = registerSW({
           clearInterval(interval);
         }
       } catch (err) {
-        console.warn('SW Update check failed (non-critical):', err);
+        // Ignorer silencieusement l'erreur DOMException qui se produit 
+        // si l'enregistrement a été désinscrit ou mis à jour.
+        if (err.name !== 'DOMException' && err.name !== 'InvalidStateError') {
+          console.warn('SW Update check failed (non-critical):', err);
+        }
       }
     }, 60000);
   }
