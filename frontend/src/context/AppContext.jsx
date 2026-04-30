@@ -536,7 +536,7 @@ export function AppProvider({ children }) {
         throw rpcError;
       }
 
-      if (rpcSuccess) {
+      if (rpcSuccess === 'SUCCESS') {
         // Rafraîchir le produit localement
         const { data: refreshed } = await supabase.from('products').select('*').eq('id', productId).single();
         if (refreshed) {
@@ -546,8 +546,9 @@ export function AppProvider({ children }) {
         showToast("⭐ Félicitations ! Votre produit est maintenant en Vedette.", "success");
         return { success: true };
       } else {
-        console.warn('activatePromotionInstant: RPC a retourné false pour', productId);
-        return { success: false, error: "Le serveur a refusé l'activation. Vérifiez que ce produit vous appartient." };
+        console.warn('activatePromotionInstant: RPC a retourné un échec:', rpcSuccess);
+        const errorMsg = rpcSuccess?.startsWith('ERROR:') ? rpcSuccess.replace('ERROR: ', '') : "Le serveur a refusé l'activation.";
+        return { success: false, error: errorMsg };
       }
     } catch (err) {
       console.error('activatePromotionInstant error:', err);

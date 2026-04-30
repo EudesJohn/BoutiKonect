@@ -21,24 +21,31 @@ CREATE POLICY products_update_admin
 -- tout en vérifiant l'identité à l'intérieur de la fonction.
 
 CREATE OR REPLACE FUNCTION activate_product_promotion(p_product_id UUID, p_days INTEGER)
-RETURNS BOOLEAN
+RETURNS TEXT
 LANGUAGE plpgsql
-SECURITY DEFINER -- Exécuté avec les privilèges admin
+SECURITY DEFINER
 AS $$
 DECLARE
   v_seller_id UUID;
+  v_caller_id UUID;
+  v_is_admin BOOLEAN;
 BEGIN
-  -- Récupérer le seller_id du produit
+  -- 1. Récupérer l'ID de l'appelant
+  v_caller_id := auth.uid();
+  
+  -- 2. Vérifier si le produit existe
   SELECT seller_id INTO v_seller_id FROM products WHERE id = p_product_id;
   
-  -- Si le produit n'existe pas
   IF NOT FOUND THEN
-    RETURN FALSE;
+    RETURN 'ERROR: Product not found (' || p_product_id || ')';
   END IF;
 
-  -- VÉRIFICATION DE SÉCURITÉ :
+  -- 3. Vérifier si l'appelant est admin
+  SELECT is_admin INTO v_is_admin FROM profiles WHERE id = v_caller_id;
+
+  -- 4. VÉRIFICATION DE SÉCURITÉ :
   -- L'utilisateur doit être le propriétaire OU un admin
-  IF (auth.uid() = v_seller_id) OR (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)) THEN
+  IF (v_caller_id = v_seller_id) OR (COALESCE(v_is_admin, false) = true) THEN
     UPDATE products 
     SET 
       is_promoted = true,
@@ -46,15 +53,14 @@ BEGIN
       updated_at = NOW()
     WHERE id = p_product_id;
     
-    RETURN TRUE;
+    RETURN 'SUCCESS';
   ELSE
-    -- Droits insuffisants
-    RETURN FALSE;
+    RETURN 'ERROR: Permission denied. Caller: ' || COALESCE(v_caller_id::text, 'NULL') || ' / Owner: ' || COALESCE(v_seller_id::text, 'NULL');
   END IF;
 END;
 $$;
 
--- Accorder l'accès à la fonction aux utilisateurs authentifiés
+-- Accorder l'accès
 GRANT EXECUTE ON FUNCTION activate_product_promotion(UUID, INTEGER) TO authenticated;
 GRANT EXECUTE ON FUNCTION activate_product_promotion(UUID, INTEGER) TO anon;
 
