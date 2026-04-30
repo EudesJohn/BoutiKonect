@@ -5,7 +5,7 @@ import { Search, ShoppingCart, User, Plus, LogOut, Store, Menu, X, Package, Brie
 import './Navbar.css'
 
 export default function Navbar() {
-  const { seller, user, cart, filters, setFilters, logoutSeller, logoutUser, checkIsAdmin } = useContext(AppContext)
+  const { seller, user, cart, filters, setFilters, logoutSeller, logoutUser, checkIsAdmin, setUser, setSeller } = useContext(AppContext)
   const [searchQuery, setSearchQuery] = useState('')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -37,10 +37,12 @@ export default function Navbar() {
   }
 
   const handleLogout = async () => {
-    await logoutUser()
+    setUser(null)
+    setSeller(null)
     navigate('/')
     setMobileMenuOpen(false)
     setDropdownOpen(false)
+    logoutUser() // asynchronous network request
   }
 
   const closeDropdown = () => {

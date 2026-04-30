@@ -55,7 +55,7 @@ export default function Login() {
         
         if (result.success) {
           setSuccess(true)
-          setTimeout(() => navigate('/'), 1000)
+          navigate('/')
         } else {
           setErrors({ general: result.error })
         }
