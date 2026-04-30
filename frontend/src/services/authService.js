@@ -125,8 +125,18 @@ export const logoutUser = async () => {
   try {
     console.log('🚪 Déconnexion demandée...')
     const { error } = await supabase.auth.signOut()
-    if (error) console.error('❌ Erreur lors de la déconnexion:', error)
+    if (error) {
+      console.warn('❌ Erreur serveur lors de la déconnexion, forçage local...', error)
+    }
   } finally {
+    // Forcer la suppression du token Supabase du localStorage pour garantir la déconnexion
+    // même si le serveur renvoie une erreur (ex: offline, session expirée, lock volé)
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && key.startsWith('sb-') && key.endsWith('-auth-token')) {
+        localStorage.removeItem(key)
+      }
+    }
     isLoggingOut = false
   }
 }
