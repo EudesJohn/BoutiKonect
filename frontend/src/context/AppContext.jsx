@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 // Vercel Trigger: 2026-04-29 - FINAL STABLE - Promotions + RLS Orders + Realtime Seller/Admin
 import { supabase } from '../supabase/client'
 import { isAdminConfigured, getAdminInfo } from '../services/adminAuth'
-import { logoutUser as authLogoutUser, loginUser as authLoginUser, registerUser as authRegisterUser } from '../services/authService'
+import { logoutUser as authLogoutUser, loginUser as authServiceLogin, registerUser as authRegisterUser } from '../services/authService'
 import { cacheService } from '../services/cacheService'
 import { saveSecureUser, loadSecureUser, secureRemoveItem, saveSecureCart, loadSecureCart, secureSetItem, secureGetItem, loadSecureSeller, saveSecureSeller, secureClear } from '../services/secureStorage'
 import { PROMOTION_PRICES } from '../services/paymentService'
@@ -861,28 +861,32 @@ export function AppProvider({ children }) {
     return Array.isArray(results) ? results.filter(p => p && p.type === 'service') : [];
   }, [getFilteredProducts])
 
-  const authLoginUser = async (email, password) => {
+  const authLoginUser = async (email, password, rememberMe = true) => {
     try {
       setAuthLoading(true);
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      const result = await authServiceLogin(email, password, rememberMe);
       
-      // FIX: Explicitly fetch profile to prevent race conditions with onAuthStateChange.
-      // Since local storage caching was removed, we must await the DB fetch before navigating.
-      const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
+      if (!result.success) {
+        showToast(result.error, "error");
+        return result;
+      }
+      
+      const profile = result.user;
       if (profile) {
-        const finalProfile = await handleSellerAutoRepair(profile, data.user.id);
+        const finalProfile = await handleSellerAutoRepair(profile, profile.id);
         setUser(finalProfile);
         if (finalProfile.is_seller) { setSeller(finalProfile); }
         else { setSeller(null); }
+        saveSecureUser(finalProfile);
+        saveSecureSeller(finalProfile.is_seller ? finalProfile : null);
       }
       
       showToast("Connexion réussie", "success");
-      return { success: true, user: data.user };
+      return result;
     } catch (err) {
       console.error('Login error:', err);
-      showToast(err.message, "error");
-      return { success: false, error: err.message };
+      showToast(err.message || "Erreur de connexion", "error");
+      return { success: false, error: err.message || "Erreur de connexion" };
     } finally {
       setAuthLoading(false);
     }
