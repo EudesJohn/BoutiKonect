@@ -7,6 +7,7 @@ import { MapPin, Package, MessageCircle, ArrowLeft, Store, Eye, Users, DollarSig
 import ProductCard from '../../components/ProductCard/ProductCard'
 import ServiceCard from '../../components/ServiceCard/ServiceCard'
 import { generateMockAnalytics } from '../../services/analyticsService'
+import { supabase } from '../../supabase/client'
 import './SellerProfile.css'
 
 export default function SellerProfile() {
@@ -16,46 +17,69 @@ export default function SellerProfile() {
   const [analytics, setAnalytics] = useState(null)
   const [activeTab, setActiveTab] = useState('products')
 
+  const [dbSellerInfo, setDbSellerInfo] = useState(null)
+
   // Get seller info
-  let sellerInfo = allUsers.find(u => u.id === sellerId)
+  let sellerInfo = allUsers.find(u => u.id === sellerId) || dbSellerInfo
   
   if (!sellerInfo && sellerId) {
-    sellerInfo = allUsers.find(u => u.name && u.name.toLowerCase() === sellerId.toLowerCase().replace(/-/g, ' '))
+    sellerInfo = allUsers.find(u => u.name && u.name.toLowerCase() === sellerId.toLowerCase().replace(/-/g, ' ')) || dbSellerInfo
   }
 
+  useEffect(() => {
+    const foundInUsers = allUsers.find(u => u.id === sellerId)
+    if (!foundInUsers && !dbSellerInfo && sellerId && sellerId.includes('-')) {
+      supabase.from('profiles').select('*').eq('id', sellerId).single()
+        .then(({data, error}) => {
+          if (data) setDbSellerInfo(data)
+          else if (error) console.error("Profile fetch error:", error)
+        })
+    }
+  }, [sellerId, allUsers, dbSellerInfo])
+
   // Get seller's products
-  let sellerProducts = []
-  if (sellerInfo) {
-    sellerProducts = products.filter(p => 
-      (p.sellerId === sellerId || 
-      (p.sellerName && p.sellerName.toLowerCase() === sellerInfo.name?.toLowerCase())) &&
-      (p.type === 'product' || !p.type)
-    )
-  }
+  let sellerProducts = products.filter(p => 
+    (p.sellerId === sellerId || 
+    (sellerInfo && p.sellerName && p.sellerName.toLowerCase() === sellerInfo.name?.toLowerCase())) &&
+    (p.type === 'product' || !p.type)
+  )
 
   if (sellerProducts.length === 0 && sellerId) {
     const decodedName = decodeURIComponent(sellerId).replace(/-/g, ' ')
     sellerProducts = products.filter(p => 
-      p.sellerName && p.sellerName.toLowerCase().includes(decodedName.toLowerCase())
-    )
+      (p.type === 'product' || !p.type) && (
+      p.sellerId === sellerId || 
+      (p.sellerName && p.sellerName.toLowerCase().includes(decodedName.toLowerCase()))
+    ))
   }
 
   // Get seller's services
-  const sellerServices = services.filter(s => 
+  const sellerServices = (services || []).filter(s => 
     s.sellerId === sellerId || 
-    (s.sellerName && s.sellerName.toLowerCase() === sellerInfo?.name?.toLowerCase())
+    (sellerInfo && s.sellerName && s.sellerName.toLowerCase() === sellerInfo.name?.toLowerCase())
   )
 
   const currentUser = user || seller
   const isOwner = currentUser && (currentUser.id === sellerId || currentUser.email === sellerInfo?.email)
 
   // Create placeholder sellerInfo if not found
-  if (!sellerInfo && sellerProducts.length > 0) {
-    sellerInfo = {
-      name: sellerProducts[0].sellerName || 'Vendeur',
-      city: sellerProducts[0].sellerCity || '',
-      neighborhood: sellerProducts[0].sellerNeighborhood || '',
-      phone: sellerProducts[0].whatsapp || ''
+  if (!sellerInfo) {
+    if (sellerProducts.length > 0) {
+      sellerInfo = {
+        name: sellerProducts[0].sellerName || 'Vendeur',
+        city: sellerProducts[0].sellerCity || '',
+        neighborhood: sellerProducts[0].sellerNeighborhood || '',
+        phone: sellerProducts[0].whatsapp || '',
+        avatar: sellerProducts[0].sellerAvatar || ''
+      }
+    } else if (sellerServices.length > 0) {
+      sellerInfo = {
+        name: sellerServices[0].sellerName || 'Vendeur',
+        city: sellerServices[0].sellerCity || '',
+        neighborhood: sellerServices[0].sellerNeighborhood || '',
+        phone: sellerServices[0].whatsapp || '',
+        avatar: sellerServices[0].sellerAvatar || ''
+      }
     }
   }
 
