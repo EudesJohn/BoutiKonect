@@ -18,41 +18,24 @@ let encryptionKey = null
  * de déchiffrer les données sans avoir aussi le sel propre à l'appareil.
  */
 const getDeviceSalt = () => {
-  const SALT_KEY = 'BoutiKonect_device_enc_salt'
-  let obfuscatedSalt = localStorage.getItem(SALT_KEY)
+  const SALT_KEY = 'BK_DEVICE_SALT_V2'
+  let salt = localStorage.getItem(SALT_KEY)
 
-  // Validation du format du sel
-  const isValidFormat = (s) => typeof s === 'string' && s.startsWith('BK_') && s.endsWith('_SK');
-
-  if (!obfuscatedSalt || !isValidFormat(obfuscatedSalt)) {
-    console.log('🎲 Generating new secure storage salt...');
-    const randomBytes = crypto.getRandomValues(new Uint8Array(32))
+  if (!salt || salt.length < 32) {
+    const randomBytes = crypto.getRandomValues(new Uint8Array(64))
     let binary = '';
     for (let i = 0; i < randomBytes.byteLength; i++) {
       binary += String.fromCharCode(randomBytes[i]);
     }
-    const rawSalt = btoa(binary)
-    obfuscatedSalt = 'BK_' + rawSalt.split('').reverse().join('') + '_SK';
-    localStorage.setItem(SALT_KEY, obfuscatedSalt)
+    salt = btoa(binary);
+    try {
+      localStorage.setItem(SALT_KEY, salt)
+    } catch (e) {
+      // Ignore quota errors
+    }
   }
 
-  try {
-    const deobfuscated = obfuscatedSalt.replace('BK_', '').replace('_SK', '').split('').reverse().join('')
-    return deobfuscated
-  } catch (e) {
-    console.error('❌ Failed to deobfuscate salt, fallback to random');
-    return 'fallback_salt_' + SALT_KEY;
-  }
-}
-
-/**
- * Initialise le stockage sécurisé avec l'UID de l'utilisateur.
- * Doit être appelé dès que l'utilisateur est authentifié.
- * Sans l'UID, les données ne peuvent pas être déchiffrées même si localStorage est volé.
- */
-export const initSecureStorage = (uid) => {
-  // OBSOLETE: La clé est maintenant liée uniquement à l'appareil pour permettre 
-  // le chargement asynchrone du profil et du panier hors-connexion.
+  return salt;
 }
 
 const getOrCreateEncryptionKey = async () => {
@@ -138,7 +121,7 @@ const decrypt = async (cipherText) => {
 
     return new TextDecoder().decode(decryptedBuffer)
   } catch (error) {
-    console.error('❌ Decryption failed. This might be due to a salt change or corrupted data.', error)
+    console.warn('Echec du déchiffrement des données locales.')
     return null
   }
 }

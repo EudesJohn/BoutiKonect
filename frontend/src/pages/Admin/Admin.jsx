@@ -549,8 +549,8 @@ export default function Admin() {
                             <tr>
                               <th>Détails Commande</th>
                               <th>Prix/Total</th>
-                              <th>Infos Client</th>
-                              <th>Date</th>
+                              <th>Infos Client & Vendeur</th>
+                              <th>Statut & Date</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -567,20 +567,44 @@ export default function Admin() {
                                     <div>P.U: {order.type === 'service' && order.priceType === 'Devis' ? 'Devis' : formatPrice(order.price)}</div>
                                     <div style={{ color: '#FF6A00', fontWeight: '700' }}>Total: {order.type === 'service' && order.priceType === 'Devis' ? 'Sur Devis' : formatPrice(order.total || order.price * order.quantity)}</div>
                                 </td>
-                                <td data-label="Client">
-                                    <div style={{ fontWeight: '700' }}>{order.buyerName}</div>
+                                <td data-label="Client & Vendeur">
+                                    <div style={{ fontWeight: '700', color: '#4CAF50' }}>👤 Client: {order.buyerName}</div>
                                     <div style={{ fontSize: '12px' }}><Phone size={10} /> {order.buyerPhone}</div>
+                                    <div style={{ fontWeight: '600', color: '#2196F3', marginTop: '4px' }}>🏪 Vendeur: {getSellerName(order)}</div>
                                     {order.type === 'service' ? (
                                       <div style={{ fontSize: '11px', color: 'var(--text-light)', marginTop: '4px', padding: '4px', background: 'rgba(255,106,0,0.05)', borderRadius: '4px' }}>
                                         <div>📍 {order.location}</div>
                                         <div style={{ whiteSpace: 'pre-wrap' }}>📝 {order.details}</div>
                                       </div>
                                     ) : (
-                                      <div style={{ fontSize: '11px', color: 'var(--text-light)' }}>🏠 {order.buyerAddress}</div>
+                                      <div style={{ fontSize: '11px', color: 'var(--text-light)', marginTop: '4px' }}>🏠 {order.buyerAddress}</div>
                                     )}
                                 </td>
-                                <td data-label="Date">
-                                    {order.createdAt ? new Date(order.createdAt).toLocaleDateString('fr-FR') : '-'}
+                                <td data-label="Statut & Date">
+                                    <div style={{ 
+                                      display: 'inline-block',
+                                      padding: '4px 8px', 
+                                      borderRadius: '4px', 
+                                      fontSize: '12px',
+                                      fontWeight: 'bold',
+                                      marginBottom: '4px',
+                                      background: order.status === 'delivered' ? 'rgba(76, 175, 80, 0.1)' : 
+                                                 order.status === 'shipped' ? 'rgba(33, 150, 243, 0.1)' : 
+                                                 order.status === 'processing' ? 'rgba(255, 152, 0, 0.1)' : 
+                                                 'rgba(158, 158, 158, 0.1)',
+                                      color: order.status === 'delivered' ? '#4CAF50' : 
+                                             order.status === 'shipped' ? '#2196F3' : 
+                                             order.status === 'processing' ? '#FF9800' : 
+                                             '#9E9E9E'
+                                    }}>
+                                      {order.status === 'delivered' ? 'Livré' : 
+                                       order.status === 'shipped' ? 'Expédié' : 
+                                       order.status === 'processing' ? 'En traitement' : 
+                                       'En attente'}
+                                    </div>
+                                    <div style={{ fontSize: '12px', color: 'var(--text-light)' }}>
+                                      {order.createdAt ? new Date(order.createdAt).toLocaleDateString('fr-FR') : '-'}
+                                    </div>
                                 </td>
                               </tr>
                             ))}

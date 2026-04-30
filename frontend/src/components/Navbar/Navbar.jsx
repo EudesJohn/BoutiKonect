@@ -10,8 +10,11 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
+  const toggleTimeoutRef = useRef(null)
   const navigate = useNavigate()
 
+  const isAuthenticated = !!(user || seller)
+  const currentUser = seller || user
   const isAdmin = checkIsAdmin(seller) || checkIsAdmin(user)
 
   // Fermer le dropdown si on clique en dehors
@@ -48,6 +51,13 @@ export default function Navbar() {
   const closeDropdown = () => {
     setDropdownOpen(false)
     setMobileMenuOpen(false)
+  }
+
+  const toggleDropdown = () => {
+    if (toggleTimeoutRef.current) clearTimeout(toggleTimeoutRef.current)
+    toggleTimeoutRef.current = setTimeout(() => {
+      setDropdownOpen(prev => !prev)
+    }, 150)
   }
 
   const cartCount = Array.isArray(cart) ? cart.reduce((sum, item) => sum + (item.quantity || 0), 0) : 0
@@ -89,13 +99,13 @@ export default function Navbar() {
           <Link to="/services" className="nav-link">
             <span>Services</span>
           </Link>
-          {(seller || user) && (
+          {isAuthenticated && (
             <Link to="/profile?tab=orders" className="nav-link">
               <span>Commandes</span>
             </Link>
           )}
 
-          {seller || user ? (
+          {isAuthenticated ? (
             <Link to="/publish" className="nav-link sell-link">
               <Plus size={20} />
               <span>Vendre</span>
@@ -119,26 +129,26 @@ export default function Navbar() {
           </Link>
 
           {/* User/Seller Menu — Click-based */}
-          {seller || user ? (
+          {isAuthenticated ? (
             <div className="user-menu" ref={dropdownRef}>
               <button
                 className="user-avatar"
-                onClick={() => setDropdownOpen(prev => !prev)}
+                onClick={toggleDropdown}
                 aria-label="Menu profil"
               >
-                {seller?.avatar || user?.avatar ? (
-                  <img src={seller?.avatar || user?.avatar} alt="Profil" />
+                {currentUser?.avatar ? (
+                  <img src={currentUser.avatar} alt="Profil" />
                 ) : (
-                  (seller?.name || user?.name || 'U').charAt(0).toUpperCase()
+                  (currentUser?.name || 'U').charAt(0).toUpperCase()
                 )}
               </button>
 
               {/* Dropdown — visible uniquement si dropdownOpen */}
               <div className={`user-dropdown ${dropdownOpen ? 'open' : ''}`}>
                 <div className="user-info">
-                  <span className="user-name">{seller?.name || user?.name}</span>
+                  <span className="user-name">{currentUser?.name}</span>
                   <span className="user-location">
-                    {seller?.city || user?.city || ''}{seller?.neighborhood || user?.neighborhood ? `, ${seller?.neighborhood || user?.neighborhood}` : ''}
+                    {currentUser?.city || ''}{currentUser?.neighborhood ? `, ${currentUser.neighborhood}` : ''}
                   </span>
                 </div>
                 <Link to="/profile" className="dropdown-item" onClick={closeDropdown}>
@@ -205,22 +215,22 @@ export default function Navbar() {
         </form>
 
         <div className="mobile-links">
-          <Link to="/" onClick={closeDropdown}>Accueil</Link>
-          <Link to="/products" onClick={closeDropdown}>Produits</Link>
-          <Link to="/services" onClick={closeDropdown}>Services</Link>
-          {(seller || user) && <Link to="/profile?tab=orders" onClick={closeDropdown}>Mes Commandes</Link>}
-          <Link to="/cart" onClick={closeDropdown}>Panier ({cartCount})</Link>
-          <Link to="/profile" onClick={closeDropdown}>Mon Profil</Link>
-          {seller || user ? (
+          <Link to="/" onClick={() => setMobileMenuOpen(false)}>Accueil</Link>
+          <Link to="/products" onClick={() => setMobileMenuOpen(false)}>Produits</Link>
+          <Link to="/services" onClick={() => setMobileMenuOpen(false)}>Services</Link>
+          {isAuthenticated && <Link to="/profile?tab=orders" onClick={() => setMobileMenuOpen(false)}>Mes Commandes</Link>}
+          <Link to="/cart" onClick={() => setMobileMenuOpen(false)}>Panier ({cartCount})</Link>
+          <Link to="/profile" onClick={() => setMobileMenuOpen(false)}>Mon Profil</Link>
+          {isAuthenticated ? (
             <>
-              <Link to="/publish" onClick={closeDropdown}>Publier un produit</Link>
-              <Link to="/publish?type=service" onClick={closeDropdown}>Publier un service</Link>
-              <Link to="/my-products" onClick={closeDropdown}>Mes produits</Link>
-              <Link to="/my-services" onClick={closeDropdown}>Mes services</Link>
-              {isAdmin && <Link to="/admin" onClick={closeDropdown}>Administration</Link>}
+              <Link to="/publish" onClick={() => setMobileMenuOpen(false)}>Publier un produit</Link>
+              <Link to="/publish?type=service" onClick={() => setMobileMenuOpen(false)}>Publier un service</Link>
+              <Link to="/my-products" onClick={() => setMobileMenuOpen(false)}>Mes produits</Link>
+              <Link to="/my-services" onClick={() => setMobileMenuOpen(false)}>Mes services</Link>
+              {isAdmin && <Link to="/admin" onClick={() => setMobileMenuOpen(false)}>Administration</Link>}
               <div className="mobile-user-info">
-                <span>{seller?.name || user?.name}</span>
-                <span>{seller?.city || user?.city}{seller?.neighborhood || user?.neighborhood ? `, ${seller?.neighborhood || user?.neighborhood}` : ''}</span>
+                <span>{currentUser?.name}</span>
+                <span>{currentUser?.city}{currentUser?.neighborhood ? `, ${currentUser.neighborhood}` : ''}</span>
               </div>
               <button className="mobile-logout" onClick={handleLogout}>
                 <LogOut size={18} /> Déconnexion
@@ -228,8 +238,8 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              <Link to="/login" onClick={closeDropdown}>Connexion</Link>
-              <Link to="/register" onClick={closeDropdown}>Devenir vendeur</Link>
+              <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Connexion</Link>
+              <Link to="/register" onClick={() => setMobileMenuOpen(false)}>Devenir vendeur</Link>
             </>
           )}
         </div>
