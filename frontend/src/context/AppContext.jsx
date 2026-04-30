@@ -841,6 +841,100 @@ export function AppProvider({ children }) {
     return Array.isArray(results) ? results.filter(p => p && p.type === 'service') : [];
   }, [getFilteredProducts])
 
+  const authLoginUser = async (email, password) => {
+    try {
+      setAuthLoading(true);
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      showToast("Connexion réussie", "success");
+      return { success: true, user: data.user };
+    } catch (err) {
+      console.error('Login error:', err);
+      showToast(err.message, "error");
+      return { success: false, error: err.message };
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const authRegisterUser = async (email, password, metadata) => {
+    try {
+      setAuthLoading(true);
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: metadata }
+      });
+      if (error) throw error;
+      showToast("Inscription réussie ! Vérifiez vos emails.", "success");
+      return { success: true, user: data.user };
+    } catch (err) {
+      console.error('Register error:', err);
+      showToast(err.message, "error");
+      return { success: false, error: err.message };
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const sendPasswordResetEmail = async (email) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
+      if (error) throw error;
+      showToast("Email de réinitialisation envoyé", "info");
+      return { success: true };
+    } catch (err) {
+      showToast(err.message, "error");
+      return { success: false, error: err.message };
+    }
+  };
+
+  const updateEmailWithVerification = async (newEmail) => {
+    try {
+      const { error } = await supabase.auth.updateUser({ email: newEmail });
+      if (error) throw error;
+      showToast("Veuillez confirmer le changement sur vos deux emails", "info");
+      return { success: true };
+    } catch (err) {
+      showToast(err.message, "error");
+      return { success: false, error: err.message };
+    }
+  };
+
+  const authLogoutUser = async () => {
+    try {
+      setAuthLoading(true);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      setUser(null);
+      setSeller(null);
+      saveSecureUser(null);
+      saveSecureSeller(null);
+      secureClear();
+      
+      // Nettoyage manuel des cookies et localStorage pour éviter les sessions fantômes
+      localStorage.removeItem('supabase.auth.token');
+      localStorage.removeItem('boutikonect-auth-token');
+      
+      showToast("Déconnexion réussie", "info");
+      
+      // Redirection forcée pour nettoyer tout état résiduel (Service Workers, etc.)
+      window.location.href = '/';
+    } catch (err) {
+      console.error('Logout error:', err);
+      showToast("Erreur lors de la déconnexion", "error");
+      // Fallback: force reset
+      setUser(null);
+      setSeller(null);
+      window.location.href = '/';
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
   const filteredProducts = useMemo(() => {
     if (!Array.isArray(products)) return [];
     const now = new Date();
