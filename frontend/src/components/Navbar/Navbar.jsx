@@ -13,7 +13,8 @@ export default function Navbar() {
   const toggleTimeoutRef = useRef(null)
   const navigate = useNavigate()
 
-  const isAuthenticated = !!(user || seller)
+  const isLoggedIn = !!(seller || user)
+  const userName = seller?.name || user?.name || ''
   const currentUser = seller || user
   const isAdmin = checkIsAdmin(seller) || checkIsAdmin(user)
 
@@ -99,13 +100,13 @@ export default function Navbar() {
           <Link to="/services" className="nav-link">
             <span>Services</span>
           </Link>
-          {isAuthenticated && (
+          {isLoggedIn && (
             <Link to="/profile?tab=orders" className="nav-link">
               <span>Commandes</span>
             </Link>
           )}
 
-          {isAuthenticated ? (
+          {isLoggedIn ? (
             <Link to="/publish" className="nav-link sell-link">
               <Plus size={20} />
               <span>Vendre</span>
@@ -129,7 +130,7 @@ export default function Navbar() {
           </Link>
 
           {/* User/Seller Menu — Click-based */}
-          {isAuthenticated ? (
+          {isLoggedIn ? (
             <div className="user-menu" ref={dropdownRef}>
               <button
                 className="user-avatar"
@@ -139,14 +140,14 @@ export default function Navbar() {
                 {currentUser?.avatar ? (
                   <img src={currentUser.avatar} alt="Profil" />
                 ) : (
-                  (currentUser?.name || 'U').charAt(0).toUpperCase()
+                  (userName || 'U').charAt(0).toUpperCase()
                 )}
               </button>
 
               {/* Dropdown — visible uniquement si dropdownOpen */}
               <div className={`user-dropdown ${dropdownOpen ? 'open' : ''}`}>
                 <div className="user-info">
-                  <span className="user-name">{currentUser?.name}</span>
+                  <span className="user-name">{userName}</span>
                   <span className="user-location">
                     {currentUser?.city || ''}{currentUser?.neighborhood ? `, ${currentUser.neighborhood}` : ''}
                   </span>
@@ -218,10 +219,10 @@ export default function Navbar() {
           <Link to="/" onClick={() => setMobileMenuOpen(false)}>Accueil</Link>
           <Link to="/products" onClick={() => setMobileMenuOpen(false)}>Produits</Link>
           <Link to="/services" onClick={() => setMobileMenuOpen(false)}>Services</Link>
-          {isAuthenticated && <Link to="/profile?tab=orders" onClick={() => setMobileMenuOpen(false)}>Mes Commandes</Link>}
+          {isLoggedIn && <Link to="/profile?tab=orders" onClick={() => setMobileMenuOpen(false)}>Mes Commandes</Link>}
           <Link to="/cart" onClick={() => setMobileMenuOpen(false)}>Panier ({cartCount})</Link>
           <Link to="/profile" onClick={() => setMobileMenuOpen(false)}>Mon Profil</Link>
-          {isAuthenticated ? (
+          {isLoggedIn ? (
             <>
               <Link to="/publish" onClick={() => setMobileMenuOpen(false)}>Publier un produit</Link>
               <Link to="/publish?type=service" onClick={() => setMobileMenuOpen(false)}>Publier un service</Link>
@@ -229,7 +230,7 @@ export default function Navbar() {
               <Link to="/my-services" onClick={() => setMobileMenuOpen(false)}>Mes services</Link>
               {isAdmin && <Link to="/admin" onClick={() => setMobileMenuOpen(false)}>Administration</Link>}
               <div className="mobile-user-info">
-                <span>{currentUser?.name}</span>
+                <span>{userName}</span>
                 <span>{currentUser?.city}{currentUser?.neighborhood ? `, ${currentUser.neighborhood}` : ''}</span>
               </div>
               <button className="mobile-logout" onClick={handleLogout}>

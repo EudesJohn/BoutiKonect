@@ -18,25 +18,25 @@ let encryptionKey = null
  * de déchiffrer les données sans avoir aussi le sel propre à l'appareil.
  */
 const getDeviceSalt = () => {
-  const SALT_KEY = 'BK_DEVICE_SALT_V2'
+  const SALT_KEY = 'BoutiKonect_device_enc_salt'
   let salt = localStorage.getItem(SALT_KEY)
 
-  if (!salt || salt.length < 32) {
-    const randomBytes = crypto.getRandomValues(new Uint8Array(64))
-    let binary = '';
+  if (!salt) {
+    console.log('🎲 Generating new secure storage salt...')
+    const randomBytes = crypto.getRandomValues(new Uint8Array(32))
+    let binary = ''
     for (let i = 0; i < randomBytes.byteLength; i++) {
-      binary += String.fromCharCode(randomBytes[i]);
+      binary += String.fromCharCode(randomBytes[i])
     }
-    salt = btoa(binary);
-    try {
-      localStorage.setItem(SALT_KEY, salt)
-    } catch (e) {
-      // Ignore quota errors
-    }
+    salt = btoa(binary)
+    localStorage.setItem(SALT_KEY, salt)
   }
-
-  return salt;
+  return salt
 }
+
+export const initSecureStorage = (uid) => {
+  throw new Error('initSecureStorage is obsolete. Encryption key is now device-only.');
+};
 
 const getOrCreateEncryptionKey = async () => {
   if (encryptionKey) return encryptionKey
@@ -121,7 +121,7 @@ const decrypt = async (cipherText) => {
 
     return new TextDecoder().decode(decryptedBuffer)
   } catch (error) {
-    console.warn('Echec du déchiffrement des données locales.')
+    console.error('❌ Decryption failed')
     return null
   }
 }
