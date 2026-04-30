@@ -13,7 +13,7 @@ const VirtualAssistant = () => {
 
   // Diagnostic de version au montage
   useEffect(() => {
-    console.log("🤖 Assistant BoutiKonect v1.1.1 (Build: 2026-04-30) loaded.");
+    console.log("🤖 Assistant BoutiKonect v1.1.5 (Build: 2026-04-30) loaded.");
   }, []);
   const [messages, setMessages] = useState([
     {
@@ -171,7 +171,7 @@ const VirtualAssistant = () => {
                   <img src={assistantAvatar} alt="AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0 }}>Assistant BoutiKonect <small style={{ fontSize: '10px', opacity: 0.7 }}>v1.1.1</small></h3>
+                  <h3 style={{ margin: 0 }}>Assistant BoutiKonect <small style={{ fontSize: '10px', opacity: 0.7 }}>v1.1.5</small></h3>
                   <span className="online-status">En ligne</span>
                 </div>
               </div>
