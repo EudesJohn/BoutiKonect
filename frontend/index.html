@@ -2,6 +2,30 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Force cache clear and Service Worker update
+      const APP_VERSION = '1.1.6'; // Change this string to force a cache clear on next deploy
+      if (localStorage.getItem('bk_app_version') !== APP_VERSION) {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for(let registration of registrations) {
+              registration.unregister();
+            }
+          });
+        }
+        if ('caches' in window) {
+          caches.keys().then((names) => {
+            names.forEach(name => {
+              // We delete all caches except those that might be strictly required, but usually deleting all is fine for PWA updates
+              caches.delete(name);
+            });
+          });
+        }
+        localStorage.setItem('bk_app_version', APP_VERSION);
+        // Force reload from server, not from cache
+        window.location.reload(true);
+      }
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="BoutiKonect.bj - Ventes et Services au Bénin. Achetez et vendez facilement." />
