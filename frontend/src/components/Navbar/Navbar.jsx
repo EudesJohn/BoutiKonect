@@ -41,12 +41,12 @@ export default function Navbar() {
   }
 
   const handleLogout = async () => {
+    setMobileMenuOpen(false)
+    setDropdownOpen(false)
+    await logoutUser() // wait for network request and lock release FIRST
     setUser(null)
     setSeller(null)
     navigate('/')
-    setMobileMenuOpen(false)
-    setDropdownOpen(false)
-    logoutUser() // asynchronous network request
   }
 
   const closeDropdown = () => {

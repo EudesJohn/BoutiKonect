@@ -8,7 +8,7 @@ import { User, Mail, Phone, MapPin, Package, Heart, LogOut, ShoppingBag, Trash2,
 import './Profile.css'
 
 export default function Profile() {
-  const { user, seller, logoutUser, products, services, getFavoriteProducts, getFavoriteServices, toggleFavorite, isFavorite, getSellerOrders, updateOrderStatus, updateProfile, upgradeToSeller, orders, formatPrice, updateEmailWithVerification, resetPassword, showToast } = useContext(AppContext)
+  const { user, seller, setUser, setSeller, logoutUser, products, services, getFavoriteProducts, getFavoriteServices, toggleFavorite, isFavorite, getSellerOrders, updateOrderStatus, updateProfile, upgradeToSeller, orders, formatPrice, updateEmailWithVerification, resetPassword, showToast } = useContext(AppContext)
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('favorites')
   const [isEditing, setIsEditing] = useState(false)
@@ -114,7 +114,12 @@ export default function Profile() {
   const maxRevenue = Math.max(...ordersByDay.map(d => d.revenue), 1)
   const maxSpent = Math.max(...purchasesByDay.map(d => d.spent), 1)
 
-  const handleLogout = () => { logoutUser(); navigate('/') }
+  const handleLogout = async () => { 
+    await logoutUser(); 
+    setUser(null); 
+    setSeller(null); 
+    navigate('/'); 
+  }
 
   const handleEditClick = () => {
     const currentUser = user || seller
