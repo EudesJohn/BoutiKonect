@@ -18,7 +18,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [showVerificationSuccess, setShowVerificationSuccess] = useState(false)
   // Token géré de manière sécurisée par Supabase Auth (JWT) et chiffré via notre secureStorage (AES-GCM)
-  const [rememberMe, setRememberMe] = useState(true)
+  const [rememberMe, setRememberMe] = useState(false)
 
   // Gérer le paramètre de succès de vérification d'email
   useEffect(() => {
