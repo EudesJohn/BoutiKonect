@@ -31,6 +31,12 @@ export default function Home() {
 
   const now = new Date()
 
+  // Vérifier si l'utilisateur a déjà publié quelque chose
+  const hasPublishedAnything = seller && (
+    products.some(p => p.sellerId === seller.id) || 
+    services.some(s => s.sellerId === seller.id)
+  );
+
   // ----------- PRODUCTS -----------
   // Get truly featured products (isPromoted and not expired)
   const allFeaturedProducts = products
@@ -124,14 +130,18 @@ export default function Home() {
                 <Briefcase size={20} />
                 Découvrir les services
               </Link>
-              <Link to="/publish?type=service" className="btn btn-primary btn-large hero-btn">
-                <Briefcase size={20} />
-                Commencer des prestations de service
-              </Link>
-              <Link to="/publish" className="btn btn-primary btn-large hero-btn">
-                <Store size={20} />
-                Commencer par vendre
-              </Link>
+              {!hasPublishedAnything && (
+                <>
+                  <Link to="/publish?type=service" className="btn btn-primary btn-large hero-btn">
+                    <Briefcase size={20} />
+                    Commencer des prestations de service
+                  </Link>
+                  <Link to="/publish" className="btn btn-primary btn-large hero-btn">
+                    <Store size={20} />
+                    Commencer par vendre
+                  </Link>
+                </>
+              )}
             </div>
             <div className="hero-stats">
               <div className="stat">
