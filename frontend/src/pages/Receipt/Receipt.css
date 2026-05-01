@@ -222,34 +222,60 @@
   color: #1e293b;
 }
 
-.receipt-table {
+.billing-details {
   width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed; /* Prevents cell width from pushing table beyond 100% */
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 15px;
+  border: 1px solid #e2e8f0;
 }
 
-.receipt-table td {
-  padding: 15px 0;
-  border-bottom: 1px solid #f1f5f9;
+.billing-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #e2e8f0;
+  gap: 20px;
+}
+
+.billing-row:last-child {
+  border-bottom: none;
+}
+
+.billing-row .label {
+  font-size: 13px;
+  color: #64748b;
+  flex: 1;
+}
+
+.billing-row .value {
   font-size: 14px;
-  word-wrap: break-word;
-  overflow: hidden;
-}
-
-.receipt-table .text-right {
-  text-align: right;
   font-weight: 700;
   color: #0f172a;
+  text-align: right;
+  flex: 1.5;
+  word-break: break-word;
 }
 
-.receipt-table .mono {
+.billing-row .mono {
   font-family: 'Courier New', Courier, monospace;
-  font-size: 13px;
+  font-size: 12px;
 }
 
-.total-row td {
-  border-bottom: none;
+.total-row {
+  margin-top: 10px;
   padding-top: 20px;
+  border-top: 2px solid #e2e8f0;
+}
+
+.total-label {
+  font-size: 16px !important;
+  font-weight: 800 !important;
+}
+
+.total-value {
+  font-size: 28px !important;
+  color: #0f172a;
 }
 
 .total-label {
@@ -258,20 +284,30 @@
   color: #0f172a;
 }
 
-.total-value {
-  font-size: 32px !important;
-  color: #0f172a;
-  font-weight: 900 !important;
+.qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
 }
 
-.receipt-footer {
-  padding: 15px 40px;
+.qr-code {
+  width: 120px;
+  height: 120px;
+  padding: 5px;
   background: #fff;
+  border: 1px solid #e2e8f0;
+}
+
+.receipt-footer-inline {
+  margin-top: 30mm; /* 3cm gap exactly */
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  border-top: 2px solid #f1f5f9;
+  border-top: 1px dashed #e2e8f0;
+  padding-top: 20px;
 }
 
 .footer-text p {

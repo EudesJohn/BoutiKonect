@@ -213,28 +213,26 @@ export default function ReceiptPage() {
 
             <section className="receipt-section">
               <h3 className="section-title">Détails de Facturation</h3>
-              <table className="receipt-table">
-                <tbody>
-                  <tr>
-                    <td>Désignation du service</td>
-                    <td className="text-right">Promotion "Vedette" - {data.plan?.name || 'Annonce'}</td>
-                  </tr>
-                  <tr>
-                    <td>Référence de transaction</td>
-                    <td className="text-right mono">{data.transactionId || 'BK-INTERNAL'}</td>
-                  </tr>
-                  <tr>
-                    <td>Mode de paiement</td>
-                    <td className="text-right">FedaPay (Mobile Money/Card)</td>
-                  </tr>
-                  <tr className="total-row">
-                    <td className="total-label">Montant Total Net</td>
-                    <td className="text-right total-value">{formatPrice(data.plan?.price || 0)}</td>
-                  </tr>
-                </tbody>
-              </table>
+              <div className="billing-details">
+                <div className="billing-row">
+                  <span className="label">Désignation du service</span>
+                  <span className="value">Promotion "Vedette" - {data.plan?.name || 'Annonce'}</span>
+                </div>
+                <div className="billing-row">
+                  <span className="label">Référence de transaction</span>
+                  <span className="value mono">{data.transactionId || 'BK-INTERNAL'}</span>
+                </div>
+                <div className="billing-row">
+                  <span className="label">Mode de paiement</span>
+                  <span className="value">FedaPay (Mobile Money/Card)</span>
+                </div>
+                <div className="billing-row total-row">
+                  <span className="label total-label">Montant Total Net</span>
+                  <span className="value total-value">{formatPrice(data.plan?.price || 0)}</span>
+                </div>
+              </div>
 
-              <div className="qr-container" style={{ marginTop: '20px' }}>
+              <div className="qr-container">
                 <img 
                   src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=BoutiKonect-TX-${data.transactionId}`} 
                   alt="QR Code de Validation" 
@@ -242,18 +240,18 @@ export default function ReceiptPage() {
                 />
                 <span>SCAN VALIDE</span>
               </div>
-            </section>
-          </div>
 
-          <div className="receipt-footer">
-            <div className="footer-text">
-              <p>Ce document certifie le paiement des frais de promotion sur BoutiKonect.bj.</p>
-              <p>BoutiKonect.bj - République du Bénin</p>
-              <p>Contact : support@boutikonect.bj | www.boutikonect.bj</p>
-            </div>
-            <div className="secure-tag">
-              <ShieldCheck size={14} /> DOCUMENT SÉCURISÉ & AUTHENTIQUE
-            </div>
+              <div className="receipt-footer-inline">
+                <div className="footer-text">
+                  <p>Ce document certifie le paiement des frais de promotion sur BoutiKonect.bj.</p>
+                  <p>BoutiKonect.bj - République du Bénin</p>
+                  <p>Contact : support@boutikonect.bj | www.boutikonect.bj</p>
+                </div>
+                <div className="secure-tag">
+                  <ShieldCheck size={14} /> DOCUMENT SÉCURISÉ & AUTHENTIQUE
+                </div>
+              </div>
+            </section>
           </div>
         </motion.div>
       </div>
