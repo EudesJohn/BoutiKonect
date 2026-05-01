@@ -70,12 +70,11 @@ export function AppProvider({ children }) {
   const fetchInitialData = useCallback(async () => {
     setDataLoading(prev => ({ ...prev, products: true, services: true }))
 
+    // Le cache local est désactivé sur demande pour garantir la fraîcheur des données
+    /*
     const cachedProducts = cacheService.get('initial_products')
-    if (cachedProducts && Array.isArray(cachedProducts)) {
-      const mappedCached = cachedProducts.map(mapItemFromDB).filter(Boolean);
-      setProducts(mappedCached);
-      setDataLoading(prev => ({ ...prev, products: false, services: false }))
-    }
+    ...
+    */
 
     const productsPromise = supabase
       .from('products').select('*').order('created_at', { ascending: false }).limit(100)
@@ -110,13 +109,17 @@ export function AppProvider({ children }) {
           supabase.from('profiles').select('*').limit(200)
             .then(({ data, error }) => {
               if (error) {
-                console.error('Error fetching profiles:', error);
+                if (error.name !== 'AbortError' && error.message !== 'AbortError') {
+                  console.error('Error fetching profiles:', error);
+                }
                 setAllUsers([]);
               } else if (data) {
                 setAllUsers(data);
               } else {
                 setAllUsers([]);
               }
+            }).catch(err => {
+              if (err.name !== 'AbortError') console.error('Error fetching profiles:', err);
             });
         }
       } catch (e) { console.warn('BG fetch error:', e); }
