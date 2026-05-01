@@ -1,14 +1,14 @@
+import { useEffect, useState, useContext } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Printer, ArrowLeft, ShieldCheck, Zap, FileText } from 'lucide-react';
+import { Printer, ArrowLeft, ShieldCheck, Zap } from 'lucide-react';
 import { AppContext } from '../../context/AppContextInstance';
-import { useContext } from 'react';
 import './Receipt.css';
 
 export default function ReceiptPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { products, services, seller, user } = useContext(AppContext);
+  const { products, services, seller } = useContext(AppContext);
   const [data, setData] = useState(null);
 
   useEffect(() => {
@@ -32,8 +32,8 @@ export default function ReceiptPage() {
           productImage: item.images?.[0] || null,
           plan: { 
             name: item.promotion_plan_name || 'Promotion Vedette',
-            price: item.promotion_plan_price || 0, // On peut essayer de deviner le prix ou laisser 0
-            days: 0 // Inconnu ici mais pas critique pour l'affichage
+            price: item.promotion_plan_price || 0,
+            days: 0 
           },
           seller: seller || { name: item.sellerName || 'Vendeur' },
           date: item.promotion_start_date || item.updatedAt
@@ -44,20 +44,19 @@ export default function ReceiptPage() {
 
     // 3. Fallback sur les query params directs
     const tid = searchParams.get('tid');
-      const title = searchParams.get('title');
-      const price = searchParams.get('price');
-      
-      if (tid && title && price) {
-        setData({
-          transactionId: tid,
-          productTitle: title,
-          plan: { price: parseInt(price), name: searchParams.get('plan') || 'Promotion' },
-          seller: { name: searchParams.get('seller') || 'Client' },
-          date: new Date().toISOString()
-        });
-      }
+    const title = searchParams.get('title');
+    const price = searchParams.get('price');
+    
+    if (tid && title && price) {
+      setData({
+        transactionId: tid,
+        productTitle: title,
+        plan: { price: parseInt(price), name: searchParams.get('plan') || 'Promotion' },
+        seller: { name: searchParams.get('seller') || 'Client' },
+        date: new Date().toISOString()
+      });
     }
-  }, [searchParams]);
+  }, [searchParams, products, services, seller]);
 
   const handlePrint = () => {
     window.print();
