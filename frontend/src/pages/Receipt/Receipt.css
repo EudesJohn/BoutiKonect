@@ -5,6 +5,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-sizing: border-box;
+}
+
+.receipt-page * {
+  box-sizing: border-box;
 }
 
 .receipt-nav {
@@ -37,10 +42,11 @@
 
 .receipt-card {
   background: #ffffff;
-  border-radius: 0; /* Traditional receipt look */
+  border-radius: 0;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  max-width: 800px;
+  width: 100%;
+  max-width: 760px; /* Reduced to fit A4 perfectly with html2pdf margins */
   margin: 0 auto;
   position: relative;
   border: 1px solid #e2e8f0;
@@ -62,7 +68,7 @@
 }
 
 .receipt-header {
-  padding: 30px 40px 20px;
+  padding: 25px 30px 15px;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -143,7 +149,7 @@
 }
 
 .receipt-content {
-  padding: 25px 40px;
+  padding: 20px 30px;
   position: relative;
   z-index: 1;
 }
@@ -256,7 +262,7 @@
 }
 
 .receipt-footer {
-  padding: 20px 40px;
+  padding: 15px 40px;
   background: #fff;
   display: flex;
   flex-direction: column;

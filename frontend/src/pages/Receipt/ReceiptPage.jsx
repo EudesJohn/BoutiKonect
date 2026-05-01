@@ -76,10 +76,16 @@ export default function ReceiptPage() {
     setIsGenerating(true);
     const element = document.getElementById('receipt-content-to-export');
     const opt = {
-      margin:       [10, 10],
+      margin:       10,
       filename:     `Quittance_BoutiKonect_${data.transactionId}.pdf`,
       image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, letterRendering: true, logging: false },
+      html2canvas:  { 
+        scale: 2, 
+        useCORS: true, 
+        letterRendering: true, 
+        logging: false,
+        width: 760 // Matches the CSS max-width for consistency
+      },
       jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
     };
@@ -120,7 +126,9 @@ export default function ReceiptPage() {
     }).format(date);
   };
 
-  const receiptNumber = `BK-${(data.timestamp || Date.now()).toString(36).toUpperCase()}`;
+  const receiptNumber = data.transactionId 
+    ? `BK-${data.transactionId.toString().slice(-8).toUpperCase()}` 
+    : `BK-${(data.timestamp || Date.now()).toString(36).toUpperCase()}`;
 
   return (
     <div className="receipt-page">
