@@ -1,7 +1,10 @@
 .receipt-page {
-  padding: 40px 0;
+  padding: 40px 20px;
   background-color: #f1f5f9;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .receipt-nav {
@@ -9,9 +12,8 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+  width: 100%;
   max-width: 800px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 .btn-back {
@@ -279,17 +281,27 @@
   letter-spacing: 1px;
 }
 
-.qr-placeholder {
-  width: 80px;
-  height: 80px;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+.qr-container {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.qr-code {
+  width: 100px;
+  height: 100px;
+  padding: 5px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+}
+
+.qr-container span {
   font-size: 10px;
-  color: #94a3b8;
-  margin-bottom: 15px;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 1px;
 }
 
 @media print {

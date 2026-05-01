@@ -20,7 +20,7 @@
         { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0" },
         { "key": "Pragma", "value": "no-cache" },
         { "key": "Expires", "value": "0" },
-          { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' https://cdn.fedapay.com 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://*.fedapay.com https://images.unsplash.com https://*.supabase.co; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.fedapay.com; frame-src 'self' https://*.fedapay.com; object-src 'none';" },
+          { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' https://cdn.fedapay.com https://cdnjs.cloudflare.com 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://*.fedapay.com https://images.unsplash.com https://*.supabase.co https://api.qrserver.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.fedapay.com; frame-src 'self' https://*.fedapay.com; object-src 'none';" },
           { "key": "X-Frame-Options", "value": "DENY" },
           { "key": "X-Content-Type-Options", "value": "nosniff" },
           { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
