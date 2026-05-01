@@ -1,7 +1,7 @@
 import { useEffect, useContext, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CircleCheck as CheckCircle, CircleX as XCircle, Loader2 as Loader } from 'lucide-react';
+import { CircleCheck as CheckCircle, CircleX as XCircle, Loader2 as Loader, FileText } from 'lucide-react';
 import { AppContext } from '../../context/AppContextInstance';
 
 export default function PromotionCallback() {
@@ -54,6 +54,16 @@ export default function PromotionCallback() {
             const transactionId = searchParams.get('id') || searchParams.get('transaction_id');
             const userId = currentUser?.id || promoData.uid || promoData.id || null;
             await confirmPromotionPayment(promoData.productId, promoData.plan, userId, transactionId);
+
+            // Sauvegarder les données pour la quittance
+            const receipt = {
+              transactionId: transactionId,
+              productTitle: promoData.productTitle || 'Promotion',
+              plan: promoData.plan,
+              seller: seller || { name: 'Client' },
+              date: new Date().toISOString()
+            };
+            sessionStorage.setItem('last_promotion_receipt', JSON.stringify(receipt));
 
             sessionStorage.removeItem('fedapay_promotion_data');
             setPromoItem(promoData);
@@ -109,6 +119,9 @@ export default function PromotionCallback() {
               <h2>{message}</h2>
               <div style={{ marginTop: 'var(--space-xl)', display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
                 <Link to="/" className="btn btn-primary">Retour à l'accueil</Link>
+                <Link to="/quittance" className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <FileText size={18} /> Voir ma quittance
+                </Link>
                 {promoItem && (
                   <button 
                     onClick={() => activatePromotionInstant(promoItem.productId, promoItem.plan.days)}

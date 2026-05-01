@@ -40,6 +40,7 @@ import AdminRoute from './components/Auth/AdminRoute'
 import GuestRoute from './components/Auth/GuestRoute'
 import PaymentCallback from './pages/Payment/PaymentCallback'
 import PromotionCallback from './pages/Payment/PromotionCallback'
+import ReceiptPage from './pages/Receipt/ReceiptPage'
 
 import Toast from './components/Toast/Toast'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -108,6 +109,7 @@ function App() {
             <Route path="/payment" element={<ProtectedRoute><PageTransition><Payment /></PageTransition></ProtectedRoute>} />
             <Route path="/payment-callback" element={<ProtectedRoute><PageTransition><PaymentCallback /></PageTransition></ProtectedRoute>} />
             <Route path="/promotion/success" element={<ProtectedRoute><PageTransition><PromotionCallback /></PageTransition></ProtectedRoute>} />
+            <Route path="/quittance" element={<ProtectedRoute><PageTransition><ReceiptPage /></PageTransition></ProtectedRoute>} />
             <Route path="/admin" element={<AdminRoute><PageTransition><Admin /></PageTransition></AdminRoute>} />
             <Route path="/seller/:sellerId" element={<PageTransition><SellerProfile /></PageTransition>} />
             <Route path="/terms" element={<PageTransition><Terms /></PageTransition>} />

@@ -2,12 +2,13 @@ import { useContext, useState } from 'react';
 import { motion } from 'framer-motion';
 import { AppContext } from '../../context/AppContextInstance';
 import { openFedaPayOverlay } from '../../services/paymentService';
-import { generatePromotionReceipt } from '../../services/receiptService';
 import { X, Zap, CircleCheck as CheckCircle, Loader2 as Loader, FileText } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import './Publish.css';
 
 export default function PromoteModal({ product, onClose }) {
   const { PROMOTION_PRICES, activatePromotionInstant, seller } = useContext(AppContext);
+  const navigate = useNavigate();
   const [selectedPlan, setSelectedPlan] = useState('week');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -79,10 +80,8 @@ export default function PromoteModal({ product, onClose }) {
         seller: seller
       };
       setReceiptData(receipt);
+      sessionStorage.setItem('last_promotion_receipt', JSON.stringify(receipt));
       setSuccess(true);
-
-      // Générer et afficher la quittance automatiquement
-      generatePromotionReceipt(receipt);
 
       // ÉTAPE 3 (non-bloquante) : Notifier l'admin en arrière-plan
       try {
@@ -119,17 +118,17 @@ export default function PromoteModal({ product, onClose }) {
             <CheckCircle size={64} className="success-icon" />
             <h3>⭐ Annonce promue avec succès !</h3>
             <p>Votre annonce apparaît désormais en tête des résultats pendant <strong>{PROMOTION_PRICES[selectedPlan]?.name || 'la durée choisie'}</strong>.</p>
-            <p style={{ marginTop: '8px', fontSize: '0.9rem', color: 'var(--text-light)' }}>🖨️ La quittance de paiement s'est ouverte dans un nouvel onglet.</p>
-            {receiptData && (
+            <p style={{ marginTop: '8px', fontSize: '0.9rem', color: 'var(--text-light)' }}>✅ Votre annonce est maintenant prioritaire.</p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '20px' }}>
               <button
-                className="btn btn-outline"
-                style={{ marginTop: '16px' }}
-                onClick={() => generatePromotionReceipt(receiptData)}
+                className="btn btn-primary"
+                onClick={() => navigate('/quittance')}
               >
                 <FileText size={16} />
-                Réimprimer la quittance
+                Voir ma quittance
               </button>
-            )}
+              <button className="btn btn-outline" onClick={onClose}>Fermer</button>
+            </div>
           </motion.div>
         ) : (
           <>
