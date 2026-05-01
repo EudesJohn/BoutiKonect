@@ -139,7 +139,7 @@ export default function MyProducts() {
                               </button>
                             )}
                             
-                            {product.last_transaction_id && (
+                            {product.lastTransactionId && (
                               <Link to={`/quittance?pid=${product.id}`} className="btn btn-outline btn-small" title="Télécharger la quittance">
                                 <FileText size={16} />
                                 Quittance

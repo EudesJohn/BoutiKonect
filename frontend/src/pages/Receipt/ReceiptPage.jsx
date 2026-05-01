@@ -25,13 +25,13 @@ export default function ReceiptPage() {
       const allItems = [...products, ...services];
       const item = allItems.find(p => p.id === pid);
       
-      if (item && item.last_transaction_id) {
+      if (item && item.lastTransactionId) {
         setData({
-          transactionId: item.last_transaction_id,
+          transactionId: item.lastTransactionId,
           productTitle: item.title,
           productImage: item.images?.[0] || null,
           plan: { 
-            name: item.promotion_plan_name || 'Promotion Vedette',
+            name: item.promotionPlanName || 'Promotion Vedette',
             price: item.promotion_plan_price || 0,
             days: 0 
           },

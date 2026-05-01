@@ -134,7 +134,7 @@ export default function MyServices() {
                             </button>
                           )}
                           
-                          {service.last_transaction_id && (
+                          {service.lastTransactionId && (
                             <Link to={`/quittance?pid=${service.id}`} className="btn btn-outline btn-small" title="Télécharger la quittance">
                               <FileText size={16} />
                               Quittance
