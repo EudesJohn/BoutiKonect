@@ -261,6 +261,26 @@ export default function Publish() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  const handleCancelEdit = () => {
+    setEditingProduct(null)
+    setFormData({
+      title: '',
+      description: '',
+      price: '',
+      priceType: 'Fixe',
+      category: '',
+      condition: 'Neuf',
+      stock: 1,
+      experience: '',
+      duration: '',
+      images: [],
+      whatsapp: seller?.whatsapp || '',
+      latitude: null,
+      longitude: null
+    })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   const handleGetLocation = async () => {
     setIsLocating(true)
     try {
