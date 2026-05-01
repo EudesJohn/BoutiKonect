@@ -76,14 +76,13 @@ export default function ReceiptPage() {
     setIsGenerating(true);
     const element = document.getElementById('receipt-content-to-export');
     const opt = {
-      margin:       [10, 10, 10, 10],
+      margin:       10,
       filename:     `Quittance_BoutiKonect_${data.transactionId}.pdf`,
-      image:        { type: 'png', quality: 1 },
+      image:        { type: 'jpeg', quality: 0.95 },
       html2canvas:  { 
-        scale: 3, 
+        scale: 2, 
         useCORS: true, 
         letterRendering: true,
-        width: 760,
         backgroundColor: '#ffffff'
       },
       jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
@@ -150,108 +149,78 @@ export default function ReceiptPage() {
 
         <motion.div 
           id="receipt-content-to-export"
-          className="receipt-card"
+          className="receipt-modern"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="receipt-header">
-            <div className="brand">
-              <h1>BoutiKonect<span>.</span>bj</h1>
-              <p>Plateforme Officielle de Commerce</p>
+          <div className="modern-header">
+            <div className="header-left">
+              <div className="logo-text">BoutiKonect<span>.</span>bj</div>
+              <p>République du Bénin</p>
             </div>
-            <div className="receipt-id">
-              <span>N° QUITTANCE</span>
-              <strong>{receiptNumber}</strong>
-            </div>
-          </div>
-
-          <div className="status-banner">
-            <div className="status-icon">✓</div>
-            <div className="status-text">
-              <strong>Transaction Confirmée</strong>
-              <span>Approuvé par le système de paiement FedaPay</span>
+            <div className="header-right">
+              <h2>QUITTANCE DE PAIEMENT</h2>
+              <div className="receipt-no">Réf: {receiptNumber}</div>
             </div>
           </div>
 
-          <div className="receipt-content">
-            <section className="receipt-section">
-              <h3 className="section-title">Annonce Mise en Vedette</h3>
-              <div className="promo-info">
-                {data.productImage && <img src={data.productImage} alt={data.productTitle} className="promo-img" />}
-                <div className="promo-details">
-                  <span className="promo-name">{data.productTitle}</span>
-                  <span className="promo-badge"><Zap size={14} /> Pack Promotionnel Activé</span>
-                </div>
-              </div>
-            </section>
-
-            <div className="info-grid">
-              <section className="receipt-section">
-                <h3 className="section-title">Propriétaire</h3>
-                <div className="info-group">
-                  <label>Nom Complet</label>
-                  <p>{data.seller?.name || 'Client BoutiKonect'}</p>
-                </div>
-                <div className="info-group" style={{marginTop: '10px'}}>
-                  <label>Contact</label>
-                  <p>{data.seller?.phone || data.seller?.whatsapp || data.seller?.email || 'N/A'}</p>
-                </div>
-              </section>
-
-              <section className="receipt-section">
-                <h3 className="section-title">Date d'émission</h3>
-                <div className="info-group">
-                  <label>Date et Heure</label>
-                  <p>{formatDate(data.date)}</p>
-                </div>
-                <div className="info-group" style={{marginTop: '10px'}}>
-                  <label>Plateforme</label>
-                  <p>BoutiKonect.bj (Bénin)</p>
-                </div>
-              </section>
+          <div className="modern-body">
+            <div className="status-indicator">
+              <div className="indicator-dot"></div>
+              <span>Transaction Confirmée & Sécurisée</span>
             </div>
 
-            <section className="receipt-section">
-              <h3 className="section-title">Détails de Facturation</h3>
-              <div className="billing-details">
-                <div className="billing-row">
-                  <span className="label">Désignation du service</span>
-                  <span className="value">Promotion "Vedette" - {data.plan?.name || 'Annonce'}</span>
-                </div>
-                <div className="billing-row">
-                  <span className="label">Référence de transaction</span>
-                  <span className="value mono">{data.transactionId || 'BK-INTERNAL'}</span>
-                </div>
-                <div className="billing-row">
-                  <span className="label">Mode de paiement</span>
-                  <span className="value">FedaPay (Mobile Money/Card)</span>
-                </div>
-                <div className="billing-row total-row">
-                  <span className="label total-label">Montant Total Net</span>
-                  <span className="value total-value">{formatPrice(data.plan?.price || 0)}</span>
-                </div>
+            <div className="info-section">
+              <div className="info-col">
+                <label>Bénéficiaire</label>
+                <div className="info-val">{data.seller?.name || 'Vendeur BoutiKonect'}</div>
+                <div className="info-sub">{data.seller?.email || 'Contact vérifié'}</div>
               </div>
+              <div className="info-col text-right">
+                <label>Date de Paiement</label>
+                <div className="info-val">{formatDate(data.date)}</div>
+                <div className="info-sub">Heure locale de Cotonou</div>
+              </div>
+            </div>
 
-              <div className="qr-container">
+            <div className="billing-box">
+              <div className="billing-title">Détails de la Promotion</div>
+              <div className="billing-item">
+                <span>Description du Service</span>
+                <strong>Promotion "Vedette" - {data.productTitle}</strong>
+              </div>
+              <div className="billing-item">
+                <span>ID Transaction</span>
+                <span className="mono">{data.transactionId}</span>
+              </div>
+              <div className="billing-item">
+                <span>Méthode de règlement</span>
+                <span>FedaPay Mobile Money</span>
+              </div>
+              <div className="billing-total">
+                <span>Total Payé</span>
+                <span className="total-amount">{formatPrice(data.plan?.price || 0)}</span>
+              </div>
+            </div>
+
+            <div className="modern-footer-vertical">
+              <div className="footer-qr-center">
                 <img 
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=BoutiKonect-TX-${data.transactionId}`} 
-                  alt="QR Code de Validation" 
-                  className="qr-code"
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=BoutiKonect-TX-${data.transactionId}`} 
+                  alt="QR Validation" 
                 />
-                <span>SCAN VALIDE</span>
+                <span>SCAN DE VALIDITÉ</span>
               </div>
 
-              <div className="receipt-footer-inline">
-                <div className="footer-text">
-                  <p>Ce document certifie le paiement des frais de promotion sur BoutiKonect.bj.</p>
-                  <p>BoutiKonect.bj - République du Bénin</p>
-                  <p>Contact : support@boutikonect.bj | www.boutikonect.bj</p>
-                </div>
-                <div className="secure-tag">
+              <div className="footer-legal-flow">
+                <p>Ce document certifie le paiement des frais de promotion sur BoutiKonect.bj.</p>
+                <p>BoutiKonect.bj - République du Bénin</p>
+                <p>Contact : support@boutikonect.bj | www.boutikonect.bj</p>
+                <div className="secure-badge-center">
                   <ShieldCheck size={14} /> DOCUMENT SÉCURISÉ & AUTHENTIQUE
                 </div>
               </div>
-            </section>
+            </div>
           </div>
         </motion.div>
       </div>
