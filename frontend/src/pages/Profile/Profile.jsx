@@ -8,7 +8,7 @@ import { User, Mail, Phone, MapPin, Package, Heart, LogOut, ShoppingBag, Trash2,
 import './Profile.css'
 
 export default function Profile() {
-  const { user, seller, setUser, setSeller, logoutUser, products, services, getFavoriteProducts, getFavoriteServices, toggleFavorite, isFavorite, getSellerOrders, updateOrderStatus, updateProfile, upgradeToSeller, orders, formatPrice, updateEmailWithVerification, resetPassword, showToast, forceUpdate } = useContext(AppContext)
+  const { user, seller, setUser, setSeller, logoutUser, products, services, getFavoriteProducts, getFavoriteServices, toggleFavorite, isFavorite, getSellerOrders, updateOrderStatus, updateProfile, upgradeToSeller, orders, formatPrice, updateEmailWithVerification, resetPassword, showToast } = useContext(AppContext)
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('favorites')
   const [isEditing, setIsEditing] = useState(false)

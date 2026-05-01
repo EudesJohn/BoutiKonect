@@ -26,7 +26,7 @@ export function AppProvider({ children }) {
   const [authLoading, setAuthLoading] = useState(true)
   const [isAppReady, setIsAppReady] = useState(false)
   const [errors, setErrors] = useState({ products: null, users: null, orders: null })
-  const [dataLoading, setDataLoading] = useState({ products: true, users: true, orders: true, services: true })
+  const [dataLoading, setDataLoading] = useState({ products: true, users: true, orders: true, services: true, reviews: true })
 
   const [toasts, setToasts] = useState([])
   const showToast = useCallback((message, type = 'info', duration = 5000, onClick = null) => {
@@ -70,11 +70,8 @@ export function AppProvider({ children }) {
   const fetchInitialData = useCallback(async () => {
     setDataLoading(prev => ({ ...prev, products: true, services: true }))
 
-    // Le cache local est désactivé sur demande pour garantir la fraîcheur des données
-    /*
-    const cachedProducts = cacheService.get('initial_products')
-    ...
-    */
+    // Suppression du chargement optimiste (cache) pour forcer le temps réel dès le début
+    // comme demandé par l'utilisateur.
 
     const productsPromise = supabase
       .from('products').select('*').order('created_at', { ascending: false }).limit(100)
@@ -100,26 +97,25 @@ export function AppProvider({ children }) {
           .then(({ data }) => data && setOrders(data.map(mapOrderFromDB)));
 
         supabase.from('reviews').select('*').limit(50)
-          .then(({ data }) => data && setReviews(data.map(r => ({
-            id: r.id, productId: r.product_id, reviewerName: r.reviewer_name,
-            reviewerId: r.reviewer_id, reviewerAvatar: r.reviewer_avatar, rating: r.rating, comment: r.comment, createdAt: r.created_at
-          }))));
+          .then(({ data }) => {
+            if (data) setReviews(data.map(r => ({
+              id: r.id, productId: r.product_id, reviewerName: r.reviewer_name,
+              reviewerId: r.reviewer_id, reviewerAvatar: r.reviewer_avatar, rating: r.rating, comment: r.comment, createdAt: r.created_at
+            })));
+          })
+          .finally(() => setDataLoading(prev => ({ ...prev, reviews: false })));
 
         if (checkIsAdmin(seller || user)) {
           supabase.from('profiles').select('*').limit(200)
             .then(({ data, error }) => {
               if (error) {
-                if (error.name !== 'AbortError' && error.message !== 'AbortError') {
-                  console.error('Error fetching profiles:', error);
-                }
+                console.error('Error fetching profiles:', error);
                 setAllUsers([]);
               } else if (data) {
                 setAllUsers(data);
               } else {
                 setAllUsers([]);
               }
-            }).catch(err => {
-              if (err.name !== 'AbortError') console.error('Error fetching profiles:', err);
             });
         }
       } catch (e) { console.warn('BG fetch error:', e); }
@@ -234,7 +230,8 @@ export function AppProvider({ children }) {
       }
     }, 8000);
 
-    if (!authLoading && !dataLoading.products) {
+    // On attend que l'auth ET les données critiques (produits, services, avis) soient prêtes
+    if (!authLoading && !dataLoading.products && !dataLoading.services && !dataLoading.reviews) {
       setIsAppReady(true);
       const loaderTimer = setTimeout(() => {
         if (window.hideAppLoader) window.hideAppLoader();
