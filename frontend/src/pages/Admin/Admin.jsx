@@ -129,13 +129,6 @@ export default function Admin() {
       </div>
     )
   }
-            <h2>Aucun utilisateur trouvé</h2>
-            <p>La base de données semble vide.</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
   
   const allProducts = getAllProducts()
   const allOrders = getAllOrders()
