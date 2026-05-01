@@ -571,8 +571,10 @@ export function AppProvider({ children }) {
         throw rpcError;
       }
 
-      if (rpcStatus === 'SUCCESS') {
-        // Rafraîchir le produit localement
+      const isSuccess = rpcStatus === 'SUCCESS' || (rpcStatus && typeof rpcStatus === 'object' && rpcStatus.success);
+
+      if (isSuccess) {
+        // Rafraîchir le produit localement pour avoir les nouvelles dates et infos transaction
         const { data: refreshed } = await supabase.from('products').select('*').eq('id', productId).single();
         if (refreshed) {
           const mapped = mapItemFromDB(refreshed);
@@ -582,7 +584,14 @@ export function AppProvider({ children }) {
         return { success: true };
       } else {
         console.warn('activatePromotionInstant: RPC a retourné un échec:', rpcStatus);
-        const errorMsg = rpcStatus?.startsWith('ERROR:') ? rpcStatus.replace('ERROR: ', '') : "Le serveur a refusé l'activation.";
+        let errorMsg = "Le serveur a refusé l'activation.";
+        
+        if (typeof rpcStatus === 'string' && rpcStatus.startsWith('ERROR:')) {
+          errorMsg = rpcStatus.replace('ERROR: ', '');
+        } else if (rpcStatus && typeof rpcStatus === 'object' && rpcStatus.error) {
+          errorMsg = rpcStatus.error;
+        }
+        
         return { success: false, error: errorMsg };
       }
     } catch (err) {
