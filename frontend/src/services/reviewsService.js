@@ -52,7 +52,7 @@ export const getItemRating = async (itemId) => {
 /**
  * Ajouter un avis
  */
-export const addReview = async (itemId, reviewerName, rating, comment, reviewerId) => {
+export const addReview = async (itemId, reviewerName, rating, comment, reviewerId, reviewerAvatar = null) => {
   if (!itemId || !reviewerId) return { success: false, error: 'ID requis' }
   
   const reviewId = `${reviewerId}_${itemId}`
@@ -61,6 +61,7 @@ export const addReview = async (itemId, reviewerName, rating, comment, reviewerI
     product_id: itemId,
     reviewer_name: reviewerName.trim(),
     reviewer_id: reviewerId,
+    reviewer_avatar: reviewerAvatar,
     rating: parseInt(rating),
     comment: comment.trim()
   }

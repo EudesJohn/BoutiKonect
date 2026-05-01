@@ -316,7 +316,8 @@ export default function ProductDetail() {
       currentUser?.name || 'Anonyme',
       newReview.rating,
       newReview.comment,
-      currentUser?.id || null
+      currentUser?.id || null,
+      currentUser?.avatar || null
     )
 
     if (result.success) {
@@ -641,7 +642,13 @@ export default function ProductDetail() {
                 <div key={review.id} className="review-card">
                   <div className="review-header">
                     <div className="reviewer-info">
-                      <div className="reviewer-avatar">{review.reviewerName.charAt(0)}</div>
+                      <div className="reviewer-avatar">
+                        {review.reviewerAvatar ? (
+                          <img src={review.reviewerAvatar} alt={review.reviewerName} />
+                        ) : (
+                          review.reviewerName?.charAt(0).toUpperCase() || 'U'
+                        )}
+                      </div>
                       <div>
                         <span className="reviewer-name">{review.reviewerName}</span>
                         <span className="review-date">

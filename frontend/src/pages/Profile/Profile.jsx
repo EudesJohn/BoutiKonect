@@ -278,7 +278,11 @@ export default function Profile() {
               </div>
             ) : (
               <div className="profile-avatar">
-                {currentUser?.avatar ? <img src={currentUser.avatar} alt={currentUser.name} /> : <div className="avatar-placeholder"><User size={48} /></div>}
+                {currentUser?.avatar ? (
+                  <img src={currentUser.avatar} alt={currentUser.name} />
+                ) : (
+                  <div className="avatar-placeholder">{(currentUser?.name || 'U').charAt(0).toUpperCase()}</div>
+                )}
               </div>
             )}
           </div>

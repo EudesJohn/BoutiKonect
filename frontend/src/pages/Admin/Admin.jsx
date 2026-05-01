@@ -397,7 +397,11 @@ export default function Admin() {
                   >
                     <div className="user-card-header">
                       <div className="user-avatar-large">
-                        {targetUser.name?.charAt(0).toUpperCase() || 'U'}
+                        {targetUser.avatar ? (
+                          <img src={targetUser.avatar} alt={targetUser.name} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                        ) : (
+                          targetUser.name?.charAt(0).toUpperCase() || 'U'
+                        )}
                       </div>
                       <div className="user-basic-info">
                         <h3>{targetUser.name || 'Non spécifié'}</h3>

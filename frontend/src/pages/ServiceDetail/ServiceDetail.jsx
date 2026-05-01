@@ -153,7 +153,8 @@ export default function ServiceDetail() {
       currentUser.name,
       newReview.rating,
       newReview.comment,
-      currentUser.id
+      currentUser.id,
+      currentUser.avatar || null
     )
     
     setSubmittingReview(false)
@@ -463,8 +464,12 @@ export default function ServiceDetail() {
                 <div key={rev.id} className="review-item" style={{ background: 'rgba(255,255,255,0.05)', padding: '20px', borderRadius: '12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                      <div style={{ width: '40px', height: '40px', background: 'rgba(255,255,255,0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
-                        {rev.reviewerName?.charAt(0)}
+                      <div style={{ width: '40px', height: '40px', background: 'rgba(255,255,255,0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', overflow: 'hidden' }}>
+                        {rev.reviewerAvatar ? (
+                          <img src={rev.reviewerAvatar} alt={rev.reviewerName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          rev.reviewerName?.charAt(0)
+                        )}
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <span style={{ fontWeight: '700', color: '#FFD700' }}>{rev.reviewerName}</span>

@@ -103,7 +103,7 @@ export function AppProvider({ children }) {
         supabase.from('reviews').select('*').limit(50)
           .then(({ data }) => data && setReviews(data.map(r => ({
             id: r.id, productId: r.product_id, reviewerName: r.reviewer_name,
-            reviewerId: r.reviewer_id, rating: r.rating, comment: r.comment, createdAt: r.created_at
+            reviewerId: r.reviewer_id, reviewerAvatar: r.reviewer_avatar, rating: r.rating, comment: r.comment, createdAt: r.created_at
           }))));
 
         if (checkIsAdmin(seller || user)) {
@@ -342,7 +342,7 @@ export function AppProvider({ children }) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reviews' }, (payload) => {
         const mapReview = (r) => r ? ({
           id: r.id, productId: r.product_id, reviewerName: r.reviewer_name,
-          reviewerId: r.reviewer_id, rating: r.rating, comment: r.comment, createdAt: r.created_at
+          reviewerId: r.reviewer_id, reviewerAvatar: r.reviewer_avatar, rating: r.rating, comment: r.comment, createdAt: r.created_at
         }) : null
         if (payload.eventType === 'INSERT') {
           const mapped = mapReview(payload.new);
