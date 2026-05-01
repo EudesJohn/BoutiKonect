@@ -223,36 +223,15 @@ export function AppProvider({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // === APP READINESS LOGIC ===
   useEffect(() => {
-    const globalSafetyTimeout = setTimeout(() => {
-      if (!isAppReady) {
-        setIsAppReady(true);
-        if (window.hideAppLoader) window.hideAppLoader();
-      }
-    }, 10000); // 10s de sécurité
-
-    const statusUpdateInterval = setInterval(() => {
-      const status = `Auth: ${authLoading ? '⏳' : '✅'} | Prod: ${dataLoading.products ? '⏳' : '✅'} | Rev: ${dataLoading.reviews ? '⏳' : '✅'}`;
-      if (window.setLoaderStatus) window.setLoaderStatus(status);
-    }, 500);
-
     // On attend que l'auth ET les données critiques (produits, services, avis) soient prêtes
     if (!authLoading && !dataLoading.products && !dataLoading.services && !dataLoading.reviews) {
       setIsAppReady(true);
       const loaderTimer = setTimeout(() => {
         if (window.hideAppLoader) window.hideAppLoader();
       }, 800);
-      return () => { 
-        clearTimeout(globalSafetyTimeout); 
-        clearTimeout(loaderTimer); 
-        clearInterval(statusUpdateInterval);
-      };
+      return () => clearTimeout(loaderTimer);
     }
-    return () => {
-      clearTimeout(globalSafetyTimeout);
-      clearInterval(statusUpdateInterval);
-    };
   }, [authLoading, dataLoading.products, dataLoading.services, dataLoading.reviews, isAppReady])
 
   // === FILTERS STATE ===

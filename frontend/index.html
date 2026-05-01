@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <script>
       // Force cache clear and Service Worker update
-      const APP_VERSION = '1.2.0'; // Change this string to force a cache clear on next deploy
+      const APP_VERSION = '1.2.1'; // Change this string to force a cache clear on next deploy
       if (localStorage.getItem('bk_app_version') !== APP_VERSION) {
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker.getRegistrations().then(function(registrations) {
@@ -64,8 +64,6 @@
       <img src="/logo.jpg" alt="Logo" style="width: 140px; height: 140px; object-fit: contain; margin-bottom: 20px; border-radius: 16px; box-shadow: 0 4px 20px rgba(255,106,0,0.2);">
       <div style="width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #FF6A00; border-radius: 50%; animation: spin 1s linear infinite;"></div>
       <p style="margin-top: 15px; color: #CBD5E1; font-family: sans-serif; font-size: 14px; letter-spacing: 0.5px;">Initialisation de votre Marketplace...</p>
-      <div id="loader-status" style="margin-top: 10px; color: #FF6A00; font-family: monospace; font-size: 12px; opacity: 0.8;"></div>
-      <a id="skip-loader" href="javascript:hideAppLoader()" style="margin-top: 20px; color: #64748B; font-size: 12px; text-decoration: underline; display: none;">Accéder quand même</a>
     </div>
 
     <style>
@@ -83,18 +81,6 @@
           loader.style.opacity = '0';
           setTimeout(() => loader.remove(), 500);
         }
-      };
-
-      // Fonction pour mettre à jour le statut du loader
-      window.setLoaderStatus = (status) => {
-        const statusEl = document.getElementById('loader-status');
-        if (statusEl) statusEl.innerText = status;
-        
-        // Afficher le bouton passer après 5 secondes
-        setTimeout(() => {
-          const skipBtn = document.getElementById('skip-loader');
-          if (skipBtn) skipBtn.style.display = 'block';
-        }, 5000);
       };
     </script>
   </body>
