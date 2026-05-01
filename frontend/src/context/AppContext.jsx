@@ -84,7 +84,7 @@ export function AppProvider({ children }) {
         if (data) {
           const mappedData = data.map(mapItemFromDB).filter(Boolean);
           setProducts(mappedData);
-          cacheService.set('initial_products', data, 12)
+          cacheService.set('initial_products', data, 1) // Réduit à 1h pour plus de fraîcheur
         }
       })
       .catch(err => {
@@ -290,7 +290,7 @@ export function AppProvider({ children }) {
   }, [cart])
 
   useEffect(() => {
-    console.log('🚀 BoutiKonect v1.1.8 (STABLE - 2026-05-01) loaded.');
+    console.log('🚀 BoutiKonect v1.1.9 (STABLE - 2026-05-01) loaded.');
     fetchInitialData();
   }, [fetchInitialData]);
 
@@ -605,6 +605,7 @@ export function AppProvider({ children }) {
       const dbItem = mapItemToDB(itemData)
       const { data, error } = await supabase.from('products').insert([dbItem]).select()
       if (error) throw error
+      cacheService.remove('initial_products')
       return { success: true, data: data[0] }
     } catch (error) { return { success: false, error: error.message } }
   }
@@ -614,6 +615,7 @@ export function AppProvider({ children }) {
       const dbItem = mapItemToDB(itemData)
       const { error } = await supabase.from('products').update(dbItem).eq('id', id)
       if (error) throw error
+      cacheService.remove('initial_products')
       return { success: true }
     } catch (error) { return { success: false, error: error.message } }
   }
@@ -638,6 +640,12 @@ export function AppProvider({ children }) {
       if (error) throw error
       return { success: true }
     } catch (error) { return { success: false, error: error.message } }
+  }
+
+  const forceUpdate = () => {
+    if (window.confirm("Cela va rafraîchir toutes les données et synchroniser l'application. Voulez-vous continuer ?")) {
+      window.location.href = window.location.origin + window.location.pathname + '?reset=true';
+    }
   }
 
   const addToCart = (item) => {
@@ -1000,7 +1008,7 @@ export function AppProvider({ children }) {
     getProductById, getServiceById, fetchSingleProduct, addProduct, updateProduct, deleteProduct, deleteService,
     addService, updateService,
     createOrder, addToCart, removeFromCart, updateCartQuantity, clearCart, getCartTotal,
-    toggleFavorite, isFavorite, decrementProductStock, reportProduct,
+    toggleFavorite, isFavorite, decrementProductStock, reportProduct, forceUpdate,
     getFavoriteProducts, getFavoriteServices, getSellerOrders, updateOrderStatus, updateProfile, upgradeToSeller,
     PROMOTION_PRICES, promoteProduct, activatePromotionInstant,
     getAllUsers: () => allUsers,
