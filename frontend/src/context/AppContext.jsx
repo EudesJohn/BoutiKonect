@@ -600,6 +600,30 @@ export function AppProvider({ children }) {
     }
   };
 
+  const cancelPromotion = async (productId) => {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({ 
+          is_promoted: false, 
+          promotion_end_date: null 
+        })
+        .eq('id', productId);
+      
+      if (error) throw error;
+      
+      setProducts(prev => prev.map(p => 
+        p.id === productId ? { ...p, isPromoted: false, promotionEndDate: null } : p
+      ));
+      showToast("Promotion annulée avec succès", "info");
+      return { success: true };
+    } catch (err) {
+      console.error('cancelPromotion error:', err);
+      showToast("Erreur lors de l'annulation", "error");
+      return { success: false, error: err.message };
+    }
+  };
+
   // === HELPER METHODS ===
   const getProductById = useCallback((id) => products.find(p => p.id === id), [products])
   const getServiceById = useCallback((id) => products.find(p => p.id === id && p.type === 'service'), [products])
@@ -1023,7 +1047,8 @@ export function AppProvider({ children }) {
   const value = {
     seller, user, products, services: (products || []).filter(p => p && p.type === 'service'), reviews, orders, allUsers, favorites, cart,
     toasts, showToast, removeToast, authLoading, dataLoading, isAppReady, errors,
-    getProductById, getServiceById, fetchSingleProduct, addProduct, updateProduct, deleteProduct, deleteService,
+    getProductById, getServiceById, fetchSingleProduct, addProduct, 
+    updateProduct, deleteProduct, deleteService, cancelPromotion,
     addService, updateService,
     createOrder, addToCart, removeFromCart, updateCartQuantity, clearCart, getCartTotal,
     toggleFavorite, isFavorite, decrementProductStock, reportProduct, forceUpdate,

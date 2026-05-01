@@ -2,12 +2,12 @@ import { useContext, useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { AppContext } from '../../context/AppContextInstance'
-import { Package, Trash2, ArrowLeft, Eye, Plus, Zap, FileText } from 'lucide-react'
+import { Package, Trash2, ArrowLeft, Eye, Plus, Zap, FileText, XCircle } from 'lucide-react'
 import PromoteModal from '../Publish/PromoteModal'
 import './MyProducts.css'
 
 export default function MyProducts() {
-  const { seller, user, logoutSeller, products, deleteProduct, formatPrice, checkIsAdmin, parseDate } = useContext(AppContext)
+  const { seller, user, logoutSeller, products, deleteProduct, formatPrice, checkIsAdmin, parseDate, cancelPromotion } = useContext(AppContext)
   const navigate = useNavigate()
   
   // État pour le modal de promotion
@@ -118,8 +118,8 @@ export default function MyProducts() {
                                 alignItems: 'center',
                                 minWidth: '80px'
                               }}>
-                                <span style={{ color: '#FFD700', fontWeight: 'bold' }}>En Vedette</span>
-                                <span style={{ color: '#aaa' }}>
+                                <span style={{ color: '#FFD700', fontWeight: 'bold', display: 'block' }}>En Vedette</span>
+                                <span style={{ color: '#aaa', fontSize: '11px', display: 'block' }}>
                                   {(() => {
                                     const diff = parseDate(product.promotionEndDate) - new Date();
                                     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -127,6 +127,17 @@ export default function MyProducts() {
                                     return `Expire dans ${days}j ${hours}h`;
                                   })()}
                                 </span>
+                                <button 
+                                  className="btn btn-outline btn-small" 
+                                  style={{ marginTop: '5px', padding: '2px 8px', fontSize: '10px', color: '#ef4444', borderColor: '#ef4444' }}
+                                  onClick={() => {
+                                    if (window.confirm("Voulez-vous vraiment annuler la promotion de ce produit ? (Aucun remboursement possible)")) {
+                                      cancelPromotion(product.id);
+                                    }
+                                  }}
+                                >
+                                  <XCircle size={10} /> Annuler
+                                </button>
                               </div>
                             ) : (
                               <button 
