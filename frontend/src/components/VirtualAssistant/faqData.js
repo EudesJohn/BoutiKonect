@@ -32,7 +32,7 @@ export const faqData = [
   {
     id: 'modify_password',
     question: 'J\'ai oublié mon mot secret, je fais quoi ?',
-    answer: 'Ne pleure pas ! Appuie sur le bouton "MDP". Un petit oiseau va envoyer un message à maman pour créer un nouveau mot secret tout neuf en une minute.'
+    answer: 'Ne pleure pas ! Appuie sur le bouton "Mot de passe". Un petit oiseau va envoyer un message à maman pour créer un nouveau mot secret tout neuf en une minute.'
   },
   {
     id: 'view_orders',

@@ -357,8 +357,7 @@ export default function Profile() {
               <>
                 {!seller && <button className="btn btn-primary" onClick={() => upgradeToSeller(currentUser.id, {})}><Store size={18} />Devenir vendeur</button>}
                 <button className="btn btn-outline" onClick={handleEditClick}><Edit2 size={18} />Modifier</button>
-                <button className="btn btn-outline" onClick={forceUpdate} title="Forcer la synchronisation"><TrendingUp size={18} />Synchroniser</button>
-                {!isGoogleUser && <button className="btn btn-outline" onClick={() => setShowPasswordChange(true)}><Lock size={18} />MDP</button>}
+                {!isGoogleUser && <button className="btn btn-outline" onClick={() => setShowPasswordChange(true)}><Lock size={18} />Mot de passe</button>}
               </>
             )}
             <button className="btn btn-danger" onClick={handleLogout}><LogOut size={18} />Deconnexion</button>
