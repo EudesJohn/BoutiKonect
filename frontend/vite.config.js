@@ -33,12 +33,20 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: [], // Ne pas mettre en cache les fichiers pour forcer le mode en ligne
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg}'], // Mise en cache des assets de base
         navigateFallbackDenylist: [/^\/api/, /supabase\.co/],
         runtimeCaching: [
           {
-            urlPattern: ({ url }) => true, // Appliquer à tout
-            handler: 'NetworkOnly'
+            urlPattern: ({ url }) => url.origin === self.location.origin, // Assets locaux
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'assets-cache',
+              expiration: { maxEntries: 50, maxAgeSeconds: 86400 }
+            }
+          },
+          {
+            urlPattern: ({ url }) => url.href.includes('supabase.co'), // API Supabase
+            handler: 'NetworkOnly' // Toujours en ligne pour les données
           }
         ]
       }

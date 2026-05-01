@@ -124,7 +124,8 @@ export function AppProvider({ children }) {
     };
 
     fetchBackgroundData();
-    await productsPromise;
+    // Ne pas await ici pour ne pas bloquer tout le cycle d'init si la requête est lente
+    productsPromise.then(() => console.log('📦 Products load complete'));
   }, [user, seller])
 
   // GESTION DE LA SESSION SUPABASE
@@ -229,7 +230,12 @@ export function AppProvider({ children }) {
         setIsAppReady(true);
         if (window.hideAppLoader) window.hideAppLoader();
       }
-    }, 8000);
+    }, 10000); // 10s de sécurité
+
+    const statusUpdateInterval = setInterval(() => {
+      const status = `Auth: ${authLoading ? '⏳' : '✅'} | Prod: ${dataLoading.products ? '⏳' : '✅'} | Rev: ${dataLoading.reviews ? '⏳' : '✅'}`;
+      if (window.setLoaderStatus) window.setLoaderStatus(status);
+    }, 500);
 
     // On attend que l'auth ET les données critiques (produits, services, avis) soient prêtes
     if (!authLoading && !dataLoading.products && !dataLoading.services && !dataLoading.reviews) {
@@ -237,9 +243,16 @@ export function AppProvider({ children }) {
       const loaderTimer = setTimeout(() => {
         if (window.hideAppLoader) window.hideAppLoader();
       }, 800);
-      return () => { clearTimeout(globalSafetyTimeout); clearTimeout(loaderTimer); };
+      return () => { 
+        clearTimeout(globalSafetyTimeout); 
+        clearTimeout(loaderTimer); 
+        clearInterval(statusUpdateInterval);
+      };
     }
-    return () => clearTimeout(globalSafetyTimeout);
+    return () => {
+      clearTimeout(globalSafetyTimeout);
+      clearInterval(statusUpdateInterval);
+    };
   }, [authLoading, dataLoading.products, dataLoading.services, dataLoading.reviews, isAppReady])
 
   // === FILTERS STATE ===
