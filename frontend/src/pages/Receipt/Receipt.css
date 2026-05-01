@@ -44,6 +44,7 @@
   margin: 0 auto;
   position: relative;
   border: 1px solid #e2e8f0;
+  page-break-inside: avoid;
 }
 
 /* Watermark */
@@ -61,7 +62,7 @@
 }
 
 .receipt-header {
-  padding: 50px 50px 30px;
+  padding: 30px 40px 20px;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -109,7 +110,7 @@
 
 .status-banner {
   background: #f0fdf4;
-  padding: 15px 50px;
+  padding: 10px 40px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -142,13 +143,14 @@
 }
 
 .receipt-content {
-  padding: 40px 50px;
+  padding: 25px 40px;
   position: relative;
   z-index: 1;
 }
 
 .receipt-section {
-  margin-bottom: 35px;
+  margin-bottom: 25px;
+  page-break-inside: avoid;
 }
 
 .section-title {
@@ -254,7 +256,7 @@
 }
 
 .receipt-footer {
-  padding: 40px 50px;
+  padding: 20px 40px;
   background: #fff;
   display: flex;
   flex-direction: column;

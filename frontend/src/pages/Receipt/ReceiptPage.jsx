@@ -76,11 +76,12 @@ export default function ReceiptPage() {
     setIsGenerating(true);
     const element = document.getElementById('receipt-content-to-export');
     const opt = {
-      margin:       0,
+      margin:       [10, 10],
       filename:     `Quittance_BoutiKonect_${data.transactionId}.pdf`,
       image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
-      jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+      html2canvas:  { scale: 2, useCORS: true, letterRendering: true, logging: false },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
     window.html2pdf().from(element).set(opt).save().then(() => {
