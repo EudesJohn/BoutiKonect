@@ -628,6 +628,9 @@ export function AppProvider({ children }) {
     } catch (error) { return { success: false, error: error.message } }
   }
 
+  const addService = addProduct
+  const updateService = updateProduct
+
   const createOrder = async (orderData) => {
     try {
       const dbOrder = mapOrderToDB(orderData)
@@ -995,6 +998,7 @@ export function AppProvider({ children }) {
     seller, user, products, services: (products || []).filter(p => p && p.type === 'service'), reviews, orders, allUsers, favorites, cart,
     toasts, showToast, removeToast, authLoading, dataLoading, isAppReady, errors,
     getProductById, getServiceById, fetchSingleProduct, addProduct, updateProduct, deleteProduct, deleteService,
+    addService, updateService,
     createOrder, addToCart, removeFromCart, updateCartQuantity, clearCart, getCartTotal,
     toggleFavorite, isFavorite, decrementProductStock, reportProduct,
     getFavoriteProducts, getFavoriteServices, getSellerOrders, updateOrderStatus, updateProfile, upgradeToSeller,
