@@ -53,26 +53,19 @@
   page-break-inside: avoid;
 }
 
-/* Watermark */
-.receipt-card::before {
-  content: 'OFFICIEL';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) rotate(-45deg);
-  font-size: 120px;
-  font-weight: 900;
-  color: rgba(0, 0, 0, 0.02);
-  pointer-events: none;
-  z-index: 0;
+  position: relative;
+  border: 1px solid #e2e8f0;
+  page-break-inside: avoid;
+  overflow: hidden;
 }
 
 .receipt-header {
   padding: 25px 30px 15px;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center; /* Better than flex-start for alignment */
   border-bottom: 2px solid #f1f5f9;
+  width: 100%;
 }
 
 .receipt-header .brand h1 {
