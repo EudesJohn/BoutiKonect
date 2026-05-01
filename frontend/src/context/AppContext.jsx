@@ -116,44 +116,18 @@ export function AppProvider({ children }) {
       }
     };
 
-    const productsPromise = fetchProductsWithRetry();
+    fetchProductsWithRetry();
 
-    const fetchBackgroundData = async () => {
-      try {
-        supabase.from('orders').select('*').order('created_at', { ascending: false }).limit(20)
-          .then(({ data }) => data && setOrders(data.map(mapOrderFromDB)));
-
-        supabase.from('reviews').select('*').limit(50)
-          .then(({ data }) => {
-            if (data) setReviews(data.map(r => ({
-              id: r.id, productId: r.product_id, reviewerName: r.reviewer_name,
-              reviewerId: r.reviewer_id, reviewerAvatar: r.reviewer_avatar, rating: r.rating, comment: r.comment, createdAt: r.created_at
-            })));
-          })
-          .catch(err => console.warn('Reviews fetch error:', err));
-        // Les avis ne bloquent PAS l'affichage de l'app
-
-        if (checkIsAdmin(seller || user)) {
-          supabase.from('profiles').select('*').limit(200)
-            .then(({ data, error }) => {
-              if (error) {
-                console.error('Error fetching profiles:', error);
-                setAllUsers([]);
-              } else if (data) {
-                setAllUsers(data);
-              } else {
-                setAllUsers([]);
-              }
-            });
-        }
-      } catch (e) { console.warn('BG fetch error:', e); }
-      finally { setDataLoading(prev => ({ ...prev, orders: false, users: false })); }
-    };
-
-    fetchBackgroundData();
-    // Ne pas await ici pour ne pas bloquer tout le cycle d'init si la requête est lente
-    productsPromise.then(() => console.log('📦 Products load complete'));
-  }, [user, seller])
+    // Fetch reviews (public)
+    supabase.from('reviews').select('*').limit(50)
+      .then(({ data }) => {
+        if (data) setReviews(data.map(r => ({
+          id: r.id, productId: r.product_id, reviewerName: r.reviewer_name,
+          reviewerId: r.reviewer_id, reviewerAvatar: r.reviewer_avatar, rating: r.rating, comment: r.comment, createdAt: r.created_at
+        })));
+      })
+      .catch(err => console.warn('Reviews fetch error:', err));
+  }, [])
 
   // GESTION DE LA SESSION SUPABASE
   useEffect(() => {
@@ -996,11 +970,12 @@ export function AppProvider({ children }) {
       setSeller(null);
       saveSecureUser(null);
       saveSecureSeller(null);
-      secureClear();
       
-      // Nettoyage manuel des cookies et localStorage pour éviter les sessions fantômes
+      // Nettoyage manuel des cookies et storage pour éviter les sessions fantômes
       localStorage.removeItem('supabase.auth.token');
       localStorage.removeItem('boutikonect-auth-token');
+      sessionStorage.removeItem('bk-auth-token');
+      secureClear();
       
       showToast("Déconnexion réussie", "info");
       

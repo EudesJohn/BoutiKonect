@@ -22,7 +22,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
-      storage: window.localStorage
+      storage: window.sessionStorage,
+      storageKey: 'bk-auth-token'
     }
   })
 } else {
@@ -31,7 +32,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
-      storage: window.localStorage
+      storage: window.sessionStorage,
+      storageKey: 'bk-auth-token'
     }
   })
 }
