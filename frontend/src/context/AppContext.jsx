@@ -103,6 +103,7 @@ export function AppProvider({ children }) {
               reviewerId: r.reviewer_id, reviewerAvatar: r.reviewer_avatar, rating: r.rating, comment: r.comment, createdAt: r.created_at
             })));
           })
+          .catch(err => console.warn('Reviews fetch error:', err))
           .finally(() => setDataLoading(prev => ({ ...prev, reviews: false })));
 
         if (checkIsAdmin(seller || user)) {
@@ -239,7 +240,7 @@ export function AppProvider({ children }) {
       return () => { clearTimeout(globalSafetyTimeout); clearTimeout(loaderTimer); };
     }
     return () => clearTimeout(globalSafetyTimeout);
-  }, [authLoading, dataLoading.products, isAppReady])
+  }, [authLoading, dataLoading.products, dataLoading.services, dataLoading.reviews, isAppReady])
 
   // === FILTERS STATE ===
   const [filters, setFilters] = useState({
