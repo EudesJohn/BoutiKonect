@@ -33,10 +33,11 @@ export default defineConfig({
         ]
       },
       workbox: {
+        globPatterns: [], // Ne pas mettre en cache les fichiers pour forcer le mode en ligne
         navigateFallbackDenylist: [/^\/api/, /supabase\.co/],
         runtimeCaching: [
           {
-            urlPattern: ({ url }) => url.origin.includes('supabase.co'),
+            urlPattern: ({ url }) => true, // Appliquer à tout
             handler: 'NetworkOnly'
           }
         ]

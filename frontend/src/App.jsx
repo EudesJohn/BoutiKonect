@@ -10,6 +10,8 @@ import TopBarLoader from './components/TopBarLoader/TopBarLoader'
 import PageTransition from './components/PageTransition/PageTransition'
 import SplashScreen from './components/SplashScreen/SplashScreen'
 import UpdatePrompt from './components/UpdatePrompt/UpdatePrompt'
+import OfflinePage from './components/OfflinePage/OfflinePage'
+import { useState, useEffect } from 'react'
 import './App.css'
 
 import Home from './pages/Home/Home'
@@ -45,6 +47,24 @@ import { motion, AnimatePresence } from 'framer-motion'
 function App() {
   const { seller, user, toasts, removeToast, isAppReady, dataLoading, errors } = useContext(AppContext)
   const location = useLocation()
+  const [isOffline, setIsOffline] = useState(!navigator.onLine)
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false)
+    const handleOffline = () => setIsOffline(true)
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
+
+  if (isOffline) {
+    return <OfflinePage />
+  }
 
   if (!isAppReady) {
     return <SplashScreen dataLoading={dataLoading} errors={errors} />
