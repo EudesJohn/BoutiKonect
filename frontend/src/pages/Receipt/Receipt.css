@@ -225,12 +225,15 @@
 .receipt-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed; /* Prevents cell width from pushing table beyond 100% */
 }
 
 .receipt-table td {
   padding: 15px 0;
   border-bottom: 1px solid #f1f5f9;
   font-size: 14px;
+  word-wrap: break-word;
+  overflow: hidden;
 }
 
 .receipt-table .text-right {
@@ -246,7 +249,7 @@
 
 .total-row td {
   border-bottom: none;
-  padding-top: 30px;
+  padding-top: 20px;
 }
 
 .total-label {
@@ -292,14 +295,14 @@
 .qr-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start; /* Align to left like the table labels */
   gap: 8px;
-  margin-bottom: 20px;
+  margin-top: 30px;
 }
 
 .qr-code {
-  width: 100px;
-  height: 100px;
+  width: 90px;
+  height: 90px;
   padding: 5px;
   background: #fff;
   border: 1px solid #e2e8f0;

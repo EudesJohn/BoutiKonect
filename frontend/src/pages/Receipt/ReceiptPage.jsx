@@ -233,18 +233,19 @@ export default function ReceiptPage() {
                   </tr>
                 </tbody>
               </table>
+
+              <div className="qr-container" style={{ marginTop: '20px' }}>
+                <img 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=BoutiKonect-TX-${data.transactionId}`} 
+                  alt="QR Code de Validation" 
+                  className="qr-code"
+                />
+                <span>SCAN VALIDE</span>
+              </div>
             </section>
           </div>
 
           <div className="receipt-footer">
-            <div className="qr-container">
-              <img 
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=BoutiKonect-TX-${data.transactionId}`} 
-                alt="QR Code de Validation" 
-                className="qr-code"
-              />
-              <span>SCAN VALIDE</span>
-            </div>
             <div className="footer-text">
               <p>Ce document certifie le paiement des frais de promotion sur BoutiKonect.bj.</p>
               <p>BoutiKonect.bj - République du Bénin</p>
