@@ -45,13 +45,12 @@ export default function PromotionCallback() {
 
             console.log('Données de promotion validées:', { productId: promoData.productId, days: promoData.plan.days });
 
-            // Activation immédiate côté client
-            const result = await activatePromotionInstant(promoData.productId, promoData.plan.days);
+            const transactionId = searchParams.get('id') || searchParams.get('transaction_id');
+            const result = await activatePromotionInstant(promoData.productId, promoData.plan.days, transactionId, promoData.plan.name);
             console.log('Résultat activation immédiate:', result);
 
             // Confirmer au serveur sans rouvrir le popup
             const { confirmPromotionPayment } = await import('../../services/paymentService');
-            const transactionId = searchParams.get('id') || searchParams.get('transaction_id');
             const userId = currentUser?.id || promoData.uid || promoData.id || null;
             await confirmPromotionPayment(promoData.productId, promoData.plan, userId, transactionId);
 

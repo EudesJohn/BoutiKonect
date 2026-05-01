@@ -510,7 +510,7 @@ export function AppProvider({ children }) {
     return await confirmPromotionPayment(productId, plan, currentUser.id);
   };
 
-  const activatePromotionInstant = async (productId, days) => {
+  const activatePromotionInstant = async (productId, days, transactionId = null, planName = null) => {
     try {
       console.log('🚀 Tentative d\'activation promotion pour:', productId);
       
@@ -534,7 +534,9 @@ export function AppProvider({ children }) {
       // 2. Appel RPC avec la session garantie
       const { data: rpcStatus, error: rpcError } = await supabase.rpc('activate_product_promotion', {
         p_product_id: productId,
-        p_days: days
+        p_days: days,
+        p_transaction_id: transactionId,
+        p_plan_name: planName
       });
 
       if (rpcError) {
@@ -547,7 +549,12 @@ export function AppProvider({ children }) {
           
           const { data, error } = await supabase
             .from('products')
-            .update({ is_promoted: true, promotion_end_date: endDate.toISOString() })
+            .update({ 
+              is_promoted: true, 
+              promotion_end_date: endDate.toISOString(),
+              last_transaction_id: transactionId,
+              promotion_plan_name: planName
+            })
             .eq('id', productId)
             .select();
 

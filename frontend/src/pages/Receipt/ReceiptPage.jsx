@@ -1,22 +1,49 @@
-import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Printer, Download, ArrowLeft, ShieldCheck, Zap } from 'lucide-react';
+import { Printer, ArrowLeft, ShieldCheck, Zap, FileText } from 'lucide-react';
+import { AppContext } from '../../context/AppContextInstance';
+import { useContext } from 'react';
 import './Receipt.css';
 
 export default function ReceiptPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { products, services, seller, user } = useContext(AppContext);
   const [data, setData] = useState(null);
 
   useEffect(() => {
-    // Essayer de récupérer les données depuis sessionStorage ou les query params
+    // 1. Essayer sessionStorage (le plus frais après paiement)
     const stored = sessionStorage.getItem('last_promotion_receipt');
     if (stored) {
       setData(JSON.parse(stored));
-    } else {
-      // Fallback sur les params si possible
-      const tid = searchParams.get('tid');
+      return;
+    }
+
+    // 2. Essayer via ID produit (historique)
+    const pid = searchParams.get('pid');
+    if (pid) {
+      const allItems = [...products, ...services];
+      const item = allItems.find(p => p.id === pid);
+      
+      if (item && item.last_transaction_id) {
+        setData({
+          transactionId: item.last_transaction_id,
+          productTitle: item.title,
+          productImage: item.images?.[0] || null,
+          plan: { 
+            name: item.promotion_plan_name || 'Promotion Vedette',
+            price: item.promotion_plan_price || 0, // On peut essayer de deviner le prix ou laisser 0
+            days: 0 // Inconnu ici mais pas critique pour l'affichage
+          },
+          seller: seller || { name: item.sellerName || 'Vendeur' },
+          date: item.promotion_start_date || item.updatedAt
+        });
+        return;
+      }
+    }
+
+    // 3. Fallback sur les query params directs
+    const tid = searchParams.get('tid');
       const title = searchParams.get('title');
       const price = searchParams.get('price');
       

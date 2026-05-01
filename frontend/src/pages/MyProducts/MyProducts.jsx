@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { AppContext } from '../../context/AppContextInstance'
-import { Package, Trash2, ArrowLeft, Eye, Plus, Zap } from 'lucide-react'
+import { Package, Trash2, ArrowLeft, Eye, Plus, Zap, FileText } from 'lucide-react'
 import PromoteModal from '../Publish/PromoteModal'
 import './MyProducts.css'
 
@@ -139,6 +139,13 @@ export default function MyProducts() {
                               </button>
                             )}
                             
+                            {product.last_transaction_id && (
+                              <Link to={`/quittance?pid=${product.id}`} className="btn btn-outline btn-small" title="Télécharger la quittance">
+                                <FileText size={16} />
+                                Quittance
+                              </Link>
+                            )}
+
                             <button 
                               className="btn btn-danger btn-small"
                               onClick={() => {

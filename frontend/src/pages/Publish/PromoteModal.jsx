@@ -66,7 +66,7 @@ export default function PromoteModal({ product, onClose }) {
     // ÉTAPE 2 : Paiement validé par FedaPay → Activer le badge Vedette IMMÉDIATEMENT en BDD
     // On appelle directement activatePromotionInstant (met is_promoted=true dans products)
     // Sans passer par promoteProduct qui ne faisait PAS la mise à jour BDD
-    const activationResult = await activatePromotionInstant(product.id, plan.days);
+    const activationResult = await activatePromotionInstant(product.id, plan.days, paymentResult.transactionId, plan.name);
 
     if (activationResult && activationResult.success) {
       sessionStorage.removeItem('fedapay_promotion_data');
