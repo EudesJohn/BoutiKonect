@@ -146,20 +146,27 @@ export function mapOrderToDB(order) {
 export function mapItemToDB(item) {
   if (!item) return null;
   const { 
-    sellerId, sellerName, sellerCity, sellerNeighborhood, sellerAvatar,
-    priceType, isPromoted, promotionEndDate, ...rest 
+    sellerId, seller_id,
+    sellerName, seller_name,
+    sellerCity, seller_city,
+    sellerNeighborhood, seller_neighborhood,
+    sellerAvatar, seller_avatar,
+    priceType, price_type,
+    isPromoted, is_promoted,
+    promotionEndDate, promotion_end_date,
+    ...rest 
   } = item;
 
   return cleanObject({
     ...rest,
-    seller_id: sellerId,
-    seller_name: sellerName,
-    seller_city: sellerCity,
-    seller_neighborhood: sellerNeighborhood,
-    seller_avatar: sellerAvatar,
-    price_type: priceType,
-    is_promoted: isPromoted,
-    promotion_end_date: promotionEndDate,
+    seller_id: sellerId || seller_id,
+    seller_name: sellerName || seller_name,
+    seller_city: sellerCity || seller_city,
+    seller_neighborhood: sellerNeighborhood || seller_neighborhood,
+    seller_avatar: sellerAvatar || seller_avatar,
+    price_type: priceType || price_type,
+    is_promoted: isPromoted || is_promoted,
+    promotion_end_date: promotionEndDate || promotion_end_date,
     latitude: item.latitude,
     longitude: item.longitude
   });

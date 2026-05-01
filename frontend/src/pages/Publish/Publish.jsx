@@ -126,11 +126,11 @@ export default function Publish() {
         category: formData.category,
         images: formData.images,
         whatsapp: formattedWhatsapp,
-        seller_id: seller.id,
-        seller_name: seller.name,
-        seller_city: seller.city || '',
-        seller_neighborhood: seller.neighborhood || '',
-        seller_avatar: seller.avatar || '',
+        sellerId: seller.id,
+        sellerName: seller.name,
+        sellerCity: seller.city || '',
+        sellerNeighborhood: seller.neighborhood || '',
+        sellerAvatar: seller.avatar || '',
         latitude: formData.latitude,
         longitude: formData.longitude,
       }
@@ -140,7 +140,7 @@ export default function Publish() {
         itemData.stock = parseInt(formData.stock) || 1
         itemData.condition = formData.condition || 'Neuf'
       } else {
-        itemData.price_type = formData.priceType || 'Fixe'
+        itemData.priceType = formData.priceType || 'Fixe'
         itemData.experience = formData.experience
         itemData.duration = formData.duration
       }
