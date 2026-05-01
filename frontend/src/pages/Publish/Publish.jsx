@@ -2,6 +2,7 @@ import { useState, useContext, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { AppContext } from '../../context/AppContextInstance'
+import { supabase } from '../../supabase/client'
 import { categories, serviceCategories } from '../../context/constants'
 import { Plus, Image as ImageIcon, Trash2, CircleCheck as CheckCircle, ArrowLeft, Package, Edit2, X, Store, MessageCircle, ShoppingBag, Zap, Briefcase, TriangleAlert as AlertTriangle, Loader2, MapPin } from 'lucide-react'
 import './Publish.css'
@@ -147,6 +148,11 @@ export default function Publish() {
 
       setIsSubmitting(true)
       setErrors({})
+      
+      // LOG POUR DÉBOGAGE
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      console.log("État Auth avant publication:", authUser ? `Connecté (ID: ${authUser.id})` : "Non connecté (Anonyme)")
+      
       console.log("Données de publication préparées:", itemData)
 
       // Vérification de la taille des images (limite indicative de 2Mo au total pour base64)
