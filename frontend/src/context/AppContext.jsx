@@ -26,7 +26,7 @@ export function AppProvider({ children }) {
   const [authLoading, setAuthLoading] = useState(true)
   const [isAppReady, setIsAppReady] = useState(false)
   const [errors, setErrors] = useState({ products: null, users: null, orders: null })
-  const [dataLoading, setDataLoading] = useState({ products: true, users: true, orders: true, services: true, reviews: true })
+  const [dataLoading, setDataLoading] = useState({ products: true, users: true, orders: true, services: true })
 
   const [toasts, setToasts] = useState([])
   const showToast = useCallback((message, type = 'info', duration = 5000, onClick = null) => {
@@ -103,8 +103,8 @@ export function AppProvider({ children }) {
               reviewerId: r.reviewer_id, reviewerAvatar: r.reviewer_avatar, rating: r.rating, comment: r.comment, createdAt: r.created_at
             })));
           })
-          .catch(err => console.warn('Reviews fetch error:', err))
-          .finally(() => setDataLoading(prev => ({ ...prev, reviews: false })));
+          .catch(err => console.warn('Reviews fetch error:', err));
+        // Les avis ne bloquent PAS l'affichage de l'app
 
         if (checkIsAdmin(seller || user)) {
           supabase.from('profiles').select('*').limit(200)
@@ -224,15 +224,22 @@ export function AppProvider({ children }) {
   }, [])
 
   useEffect(() => {
-    // On attend que l'auth ET les données critiques (produits, services, avis) soient prêtes
-    if (!authLoading && !dataLoading.products && !dataLoading.services && !dataLoading.reviews) {
+    // Timeout de sécurité : 15 secondes max, après quoi l'app s'affiche quoi qu'il arrive
+    const safetyTimer = setTimeout(() => {
+      setIsAppReady(true);
+      if (window.hideAppLoader) window.hideAppLoader();
+    }, 15000);
+
+    // Condition principale : auth + produits seulement (les avis chargent en arrière-plan)
+    if (!authLoading && !dataLoading.products) {
       setIsAppReady(true);
       const loaderTimer = setTimeout(() => {
         if (window.hideAppLoader) window.hideAppLoader();
-      }, 800);
-      return () => clearTimeout(loaderTimer);
+      }, 300);
+      return () => { clearTimeout(safetyTimer); clearTimeout(loaderTimer); };
     }
-  }, [authLoading, dataLoading.products, dataLoading.services, dataLoading.reviews, isAppReady])
+    return () => clearTimeout(safetyTimer);
+  }, [authLoading, dataLoading.products, isAppReady])
 
   // === FILTERS STATE ===
   const [filters, setFilters] = useState({
