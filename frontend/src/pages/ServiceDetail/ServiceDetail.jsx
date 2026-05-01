@@ -14,7 +14,7 @@ import './ServiceDetail.css'
 export default function ServiceDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { getServiceById, fetchSingleProduct, dataLoading, user, seller, toggleFavorite, isFavorite, reviews: allReviews, createOrder, reportProduct, formatPrice, parseDate } = useContext(AppContext)
+  const { getServiceById, fetchSingleProduct, dataLoading, user, seller, toggleFavorite, isFavorite, reviews: allReviews, createOrder, reportProduct, formatPrice, parseDate, showToast } = useContext(AppContext)
   
   const currentUser = user || seller
   const [service, setService] = useState(null)
@@ -159,13 +159,14 @@ export default function ServiceDetail() {
     setSubmittingReview(false)
     if (result.success) {
       setReviewSuccess(true)
+      showToast("Avis publié avec succès !", "success")
       setNewReview({ rating: 5, comment: '' })
       setTimeout(() => {
         setShowReviewModal(false)
         setReviewSuccess(false)
       }, 2000)
     } else {
-      alert(result.error || "Erreur lors de l'ajout de l'avis")
+      showToast(result.error || "Erreur lors de la publication de l'avis", "error")
     }
   }
 

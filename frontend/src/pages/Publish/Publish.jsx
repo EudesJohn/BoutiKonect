@@ -12,7 +12,8 @@ export default function Publish() {
     seller, user, 
     addProduct, products, deleteProduct, updateProduct, 
     addService, services, deleteService, updateService,
-    upgradeToSeller, formatPrice, checkIsAdmin, getCurrentLocation
+    upgradeToSeller, formatPrice, checkIsAdmin, getCurrentLocation,
+    showToast
   } = useContext(AppContext)
   const navigate = useNavigate()
   
@@ -198,6 +199,7 @@ export default function Publish() {
 
         if (result && (result.success || result === undefined)) {
           setSuccess(true)
+          showToast(editingProduct ? "Annonce mise à jour !" : "Annonce publiée avec succès !", "success")
           setEditingProduct(null)
           setFormData({
             title: '',
@@ -216,7 +218,6 @@ export default function Publish() {
           })
           window.scrollTo(0, 0)
           
-          // Notification de succès
           setTimeout(() => {
             navigate(publishType === 'product' ? '/my-products' : '/my-services')
           }, 2000)
@@ -224,10 +225,13 @@ export default function Publish() {
           const errorMsg = result?.error || "Une erreur est survenue lors de la publication. Vérifiez votre connexion."
           console.error("Échec publication:", errorMsg)
           setErrors({ general: errorMsg })
+          showToast(errorMsg, "error")
         }
       } catch (error) {
         console.error("Erreur soumission:", error)
-        setErrors({ general: "Une erreur inattendue est survenue. Veuillez réessayer." })
+        const msg = "Une erreur inattendue est survenue. Veuillez réessayer."
+        setErrors({ general: msg })
+        showToast(msg, "error")
       } finally {
         setIsSubmitting(false)
       }

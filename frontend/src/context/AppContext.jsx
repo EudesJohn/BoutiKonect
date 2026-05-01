@@ -107,8 +107,17 @@ export function AppProvider({ children }) {
           }))));
 
         if (checkIsAdmin(seller || user)) {
-          supabase.from('profiles').select('*').limit(100)
-            .then(({ data }) => data && setAllUsers(data));
+          supabase.from('profiles').select('*').limit(200)
+            .then(({ data, error }) => {
+              if (error) {
+                console.error('Error fetching profiles:', error);
+                setAllUsers([]);
+              } else if (data) {
+                setAllUsers(data);
+              } else {
+                setAllUsers([]);
+              }
+            });
         }
       } catch (e) { console.warn('BG fetch error:', e); }
       finally { setDataLoading(prev => ({ ...prev, orders: false, users: false })); }

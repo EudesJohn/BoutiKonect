@@ -90,14 +90,45 @@ export default function Admin() {
     )
   }
 
-  let users = getAllUsers()
+  if (allUsers === null) {
+    return (
+      <div className="admin-page">
+        <div className="container">
+          <div className="loading-state" style={{ textAlign: 'center', padding: '50px' }}>
+            <div className="spinner" style={{ 
+              width: '50px', 
+              height: '50px', 
+              border: '4px solid #f3f3f3', 
+              borderTop: '4px solid #FF6A00', 
+              borderRadius: '50%', 
+              animation: 'spin 1s linear infinite',
+              margin: '0 auto 20px'
+            }}></div>
+            <p>Récupération de la base de données...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  let users = allUsers || []
   
   if (users.length === 0) {
     return (
       <div className="admin-page">
         <div className="container">
           <div className="access-denied">
-            <AlertTriangle size={64} />
+            <Users size={64} />
+            <h2>Base de données vide</h2>
+            <p>Aucun utilisateur trouvé dans le système.</p>
+            <button className="btn btn-outline" style={{ marginTop: '20px' }} onClick={() => window.location.reload()}>
+              <RefreshCw size={18} /> Rafraîchir
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
             <h2>Aucun utilisateur trouvé</h2>
             <p>La base de données semble vide.</p>
           </div>
