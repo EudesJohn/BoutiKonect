@@ -13,7 +13,7 @@ const VirtualAssistant = () => {
 
   // Diagnostic de version au montage
   useEffect(() => {
-    console.log("🤖 Assistant BoutiKonect v1.1.5 (Build: 2026-04-30) loaded.");
+    console.log("🤖 Assistant BoutiKonect v1.1.8 (Build: 2026-05-01) loaded.");
   }, []);
   const [messages, setMessages] = useState([
     {

@@ -290,7 +290,7 @@ export function AppProvider({ children }) {
   }, [cart])
 
   useEffect(() => {
-    console.log('🚀 BoutiKonect v1.1.5 (STABLE - 2026-04-30) loaded.');
+    console.log('🚀 BoutiKonect v1.1.8 (STABLE - 2026-05-01) loaded.');
     fetchInitialData();
   }, [fetchInitialData]);
 
