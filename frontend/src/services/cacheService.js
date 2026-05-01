@@ -1,82 +1,56 @@
-
 /**
- * Service de cache avec TTL (Time To Live) et éviction LRU pour le frontend
+ * Service de cache utilisant sessionStorage.
+ * Les données sont conservées tant que l'onglet/navigateur est ouvert.
+ * Tout est effacé automatiquement à la fermeture du navigateur.
  */
-const CACHE_PREFIX = 'BK_cache_'; // Format: BK_cache_EXPIRY_KEYNAME
-
-/**
- * Eviction LRU : supprime l'entrée la plus proche de l'expiration sans parser JSON.
- */
-const evictOldestEntry = () => {
-  const cacheKeys = Object.keys(localStorage)
-    .filter(k => k.startsWith(CACHE_PREFIX))
-    .sort((a, b) => {
-      // Extraire l'expiration du nom de la clé (ex: BK_cache_1710000_myKey)
-      const expA = parseInt(a.split('_')[2]) || 0;
-      const expB = parseInt(b.split('_')[2]) || 0;
-      return expA - expB;
-    });
-
-  if (cacheKeys.length > 0) {
-    const oldestKey = cacheKeys[0];
-    localStorage.removeItem(oldestKey);
-    console.warn(`Cache LRU: evicted ${oldestKey}`);
-    return true;
-  }
-  return false;
-}
+const CACHE_PREFIX = 'BK_session_';
 
 export const cacheService = {
   set: (key, data, ttlHours = 24) => {
     const expires = Date.now() + ttlHours * 60 * 60 * 1000;
-    const cacheKey = `${CACHE_PREFIX}${expires}_${key}`;
-    const stringified = JSON.stringify({ data });
+    const cacheKey = `${CACHE_PREFIX}${key}`;
+    
+    // Supprimer l'ancienne version de la même clé
+    sessionStorage.removeItem(cacheKey);
 
-    // Nettoyer les anciennes versions de cette même clé sémantique
-    Object.keys(localStorage).forEach(k => {
-      if (k.startsWith(CACHE_PREFIX) && k.endsWith(`_${key}`)) {
-        localStorage.removeItem(k);
-      }
-    });
-
-    let success = false;
-    let attempts = 0;
-    while (!success && attempts < 5) {
+    try {
+      sessionStorage.setItem(cacheKey, JSON.stringify({ data, expires }));
+    } catch (e) {
+      // sessionStorage plein : vider les vieux caches et réessayer
+      Object.keys(sessionStorage).forEach(k => {
+        if (k.startsWith(CACHE_PREFIX)) sessionStorage.removeItem(k);
+      });
       try {
-        localStorage.setItem(cacheKey, stringified);
-        success = true;
-      } catch (e) {
-        evictOldestEntry();
-        attempts++;
+        sessionStorage.setItem(cacheKey, JSON.stringify({ data, expires }));
+      } catch {
+        console.warn('Cache session plein, impossible de stocker:', key);
       }
     }
   },
 
   get: (key) => {
-    const fullKey = Object.keys(localStorage).find(k => k.startsWith(CACHE_PREFIX) && k.endsWith(`_${key}`));
-    if (!fullKey) return null;
-
+    const cacheKey = `${CACHE_PREFIX}${key}`;
     try {
-      const expires = parseInt(fullKey.split('_')[2]);
+      const raw = sessionStorage.getItem(cacheKey);
+      if (!raw) return null;
+      const { data, expires } = JSON.parse(raw);
       if (Date.now() > expires) {
-        localStorage.removeItem(fullKey);
+        sessionStorage.removeItem(cacheKey);
         return null;
       }
-      const { data } = JSON.parse(localStorage.getItem(fullKey));
       return data;
-    } catch (e) {
+    } catch {
       return null;
     }
   },
 
   remove: (key) => {
-    const fullKey = Object.keys(localStorage).find(k => k.startsWith(CACHE_PREFIX) && k.endsWith(`_${key}`));
-    if (fullKey) localStorage.removeItem(fullKey);
+    sessionStorage.removeItem(`${CACHE_PREFIX}${key}`);
   },
 
   clearAll: () => {
-    Object.keys(localStorage).forEach(k => {
-      if (k.startsWith(CACHE_PREFIX)) localStorage.removeItem(k);
+    Object.keys(sessionStorage).forEach(k => {
+      if (k.startsWith(CACHE_PREFIX)) sessionStorage.removeItem(k);
     });
   }
 };

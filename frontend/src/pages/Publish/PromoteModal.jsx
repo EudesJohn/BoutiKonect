@@ -2,7 +2,8 @@ import { useContext, useState } from 'react';
 import { motion } from 'framer-motion';
 import { AppContext } from '../../context/AppContextInstance';
 import { openFedaPayOverlay } from '../../services/paymentService';
-import { X, Zap, CircleCheck as CheckCircle, Loader2 as Loader } from 'lucide-react';
+import { generatePromotionReceipt } from '../../services/receiptService';
+import { X, Zap, CircleCheck as CheckCircle, Loader2 as Loader, FileText } from 'lucide-react';
 import './Publish.css';
 
 export default function PromoteModal({ product, onClose }) {
@@ -11,6 +12,7 @@ export default function PromoteModal({ product, onClose }) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
+  const [receiptData, setReceiptData] = useState(null);
 
   const handlePromote = async () => {
     setLoading(true);
@@ -67,7 +69,20 @@ export default function PromoteModal({ product, onClose }) {
 
     if (activationResult && activationResult.success) {
       sessionStorage.removeItem('fedapay_promotion_data');
+      
+      // Sauvegarder les données pour la quittance
+      const receipt = {
+        transactionId: paymentResult.transactionId,
+        productTitle: product.title,
+        productImage: product.images?.[0] || null,
+        plan: plan,
+        seller: seller
+      };
+      setReceiptData(receipt);
       setSuccess(true);
+
+      // Générer et afficher la quittance automatiquement
+      generatePromotionReceipt(receipt);
 
       // ÉTAPE 3 (non-bloquante) : Notifier l'admin en arrière-plan
       try {
@@ -104,6 +119,17 @@ export default function PromoteModal({ product, onClose }) {
             <CheckCircle size={64} className="success-icon" />
             <h3>⭐ Annonce promue avec succès !</h3>
             <p>Votre annonce apparaît désormais en tête des résultats pendant <strong>{PROMOTION_PRICES[selectedPlan]?.name || 'la durée choisie'}</strong>.</p>
+            <p style={{ marginTop: '8px', fontSize: '0.9rem', color: 'var(--text-light)' }}>🖨️ La quittance de paiement s'est ouverte dans un nouvel onglet.</p>
+            {receiptData && (
+              <button
+                className="btn btn-outline"
+                style={{ marginTop: '16px' }}
+                onClick={() => generatePromotionReceipt(receiptData)}
+              >
+                <FileText size={16} />
+                Réimprimer la quittance
+              </button>
+            )}
           </motion.div>
         ) : (
           <>
