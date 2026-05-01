@@ -70,7 +70,7 @@ export function AppProvider({ children }) {
   const fetchInitialData = useCallback(async () => {
     setDataLoading(prev => ({ ...prev, products: true, services: true }))
 
-    // Fetch avec retry automatique en cas de AbortError (cold start Supabase)
+    // Fetch avec retry automatique — ne débloque l'app QUE sur succès ou échec final
     const fetchProductsWithRetry = async (attempt = 1) => {
       const MAX_ATTEMPTS = 4;
       const DELAYS = [0, 2000, 4000, 7000]; // délais croissants en ms
@@ -82,11 +82,15 @@ export function AppProvider({ children }) {
         if (error) {
           const isAbort = error.message?.includes('AbortError') || error.hint?.includes('aborted');
           if (isAbort && attempt < MAX_ATTEMPTS) {
-            console.warn(`⚡ Supabase timeout (tentative ${attempt}/${MAX_ATTEMPTS}), retry dans ${DELAYS[attempt]}ms...`);
+            console.warn(`⚡ Cold start Supabase (tentative ${attempt}/${MAX_ATTEMPTS}), retry dans ${DELAYS[attempt]}ms...`);
             await new Promise(r => setTimeout(r, DELAYS[attempt]));
-            return fetchProductsWithRetry(attempt + 1);
+            return fetchProductsWithRetry(attempt + 1); // PAS de setDataLoading ici
           }
-          throw error;
+          // Erreur définitive — débloquer et signaler
+          console.error('Failed to load products:', error);
+          setErrors(prev => ({ ...prev, products: error.message }));
+          setDataLoading(prev => ({ ...prev, products: false, services: false }));
+          return;
         }
         
         if (data) {
@@ -95,16 +99,19 @@ export function AppProvider({ children }) {
           cacheService.set('initial_products', data, 1);
           console.log(`✅ Produits chargés (tentative ${attempt})`);
         }
+        // Succès — débloquer l'app
+        setDataLoading(prev => ({ ...prev, products: false, services: false }));
+
       } catch (err) {
         const isAbort = err.message?.includes('AbortError') || err.hint?.includes('aborted');
         if (isAbort && attempt < MAX_ATTEMPTS) {
-          console.warn(`⚡ Supabase timeout (tentative ${attempt}/${MAX_ATTEMPTS}), retry dans ${DELAYS[attempt]}ms...`);
+          console.warn(`⚡ Cold start Supabase (tentative ${attempt}/${MAX_ATTEMPTS}), retry dans ${DELAYS[attempt]}ms...`);
           await new Promise(r => setTimeout(r, DELAYS[attempt]));
-          return fetchProductsWithRetry(attempt + 1);
+          return fetchProductsWithRetry(attempt + 1); // PAS de setDataLoading ici
         }
+        // Dernier échec — débloquer avec erreur
         console.error('Failed to load products after all retries:', err);
         setErrors(prev => ({ ...prev, products: err.message }));
-      } finally {
         setDataLoading(prev => ({ ...prev, products: false, services: false }));
       }
     };
