@@ -19,15 +19,14 @@
 
 .receipt-modern {
   background: #ffffff;
-  width: 210mm; /* A4 Width */
-  min-height: 297mm; /* A4 Height */
+  width: 100%;
+  max-width: 800px;
   margin: 0 auto;
   border: 1px solid #e2e8f0;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-  padding: 15mm 20mm;
+  padding: 40px;
   color: #1e293b;
   position: relative;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -293,9 +292,9 @@
   .receipt-modern { 
     box-shadow: none; 
     border: none;
-    padding: 10mm;
-    width: 210mm;
-    height: 297mm;
+    padding: 0;
+    width: 100%;
+    max-width: none;
   }
 }
 

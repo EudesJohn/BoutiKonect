@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { AppContext } from '../../context/AppContextInstance'
 import { supabase } from '../../supabase/client'
 import { categories, serviceCategories } from '../../context/constants'
-import { Plus, Image as ImageIcon, Trash2, CircleCheck as CheckCircle, ArrowLeft, Package, Edit2, X, Store, MessageCircle, ShoppingBag, Zap, Briefcase, TriangleAlert as AlertTriangle, Loader2, MapPin } from 'lucide-react'
+import { Plus, Image as ImageIcon, Trash2, CircleCheck as CheckCircle, ArrowLeft, Package, Edit2, X, Store, MessageCircle, ShoppingBag, Zap, Briefcase, TriangleAlert as AlertTriangle, Loader2, MapPin, RefreshCw } from 'lucide-react'
 import './Publish.css'
 import PromoteModal from './PromoteModal'
 
@@ -796,13 +796,22 @@ export default function Publish() {
                             >
                               <Trash2 size={16} />
                             </button>
-                            {!product.isPromoted && (
+                            {!product.isPromoted ? (
                               <button
                                 className="btn btn-highlight btn-small"
                                 onClick={() => handlePromoteClick(product)}
                                 title="Mettre en avant"
                               >
                                 <Zap size={16} />
+                              </button>
+                            ) : (
+                              <button
+                                className="btn btn-highlight btn-small"
+                                onClick={() => handlePromoteClick(product)}
+                                title="Prolonger la promotion"
+                                style={{ background: '#f59e0b', color: '#fff' }}
+                              >
+                                <RefreshCw size={16} />
                               </button>
                             )}
                           </div>
@@ -856,13 +865,22 @@ export default function Publish() {
                             >
                               <Trash2 size={16} />
                             </button>
-                            {!service.isPromoted && (
+                            {!service.isPromoted ? (
                               <button
                                 className="btn btn-highlight btn-small"
                                 onClick={() => handlePromoteClick(service)}
                                 title="Mettre en avant"
                               >
                                 <Zap size={16} />
+                              </button>
+                            ) : (
+                              <button
+                                className="btn btn-highlight btn-small"
+                                onClick={() => handlePromoteClick(service)}
+                                title="Prolonger la promotion"
+                                style={{ background: '#f59e0b', color: '#fff' }}
+                              >
+                                <RefreshCw size={16} />
                               </button>
                             )}
                           </div>

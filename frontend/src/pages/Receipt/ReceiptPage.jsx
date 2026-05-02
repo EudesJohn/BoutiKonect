@@ -136,15 +136,16 @@ export default function ReceiptPage() {
     setIsGenerating(true);
     const element = document.getElementById('receipt-content-to-export');
     const opt = {
-      margin: 0, // No margins, handled by CSS
+      margin: 10, // Add 10mm margin for better print safety
       filename: `Quittance_BoutiKonect_${data.transactionId || 'export'}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
+      image: { type: 'jpeg', quality: 1.0 },
       html2canvas: { 
-        scale: 2, 
+        scale: 4, // Very high scale for crisp text
         useCORS: true, 
         letterRendering: true, 
         backgroundColor: '#ffffff',
-        logging: false
+        scrollY: 0,
+        windowWidth: 1200 // Larger window width during capture for desktop-like layout
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
@@ -198,12 +199,6 @@ export default function ReceiptPage() {
             <ArrowLeft size={20} /> Retour
           </button>
           <div className="receipt-actions">
-            <button 
-              onClick={() => navigate(`/publish?promote=${data.productId || searchParams.get('pid')}`)}
-              className="btn btn-outline btn-extend"
-            >
-              <RefreshCw size={18} /> Prolonger ma promotion
-            </button>
             <button
               onClick={handleDownloadPDF}
               className={`btn btn-primary ${isGenerating ? 'loading' : ''}`}
