@@ -140,7 +140,7 @@ export default function ReceiptPage() {
       filename: `Quittance_BoutiKonect_${data.transactionId || 'export'}.pdf`,
       image: { type: 'jpeg', quality: 1.0 },
       html2canvas: { 
-        scale: 4, 
+        scale: 2, 
         useCORS: true, 
         letterRendering: true, 
         backgroundColor: '#ffffff',

@@ -20,9 +20,9 @@
 .receipt-modern {
   background: #ffffff;
   width: 210mm;
-  height: 297mm;
+  height: 296mm; /* Slightly less than A4 to be safe */
   margin: 0 auto;
-  padding: 15mm 20mm;
+  padding: 10mm 15mm; /* Reduced padding */
   color: #1e293b;
   position: relative;
   display: flex;
@@ -31,6 +31,7 @@
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
   border: 1px solid #e2e8f0;
   transform-origin: top center;
+  overflow: hidden;
 }
 
 /* Responsivité sur écran : on réduit l'échelle si la fenêtre est petite */
@@ -150,8 +151,8 @@
 .info-section {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 30px;
-  margin-bottom: 30px;
+  gap: 20px;
+  margin-bottom: 20px;
 }
 
 .product-preview-section {
@@ -213,8 +214,8 @@
 .billing-box {
   background: #f1f5f9;
   border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 20px; /* Reduced from 30px */
+  padding: 15px;
+  margin-bottom: 15px;
 }
 
 .billing-title {
@@ -290,10 +291,10 @@
 }
 
 .footer-legal-flow {
-  margin-top: auto;
+  margin-top: 10mm; /* Fixed margin instead of auto to avoid pushing to edge */
   text-align: center;
   border-top: 1px dashed #cbd5e1;
-  padding-top: 15px;
+  padding-top: 10px;
   width: 100%;
 }
 
