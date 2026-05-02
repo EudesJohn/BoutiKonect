@@ -19,16 +19,46 @@
 
 .receipt-modern {
   background: #ffffff;
-  width: 100%;
-  max-width: 800px;
+  width: 210mm;
+  height: 297mm;
   margin: 0 auto;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-  padding: 40px;
+  padding: 15mm 20mm;
   color: #1e293b;
   position: relative;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  transform-origin: top center;
+}
+
+/* Responsivité sur écran : on réduit l'échelle si la fenêtre est petite */
+@media screen and (max-width: 220mm) {
+  .receipt-modern {
+    transform: scale(0.9);
+  }
+}
+@media screen and (max-width: 200mm) {
+  .receipt-modern {
+    transform: scale(0.8);
+  }
+}
+@media screen and (max-width: 180mm) {
+  .receipt-modern {
+    transform: scale(0.7);
+  }
+}
+@media screen and (max-width: 150mm) {
+  .receipt-modern {
+    transform: scale(0.6);
+  }
+}
+@media screen and (max-width: 480px) {
+  .receipt-modern {
+    transform: scale(0.45);
+    margin-top: -150px; /* Compensation pour le scale */
+  }
 }
 
 .modern-header {
@@ -184,7 +214,7 @@
   background: #f1f5f9;
   border-radius: 12px;
   padding: 20px;
-  margin-bottom: 30px;
+  margin-bottom: 20px; /* Reduced from 30px */
 }
 
 .billing-title {
@@ -263,7 +293,7 @@
   margin-top: auto;
   text-align: center;
   border-top: 1px dashed #cbd5e1;
-  padding-top: 20px;
+  padding-top: 15px;
   width: 100%;
 }
 
