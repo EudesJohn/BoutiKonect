@@ -12,6 +12,7 @@ import SplashScreen from './components/SplashScreen/SplashScreen'
 import UpdatePrompt from './components/UpdatePrompt/UpdatePrompt'
 import OfflinePage from './components/OfflinePage/OfflinePage'
 import { useState, useEffect } from 'react'
+import { ErrorBoundary } from './components/ErrorBoundary/ErrorBoundary'
 import './App.css'
 
 import Home from './pages/Home/Home'
@@ -91,34 +92,36 @@ function App() {
       </div>
 
       <main className="main-content">
-        <AnimatePresence mode="wait">
-          <Routes location={location} key={location.pathname}>
-            <Route path="/" element={<PageTransition><Home /></PageTransition>} />
-            <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
-            <Route path="/products" element={<PageTransition><Products /></PageTransition>} />
-            <Route path="/product/:id" element={<PageTransition><ProductDetail /></PageTransition>} />
-            <Route path="/services" element={<PageTransition><Services /></PageTransition>} />
-            <Route path="/service/:id" element={<PageTransition><ServiceDetail /></PageTransition>} />
-            <Route path="/publish" element={<ProtectedRoute><PageTransition><Publish /></PageTransition></ProtectedRoute>} />
-            <Route path="/register" element={<GuestRoute><PageTransition><Register /></PageTransition></GuestRoute>} />
-            <Route path="/login" element={<GuestRoute><PageTransition><Login /></PageTransition></GuestRoute>} />
-            <Route path="/profile" element={<ProtectedRoute><PageTransition><Profile /></PageTransition></ProtectedRoute>} />
-            <Route path="/forgot-password" element={<PageTransition><ForgotPassword /></PageTransition>} />
-            <Route path="/my-services" element={<ProtectedRoute><PageTransition><MyServices /></PageTransition></ProtectedRoute>} />
-            <Route path="/cart" element={<PageTransition><Cart /></PageTransition>} />
-            <Route path="/payment" element={<ProtectedRoute><PageTransition><Payment /></PageTransition></ProtectedRoute>} />
-            <Route path="/payment-callback" element={<ProtectedRoute><PageTransition><PaymentCallback /></PageTransition></ProtectedRoute>} />
-            <Route path="/promotion/success" element={<ProtectedRoute><PageTransition><PromotionCallback /></PageTransition></ProtectedRoute>} />
-            <Route path="/quittance" element={<ProtectedRoute><PageTransition><ReceiptPage /></PageTransition></ProtectedRoute>} />
-            <Route path="/admin" element={<AdminRoute><PageTransition><Admin /></PageTransition></AdminRoute>} />
-            <Route path="/seller/:sellerId" element={<PageTransition><SellerProfile /></PageTransition>} />
-            <Route path="/terms" element={<PageTransition><Terms /></PageTransition>} />
-            <Route path="/privacy" element={<PageTransition><Privacy /></PageTransition>} />
-            <Route path="/my-products" element={<ProtectedRoute><PageTransition><MyProducts /></PageTransition></ProtectedRoute>} />
-            <Route path="/seller-dashboard" element={<ProtectedRoute><PageTransition><SellerDashboard /></PageTransition></ProtectedRoute>} />
-            <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
-          </Routes>
-        </AnimatePresence>
+        <ErrorBoundary>
+          <AnimatePresence mode="wait">
+            <Routes location={location} key={location.pathname}>
+              <Route path="/" element={<PageTransition><Home /></PageTransition>} />
+              <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
+              <Route path="/products" element={<PageTransition><Products /></PageTransition>} />
+              <Route path="/product/:id" element={<PageTransition><ProductDetail /></PageTransition>} />
+              <Route path="/services" element={<PageTransition><Services /></PageTransition>} />
+              <Route path="/service/:id" element={<PageTransition><ServiceDetail /></PageTransition>} />
+              <Route path="/publish" element={<ProtectedRoute><PageTransition><Publish /></PageTransition></ProtectedRoute>} />
+              <Route path="/register" element={<GuestRoute><PageTransition><Register /></PageTransition></GuestRoute>} />
+              <Route path="/login" element={<GuestRoute><PageTransition><Login /></PageTransition></GuestRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><PageTransition><Profile /></PageTransition></ProtectedRoute>} />
+              <Route path="/forgot-password" element={<PageTransition><ForgotPassword /></PageTransition>} />
+              <Route path="/my-services" element={<ProtectedRoute><PageTransition><MyServices /></PageTransition></ProtectedRoute>} />
+              <Route path="/cart" element={<PageTransition><Cart /></PageTransition>} />
+              <Route path="/payment" element={<ProtectedRoute><PageTransition><Payment /></PageTransition></ProtectedRoute>} />
+              <Route path="/payment-callback" element={<ProtectedRoute><PageTransition><PaymentCallback /></PageTransition></ProtectedRoute>} />
+              <Route path="/promotion/success" element={<ProtectedRoute><PageTransition><PromotionCallback /></PageTransition></ProtectedRoute>} />
+              <Route path="/quittance" element={<ProtectedRoute><PageTransition><ReceiptPage /></PageTransition></ProtectedRoute>} />
+              <Route path="/admin" element={<AdminRoute><PageTransition><Admin /></PageTransition></AdminRoute>} />
+              <Route path="/seller/:sellerId" element={<PageTransition><SellerProfile /></PageTransition>} />
+              <Route path="/terms" element={<PageTransition><Terms /></PageTransition>} />
+              <Route path="/privacy" element={<PageTransition><Privacy /></PageTransition>} />
+              <Route path="/my-products" element={<ProtectedRoute><PageTransition><MyProducts /></PageTransition></ProtectedRoute>} />
+              <Route path="/seller-dashboard" element={<ProtectedRoute><PageTransition><SellerDashboard /></PageTransition></ProtectedRoute>} />
+              <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+            </Routes>
+          </AnimatePresence>
+        </ErrorBoundary>
       </main>
       <Footer />
       <VirtualAssistant />

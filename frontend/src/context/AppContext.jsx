@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
-// Vercel Trigger: 2026-04-29 - FINAL STABLE - Promotions + RLS Orders + Realtime Seller/Admin
 import { supabase } from '../supabase/client'
 import { isAdminConfigured, getAdminInfo } from '../services/adminAuth'
 import { logoutUser as authLogoutUser, loginUser as authServiceLogin, registerUser as authRegisterUser } from '../services/authService'
@@ -15,6 +14,14 @@ import { sendPasswordResetEmail, updateEmailWithVerification } from '../services
 import { confirmPromotionPayment } from '../services/paymentService'
 import { useProductSearch } from '../hooks/useProductSearch'
 import { AppContext } from './AppContextInstance'
+
+// === CONSTANTES APPLICATIVES ===
+const FETCH_MAX_ATTEMPTS = 4
+const FETCH_RETRY_DELAYS_MS = [0, 2000, 4000, 7000]
+const AUTH_TIMEOUT_MS = 10_000
+const APP_SAFETY_TIMEOUT_MS = 15_000
+const PRODUCTS_FETCH_LIMIT = 100
+const REVIEWS_FETCH_LIMIT = 50
 
 /**
  * AppProvider - Gestionnaire central du state de l'application.
@@ -38,8 +45,9 @@ export function AppProvider({ children }) {
     setToasts(prev => prev.filter(t => t.id !== id))
   }, [])
 
-  const authProcessing = useRef(false)
+  // lastSessionId: empêche le re-traitement d'une session déjà connue
   const lastSessionId = useRef(null)
+  // authControllerRef: annule les requêtes profil en vol si la session change avant la réponse
   const authControllerRef = useRef(null)
 
   // === LIFTED FUNCTIONS (Avoid TDZ) ===
@@ -51,7 +59,6 @@ export function AppProvider({ children }) {
         .eq('seller_id', userId);
 
       if (!error && count > 0 && !profile.is_seller) {
-        console.log(`🔧 Auto-repair: User ${userId} has ${count} products. Updating status...`);
         const { data: updatedProfile } = await supabase
           .from('profiles')
           .update({ is_seller: true })
@@ -72,17 +79,16 @@ export function AppProvider({ children }) {
 
     // Fetch avec retry automatique — ne débloque l'app QUE sur succès ou échec final
     const fetchProductsWithRetry = async (attempt = 1) => {
-      const MAX_ATTEMPTS = 4;
-      const DELAYS = [0, 2000, 4000, 7000]; // délais croissants en ms
+      const MAX_ATTEMPTS = FETCH_MAX_ATTEMPTS
+      const DELAYS = FETCH_RETRY_DELAYS_MS
       
       try {
         const { data, error } = await supabase
-          .from('products').select('*').order('created_at', { ascending: false }).limit(100);
+          .from('products').select('*').order('created_at', { ascending: false }).limit(PRODUCTS_FETCH_LIMIT);
         
         if (error) {
           const isAbort = error.message?.includes('AbortError') || error.hint?.includes('aborted');
           if (isAbort && attempt < MAX_ATTEMPTS) {
-            console.warn(`⚡ Cold start Supabase (tentative ${attempt}/${MAX_ATTEMPTS}), retry dans ${DELAYS[attempt]}ms...`);
             await new Promise(r => setTimeout(r, DELAYS[attempt]));
             return fetchProductsWithRetry(attempt + 1); // PAS de setDataLoading ici
           }
@@ -94,20 +100,18 @@ export function AppProvider({ children }) {
         }
         
         if (data) {
-          const mappedData = data.map(mapItemFromDB).filter(Boolean);
-          setProducts(mappedData);
-          cacheService.set('initial_products', data, 1);
-          console.log(`✅ Produits chargés (tentative ${attempt})`);
+          const mappedData = data.map(mapItemFromDB).filter(Boolean)
+          setProducts(mappedData)
+          cacheService.set('initial_products', data, 1)
         }
         // Succès — débloquer l'app
         setDataLoading(prev => ({ ...prev, products: false, services: false }));
 
       } catch (err) {
-        const isAbort = err.message?.includes('AbortError') || err.hint?.includes('aborted');
+        const isAbort = err.message?.includes('AbortError') || err.hint?.includes('aborted')
         if (isAbort && attempt < MAX_ATTEMPTS) {
-          console.warn(`⚡ Cold start Supabase (tentative ${attempt}/${MAX_ATTEMPTS}), retry dans ${DELAYS[attempt]}ms...`);
-          await new Promise(r => setTimeout(r, DELAYS[attempt]));
-          return fetchProductsWithRetry(attempt + 1); // PAS de setDataLoading ici
+          await new Promise(r => setTimeout(r, DELAYS[attempt]))
+          return fetchProductsWithRetry(attempt + 1)
         }
         // Dernier échec — débloquer avec erreur
         console.error('Failed to load products after all retries:', err);
@@ -119,7 +123,7 @@ export function AppProvider({ children }) {
     fetchProductsWithRetry();
 
     // Fetch reviews (public)
-    supabase.from('reviews').select('*').limit(50)
+    supabase.from('reviews').select('*').limit(REVIEWS_FETCH_LIMIT)
       .then(({ data }) => {
         if (data) setReviews(data.map(r => ({
           id: r.id, productId: r.product_id, reviewerName: r.reviewer_name,
@@ -147,7 +151,7 @@ export function AppProvider({ children }) {
     let isInitialized = false;
     const authTimeout = setTimeout(() => {
       if (!isInitialized) { setAuthLoading(false); isInitialized = true; }
-    }, 10000);
+    }, AUTH_TIMEOUT_MS);
 
     if (!supabase || !supabase.auth) {
       setAuthLoading(false);
@@ -225,11 +229,11 @@ export function AppProvider({ children }) {
   }, [])
 
   useEffect(() => {
-    // Timeout de sécurité : 15 secondes max, après quoi l'app s'affiche quoi qu'il arrive
+    // Timeout de sécurité : après quoi l'app s'affiche quoi qu'il arrive
     const safetyTimer = setTimeout(() => {
       setIsAppReady(true);
       if (window.hideAppLoader) window.hideAppLoader();
-    }, 15000);
+    }, APP_SAFETY_TIMEOUT_MS);
 
     // Condition principale : auth + produits seulement (les avis chargent en arrière-plan)
     if (!authLoading && !dataLoading.products) {
@@ -291,11 +295,15 @@ export function AppProvider({ children }) {
   }, [cart])
 
   useEffect(() => {
-    console.log('🚀 BoutiKonect v1.1.9 (STABLE - 2026-05-01) loaded.');
-    fetchInitialData();
+    fetchInitialData()
   }, [fetchInitialData]);
 
+  // NOTE architecture stockage :
+  // - sessionStorage (clé 'bk-auth-token') : token JWT Supabase — géré exclusivement par le client Supabase
+  // - secureStorage/localStorage : données de profil chiffrées (user, seller, cart) — géré par AppContext
+  // Ces deux systèmes sont complémentaires et n'entrent pas en conflit.
   useEffect(() => {
+    // Canal produits : toujours actif (marketplace publique)
     const productsSub = supabase.channel('public:products')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, (payload) => {
         if (payload.eventType === 'INSERT') {
@@ -308,10 +316,7 @@ export function AppProvider({ children }) {
           }
         } else if (payload.eventType === 'UPDATE') {
           setProducts(prev => prev.map(p => {
-            if (p.id === payload.new.id) {
-              // Merge with existing product to avoid losing fields not in the payload
-              return mapItemFromDB({ ...p, ...payload.new })
-            }
+            if (p.id === payload.new.id) return mapItemFromDB({ ...p, ...payload.new })
             return p
           }))
         } else if (payload.eventType === 'DELETE') {
@@ -319,19 +324,16 @@ export function AppProvider({ children }) {
         }
       }).subscribe()
 
+    // Canal profils : mise à jour du profil courant en temps réel
     const profilesSub = supabase.channel('public:profiles')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, (payload) => {
-        if (payload.eventType === 'UPDATE') {
-          const updatedProfile = payload.new
-          setAllUsers(prev => prev.map(u => u.id === updatedProfile.id ? { ...u, ...updatedProfile } : u))
-          
-          // Also update current user if needed
-          if (user && updatedProfile.id === user.id) setUser(prev => ({ ...prev, ...updatedProfile }))
-          if (seller && updatedProfile.id === seller.id) setSeller(prev => ({ ...prev, ...updatedProfile }))
-        }
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, (payload) => {
+        const updatedProfile = payload.new
+        setAllUsers(prev => prev.map(u => u.id === updatedProfile.id ? { ...u, ...updatedProfile } : u))
+        if (user && updatedProfile.id === user.id) setUser(prev => ({ ...prev, ...updatedProfile }))
+        if (seller && updatedProfile.id === seller.id) setSeller(prev => ({ ...prev, ...updatedProfile }))
       }).subscribe()
 
-    // Realtime pour les commandes - essentiel pour la visibilité vendeur
+    // Canal commandes : essentiel pour vendeurs et acheteurs
     const ordersSub = supabase.channel('public:orders')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
         if (payload.eventType === 'INSERT') setOrders(prev => [mapOrderFromDB(payload.new), ...prev])
@@ -339,41 +341,43 @@ export function AppProvider({ children }) {
         else if (payload.eventType === 'DELETE') setOrders(prev => prev.filter(o => o.id !== payload.old.id))
       }).subscribe()
 
+    // Canal avis : public
     const reviewsSub = supabase.channel('public:reviews')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reviews' }, (payload) => {
         const mapReview = (r) => r ? ({
           id: r.id, productId: r.product_id, reviewerName: r.reviewer_name,
-          reviewerId: r.reviewer_id, reviewerAvatar: r.reviewer_avatar, rating: r.rating, comment: r.comment, createdAt: r.created_at
+          reviewerId: r.reviewer_id, reviewerAvatar: r.reviewer_avatar,
+          rating: r.rating, comment: r.comment, createdAt: r.created_at
         }) : null
         if (payload.eventType === 'INSERT') {
-          const mapped = mapReview(payload.new);
+          const mapped = mapReview(payload.new)
           if (mapped) setReviews(prev => [mapped, ...prev])
-        }
-        else if (payload.eventType === 'UPDATE') {
-          const mapped = mapReview(payload.new);
+        } else if (payload.eventType === 'UPDATE') {
+          const mapped = mapReview(payload.new)
           if (mapped) setReviews(prev => prev.map(r => r.id === payload.new.id ? mapped : r))
+        } else if (payload.eventType === 'DELETE') {
+          setReviews(prev => prev.filter(r => r.id !== payload.old.id))
         }
-        else if (payload.eventType === 'DELETE') setReviews(prev => prev.filter(r => r.id !== payload.old.id))
       }).subscribe()
 
-    // Realtime pour les notifications admin - signalements en temps réel
-    const adminNotifSub = supabase.channel('public:admin_notifications')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'admin_notifications' }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          setAdminNotifications(prev => [payload.new, ...prev])
-        } else if (payload.eventType === 'UPDATE') {
-          setAdminNotifications(prev => prev.map(n => n.id === payload.new.id ? payload.new : n))
-        } else if (payload.eventType === 'DELETE') {
-          setAdminNotifications(prev => prev.filter(n => n.id !== payload.old.id))
-        }
-      }).subscribe()
+    // Canal notifications admin : UNIQUEMENT pour les admins (économise un canal Supabase pour les users normaux)
+    const currentUser = seller || user
+    const isAdmin = currentUser && checkIsAdmin(currentUser)
+    const adminNotifSub = isAdmin
+      ? supabase.channel('public:admin_notifications')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'admin_notifications' }, (payload) => {
+            if (payload.eventType === 'INSERT') setAdminNotifications(prev => [payload.new, ...prev])
+            else if (payload.eventType === 'UPDATE') setAdminNotifications(prev => prev.map(n => n.id === payload.new.id ? payload.new : n))
+            else if (payload.eventType === 'DELETE') setAdminNotifications(prev => prev.filter(n => n.id !== payload.old.id))
+          }).subscribe()
+      : null
 
     return () => {
       supabase.removeChannel(productsSub)
       supabase.removeChannel(profilesSub)
       supabase.removeChannel(ordersSub)
       supabase.removeChannel(reviewsSub)
-      supabase.removeChannel(adminNotifSub)
+      if (adminNotifSub) supabase.removeChannel(adminNotifSub)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -386,29 +390,34 @@ export function AppProvider({ children }) {
     }
     const fetchUserData = async () => {
       setDataLoading(prev => ({ ...prev, orders: true, users: true }))
-      
-      const isAdmin = checkIsAdmin(currentUser)
-      
-      // Fetch orders: all if admin, else only user's orders
-      let ordersQuery = supabase.from('orders').select('*')
-      if (!isAdmin) {
-        ordersQuery = ordersQuery.or(`seller_id.eq.${currentUser.id},buyer_id.eq.${currentUser.id}`)
-      }
-      
-      const { data: ordersData } = await ordersQuery.order('created_at', { ascending: false })
-      if (ordersData) setOrders(ordersData.map(mapOrderFromDB))
+      try {
+        const isAdmin = checkIsAdmin(currentUser)
 
-      if (isAdmin) {
-        const { data: usersData } = await supabase.from('profiles').select('*')
-        if (usersData) setAllUsers(usersData)
-        
-        const { data: notificationsData } = await supabase.from('admin_notifications')
-          .select('*')
-          .order('created_at', { ascending: false })
-        if (notificationsData) setAdminNotifications(notificationsData)
+        // Fetch orders: all if admin, else only user's orders
+        let ordersQuery = supabase.from('orders').select('*')
+        if (!isAdmin) {
+          ordersQuery = ordersQuery.or(`seller_id.eq.${currentUser.id},buyer_id.eq.${currentUser.id}`)
+        }
+
+        const { data: ordersData, error: ordersError } = await ordersQuery.order('created_at', { ascending: false })
+        if (ordersError) throw ordersError
+        if (ordersData) setOrders(ordersData.map(mapOrderFromDB))
+
+        if (isAdmin) {
+          const { data: usersData } = await supabase.from('profiles').select('*')
+          if (usersData) setAllUsers(usersData)
+
+          const { data: notificationsData } = await supabase.from('admin_notifications')
+            .select('*')
+            .order('created_at', { ascending: false })
+          if (notificationsData) setAdminNotifications(notificationsData)
+        }
+      } catch (err) {
+        console.error('fetchUserData error:', err)
+        setErrors(prev => ({ ...prev, orders: err.message }))
+      } finally {
+        setDataLoading(prev => ({ ...prev, orders: false, users: false }))
       }
-      
-      setDataLoading(prev => ({ ...prev, orders: false, users: false }))
     }
     fetchUserData()
   }, [seller, user])
@@ -511,92 +520,73 @@ export function AppProvider({ children }) {
     return await confirmPromotionPayment(productId, plan, currentUser.id);
   };
 
+  // --- Helpers internes pour activatePromotionInstant ---
+  const _getValidSession = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session) return session
+    const { data: { user: freshUser } } = await supabase.auth.getUser()
+    if (freshUser) return null // session absente mais utilisateur connu — laisser continuer
+    // Dernière tentative
+    const { data: { session: retrySession } } = await supabase.auth.getSession()
+    if (!retrySession) throw new Error("Votre session a expiré. Veuillez vous reconnecter pour valider l'activation.")
+    return retrySession
+  }
+
+  const _activateViaDirectUpdate = async (productId, days, transactionId, planName) => {
+    const endDate = new Date(Date.now() + days * 24 * 60 * 60 * 1000)
+    const { data, error } = await supabase
+      .from('products')
+      .update({
+        is_promoted: true,
+        promotion_end_date: endDate.toISOString(),
+        last_transaction_id: transactionId,
+        promotion_plan_name: planName
+      })
+      .eq('id', productId)
+      .select()
+    if (error) throw error
+    if (!data || data.length === 0) throw new Error('Produit non trouvé ou droits insuffisants.')
+    const updatedProduct = mapItemFromDB(data[0])
+    setProducts(prev => prev.map(p => p.id === productId ? updatedProduct : p))
+    showToast('⭐ Badge Vedette activé !', 'success')
+    return { success: true }
+  }
+
   const activatePromotionInstant = async (productId, days, transactionId = null, planName = null) => {
     try {
-      console.log('🚀 Tentative d\'activation promotion pour:', productId);
-      
-      // 1. Forcer la récupération de la session pour s'assurer que le JWT est envoyé
-      let { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      let { data: { user: freshUser } } = await supabase.auth.getUser();
-      
-      if (!session && freshUser) {
-        console.log('✅ Utilisateur trouvé via getUser(), poursuite de l\'activation...');
-      } else if (!session && !freshUser) {
-        console.warn('⚠️ Aucun utilisateur trouvé, tentative finale de rafraîchissement...');
-        const { data: { session: secondSession } } = await supabase.auth.getSession();
-        if (!secondSession) {
-          console.error('❌ Impossible de restaurer la session. L\'utilisateur est anonyme.');
-          return { success: false, error: "Votre session a expiré ou est introuvable. Veuillez vous reconnecter pour valider l'activation." };
-        }
-      }
+      await _getValidSession()
 
-      console.log('✅ Session active pour:', session.user.id);
-      
-      // 2. Appel RPC avec la session garantie
       const { data: rpcStatus, error: rpcError } = await supabase.rpc('activate_product_promotion', {
         p_product_id: productId,
         p_days: days,
         p_transaction_id: transactionId,
         p_plan_name: planName
-      });
+      })
 
       if (rpcError) {
-        console.error('activatePromotionInstant - Erreur RPC:', rpcError);
-        // Fallback sur l'update classique si le RPC n'est pas encore déployé
+        // Fallback si le RPC n'est pas déployé
         if (rpcError.message?.includes('not found') || rpcError.message?.includes('function')) {
-          console.log('⚠️ RPC non trouvé, fallback sur update classique...');
-          const now = new Date();
-          const endDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
-          
-          const { data, error } = await supabase
-            .from('products')
-            .update({ 
-              is_promoted: true, 
-              promotion_end_date: endDate.toISOString(),
-              last_transaction_id: transactionId,
-              promotion_plan_name: planName
-            })
-            .eq('id', productId)
-            .select();
-
-          if (error) throw error;
-          if (!data || data.length === 0) throw new Error("Produit non trouvé ou droits insuffisants.");
-          
-          // Mise à jour state local
-          const updatedProduct = mapItemFromDB(data[0]);
-          setProducts(prev => prev.map(p => p.id === productId ? updatedProduct : p));
-          showToast("⭐ Badge Vedette activé !", "success");
-          return { success: true };
+          return await _activateViaDirectUpdate(productId, days, transactionId, planName)
         }
-        throw rpcError;
+        throw rpcError
       }
 
-      const isSuccess = rpcStatus === 'SUCCESS' || (rpcStatus && typeof rpcStatus === 'object' && rpcStatus.success);
+      const isSuccess = rpcStatus === 'SUCCESS' || (rpcStatus && typeof rpcStatus === 'object' && rpcStatus.success)
 
       if (isSuccess) {
-        // Rafraîchir le produit localement pour avoir les nouvelles dates et infos transaction
-        const { data: refreshed } = await supabase.from('products').select('*').eq('id', productId).single();
-        if (refreshed) {
-          const mapped = mapItemFromDB(refreshed);
-          setProducts(prev => prev.map(p => p.id === productId ? mapped : p));
-        }
-        showToast("⭐ Félicitations ! Votre produit est maintenant en Vedette.", "success");
-        return { success: true };
-      } else {
-        console.warn('activatePromotionInstant: RPC a retourné un échec:', rpcStatus);
-        let errorMsg = "Le serveur a refusé l'activation.";
-        
-        if (typeof rpcStatus === 'string' && rpcStatus.startsWith('ERROR:')) {
-          errorMsg = rpcStatus.replace('ERROR: ', '');
-        } else if (rpcStatus && typeof rpcStatus === 'object' && rpcStatus.error) {
-          errorMsg = rpcStatus.error;
-        }
-        
-        return { success: false, error: errorMsg };
+        const { data: refreshed } = await supabase.from('products').select('*').eq('id', productId).single()
+        if (refreshed) setProducts(prev => prev.map(p => p.id === productId ? mapItemFromDB(refreshed) : p))
+        showToast('⭐ Félicitations ! Votre produit est maintenant en Vedette.', 'success')
+        return { success: true }
       }
+
+      let errorMsg = "Le serveur a refusé l'activation."
+      if (typeof rpcStatus === 'string' && rpcStatus.startsWith('ERROR:')) errorMsg = rpcStatus.replace('ERROR: ', '')
+      else if (rpcStatus?.error) errorMsg = rpcStatus.error
+      return { success: false, error: errorMsg }
     } catch (err) {
-      console.error('activatePromotionInstant error:', err);
-      return { success: false, error: err.message || "Erreur de communication avec la base de données." };
+      console.error('activatePromotionInstant:', err)
+      return { success: false, error: err.message || 'Erreur de communication avec la base de données.' }
     }
   };
 
@@ -996,33 +986,30 @@ export function AppProvider({ children }) {
   const authLogoutUser = async () => {
     try {
       setAuthLoading(true);
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error('Logout error:', err);
+    } finally {
       setUser(null);
       setSeller(null);
       saveSecureUser(null);
       saveSecureSeller(null);
-      
-      // Nettoyage manuel des cookies et storage pour éviter les sessions fantômes
-      localStorage.removeItem('supabase.auth.token');
-      localStorage.removeItem('boutikonect-auth-token');
-      sessionStorage.removeItem('bk-auth-token');
       secureClear();
-      
-      showToast("Déconnexion réussie", "info");
-      
-      // Redirection forcée pour nettoyer tout état résiduel (Service Workers, etc.)
-      window.location.href = '/';
-    } catch (err) {
-      console.error('Logout error:', err);
-      showToast("Erreur lors de la déconnexion", "error");
-      // Fallback: force reset
-      setUser(null);
-      setSeller(null);
-      window.location.href = '/';
-    } finally {
+
+      // Nettoyage complet : clés Supabase sb-* + clés legacy
+      const keysToRemove = []
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i)
+        if (k && (k.startsWith('sb-') || k === 'supabase.auth.token' || k === 'boutikonect-auth-token')) {
+          keysToRemove.push(k)
+        }
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k))
+      sessionStorage.removeItem('bk-auth-token')
+
+      showToast('Déconnexion réussie', 'info');
       setAuthLoading(false);
+      window.location.href = '/';
     }
   };
 
