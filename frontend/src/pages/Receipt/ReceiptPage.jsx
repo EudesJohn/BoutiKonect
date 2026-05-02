@@ -145,7 +145,24 @@ export default function ReceiptPage() {
         letterRendering: true, 
         backgroundColor: '#ffffff',
         scrollY: 0,
-        windowWidth: 794 // Approx 210mm at 96dpi
+        windowWidth: 794,
+        onclone: (clonedDoc) => {
+          // Masquer les éléments globaux du site dans le clone utilisé pour le PDF
+          const selectorsToHide = ['.navbar', '.footer', '.virtual-assistant', '.toasts-portal', '.pwa-install-prompt', '.receipt-nav'];
+          selectorsToHide.forEach(selector => {
+            const elements = clonedDoc.querySelectorAll(selector);
+            elements.forEach(el => el.style.display = 'none');
+          });
+          
+          // S'assurer que le conteneur de la quittance est bien visible et sans transformations
+          const receipt = clonedDoc.getElementById('receipt-content-to-export');
+          if (receipt) {
+            receipt.style.transform = 'none';
+            receipt.style.margin = '0';
+            receipt.style.boxShadow = 'none';
+            receipt.style.border = 'none';
+          }
+        }
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };

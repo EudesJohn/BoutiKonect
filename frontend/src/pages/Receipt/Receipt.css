@@ -317,14 +317,18 @@
 }
 
 @media print {
-  .no-print { display: none !important; }
-  .receipt-page { background: #fff; padding: 0; }
+  .no-print, .navbar, .footer, .virtual-assistant, .toasts-portal, .pwa-install-prompt, .receipt-nav { 
+    display: none !important; 
+  }
+  .receipt-page { background: #fff; padding: 0; margin: 0; }
   .receipt-modern { 
     box-shadow: none; 
     border: none;
     padding: 0;
-    width: 100%;
-    max-width: none;
+    width: 210mm;
+    height: 297mm;
+    transform: none !important;
+    margin: 0 !important;
   }
 }
 
