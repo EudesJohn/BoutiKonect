@@ -42,6 +42,8 @@ export default function PromoteModal({ product, onClose }) {
     // Sauvegarder en sessionStorage pour récupérer si FedaPay redirige
     const promoData = {
       productId: product.id,
+      productTitle: product.title,
+      productImage: product.images?.[0] || null,
       plan: plan,
       uid: seller?.id,
       type: product.type
@@ -73,6 +75,7 @@ export default function PromoteModal({ product, onClose }) {
       
       // Sauvegarder les données pour la quittance
       const receipt = {
+        productId: product.id,
         transactionId: paymentResult.transactionId,
         productTitle: product.title,
         productImage: product.images?.[0] || null,

@@ -1,7 +1,7 @@
 import { useEffect, useState, useContext, useCallback } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Download, ArrowLeft, ShieldCheck } from 'lucide-react'; // Supprimé: Zap, ExternalLink (non utilisés)
+import { Download, ArrowLeft, ShieldCheck, RefreshCw } from 'lucide-react';
 import { AppContext } from '../../context/AppContextInstance';
 import './Receipt.css';
 
@@ -92,6 +92,7 @@ export default function ReceiptPage() {
 
       if (item?.lastTransactionId) {
         setData({
+          productId: item.id,
           transactionId: item.lastTransactionId,
           productTitle: item.title || 'Produit',
           productImage: item.images?.[0] || null,
@@ -115,6 +116,7 @@ export default function ReceiptPage() {
 
     if (tid && title && Number.isFinite(parsedPrice)) {
       setData({
+        productId: searchParams.get('pid'),
         transactionId: tid,
         productTitle: title,
         plan: { price: parsedPrice, name: searchParams.get('plan') || 'Promotion' },
@@ -134,12 +136,17 @@ export default function ReceiptPage() {
     setIsGenerating(true);
     const element = document.getElementById('receipt-content-to-export');
     const opt = {
-      margin: 10,
+      margin: 0, // No margins, handled by CSS
       filename: `Quittance_BoutiKonect_${data.transactionId || 'export'}.pdf`,
-      image: { type: 'jpeg', quality: 0.95 },
-      html2canvas: { scale: 2, useCORS: true, letterRendering: true, backgroundColor: '#ffffff' },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true, 
+        letterRendering: true, 
+        backgroundColor: '#ffffff',
+        logging: false
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
     window.html2pdf().from(element).set(opt).save()
@@ -191,6 +198,12 @@ export default function ReceiptPage() {
             <ArrowLeft size={20} /> Retour
           </button>
           <div className="receipt-actions">
+            <button 
+              onClick={() => navigate(`/publish?promote=${data.productId || searchParams.get('pid')}`)}
+              className="btn btn-outline btn-extend"
+            >
+              <RefreshCw size={18} /> Prolonger ma promotion
+            </button>
             <button
               onClick={handleDownloadPDF}
               className={`btn btn-primary ${isGenerating ? 'loading' : ''}`}
@@ -210,8 +223,11 @@ export default function ReceiptPage() {
         >
           <div className="modern-header">
             <div className="header-left">
-              <div className="logo-text">BoutiKonect<span>.</span>bj</div>
-              <p>République du Bénin</p>
+              <img src="/logo.jpg" alt="BoutiKonect Logo" className="receipt-logo" />
+              <div className="header-left-text">
+                <div className="logo-text">BoutiKonect<span>.</span>bj</div>
+                <p>République du Bénin</p>
+              </div>
             </div>
             <div className="header-right">
               <h2>QUITTANCE DE PAIEMENT</h2>
@@ -223,6 +239,17 @@ export default function ReceiptPage() {
             <div className="status-indicator">
               <div className="indicator-dot"></div>
               <span>Transaction Confirmée &amp; Sécurisée</span>
+            </div>
+
+            <div className="product-preview-section">
+              {data.productImage && (
+                <img src={data.productImage} alt={data.productTitle} className="product-receipt-img" />
+              )}
+              <div className="product-receipt-info">
+                <h3>{data.productTitle}</h3>
+                <p>Plan : {data.plan?.name || 'Vedette'}</p>
+                <p>Durée : {data.plan?.days || 30} jours</p>
+              </div>
             </div>
 
             <div className="info-section">

@@ -1,11 +1,11 @@
 .receipt-page {
-  padding: 40px 20px;
-  background-color: #f4f7f6;
+  padding: 20px;
+  background-color: #f8fafc;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Inter', -apple-system, sans-serif;
 }
 
 .receipt-nav {
@@ -19,39 +19,60 @@
 
 .receipt-modern {
   background: #ffffff;
-  width: 100%;
-  max-width: 700px;
+  width: 210mm; /* A4 Width */
+  min-height: 297mm; /* A4 Height */
   margin: 0 auto;
-  border: 1px solid #e1e8ed;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  padding: 40px;
-  color: #1a1a1a;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  padding: 15mm 20mm;
+  color: #1e293b;
   position: relative;
-  page-break-inside: avoid;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .modern-header {
   display: flex;
   justify-content: space-between;
-  border-bottom: 2px solid #f0f2f5;
-  padding-bottom: 30px;
-  margin-bottom: 30px;
+  align-items: center;
+  border-bottom: 2px solid #f1f5f9;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+}
+
+.receipt-logo {
+  height: 60px;
+  width: auto;
+  object-fit: contain;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.header-left-text {
+  display: flex;
+  flex-direction: column;
 }
 
 .logo-text {
   font-size: 24px;
   font-weight: 800;
-  color: #000;
+  color: #0f172a;
   letter-spacing: -0.5px;
+  line-height: 1;
 }
 
 .logo-text span {
   color: #FF6A00;
 }
 
-.header-left p {
-  font-size: 12px;
-  color: #667c89;
+.header-left-text p {
+  font-size: 11px;
+  color: #64748b;
   margin-top: 4px;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -100,8 +121,39 @@
 .info-section {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 40px;
-  margin-bottom: 40px;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.product-preview-section {
+  display: flex;
+  gap: 20px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 25px;
+  align-items: center;
+}
+
+.product-receipt-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #e2e8f0;
+}
+
+.product-receipt-info h3 {
+  font-size: 16px;
+  margin: 0 0 4px 0;
+  color: #0f172a;
+}
+
+.product-receipt-info p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
 }
 
 .info-col label {
@@ -130,11 +182,10 @@
 }
 
 .billing-box {
-  background: #f8fafc;
-  border: 1px solid #e1e8ed;
+  background: #f1f5f9;
   border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 40px;
+  padding: 20px;
+  margin-bottom: 30px;
 }
 
 .billing-title {
@@ -210,9 +261,9 @@
 }
 
 .footer-legal-flow {
-  margin-top: 30mm; /* Exactly 3cm distance as requested */
+  margin-top: auto;
   text-align: center;
-  border-top: 1px dashed #e1e8ed;
+  border-top: 1px dashed #cbd5e1;
   padding-top: 20px;
   width: 100%;
 }
@@ -229,19 +280,31 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  margin-top: 15px;
-  color: #000;
-  font-size: 11px;
+  margin-top: 10px;
+  color: #1e293b;
+  font-size: 10px;
   font-weight: 800;
   text-transform: uppercase;
 }
 
 @media print {
-  .no-print { display: none; }
+  .no-print { display: none !important; }
+  .receipt-page { background: #fff; padding: 0; }
   .receipt-modern { 
     box-shadow: none; 
     border: none;
-    padding: 0;
+    padding: 10mm;
+    width: 210mm;
+    height: 297mm;
   }
-  .receipt-page { background: #fff; padding: 0; }
+}
+
+.btn-extend {
+  background: #f59e0b !important;
+  color: #fff !important;
+  border: none !important;
+}
+
+.btn-extend:hover {
+  background: #d97706 !important;
 }

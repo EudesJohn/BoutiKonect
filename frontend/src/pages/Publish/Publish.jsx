@@ -1,5 +1,5 @@
 import { useState, useContext, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { AppContext } from '../../context/AppContextInstance'
 import { supabase } from '../../supabase/client'
@@ -17,6 +17,7 @@ export default function Publish() {
     showToast
   } = useContext(AppContext)
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   
   const [publishType, setPublishType] = useState('product') // 'product' | 'service'
   
@@ -48,6 +49,18 @@ export default function Publish() {
       navigate('/login')
     }
   }, [seller, user, navigate])
+
+  // Gestion du paramètre 'promote' pour prolonger une promotion depuis la quittance
+  useEffect(() => {
+    const promoteId = searchParams.get('promote')
+    if (promoteId && products.length > 0) {
+      const product = [...products, ...services].find(p => p.id === promoteId)
+      if (product) {
+        setProductToPromote(product)
+        setShowPromoteModal(true)
+      }
+    }
+  }, [searchParams, products, services])
 
   const isAdmin = checkIsAdmin(seller) || checkIsAdmin(user)
   const currentId = seller?.id || user?.id

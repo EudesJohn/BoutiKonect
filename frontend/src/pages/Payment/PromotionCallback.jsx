@@ -56,8 +56,10 @@ export default function PromotionCallback() {
 
             // Sauvegarder les données pour la quittance
             const receipt = {
+              productId: promoData.productId,
               transactionId: transactionId,
               productTitle: promoData.productTitle || 'Promotion',
+              productImage: promoData.productImage || null,
               plan: promoData.plan,
               seller: seller || { name: 'Client' },
               date: new Date().toISOString()
