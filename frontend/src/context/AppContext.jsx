@@ -532,7 +532,7 @@ export function AppProvider({ children }) {
     return retrySession
   }
 
-  const _activateViaDirectUpdate = async (productId, days, transactionId, planName) => {
+  const _activateViaDirectUpdate = async (productId, days, transactionId, planName, planPrice = 0) => {
     const endDate = new Date(Date.now() + days * 24 * 60 * 60 * 1000)
     const { data, error } = await supabase
       .from('products')
@@ -540,7 +540,8 @@ export function AppProvider({ children }) {
         is_promoted: true,
         promotion_end_date: endDate.toISOString(),
         last_transaction_id: transactionId,
-        promotion_plan_name: planName
+        promotion_plan_name: planName,
+        promotion_plan_price: planPrice
       })
       .eq('id', productId)
       .select()
@@ -552,21 +553,22 @@ export function AppProvider({ children }) {
     return { success: true }
   }
 
-  const activatePromotionInstant = async (productId, days, transactionId = null, planName = null) => {
+  const activatePromotionInstant = async (productId, days, transactionId = null, planName = null, planPrice = 0) => {
     try {
       await _getValidSession()
-
+-
       const { data: rpcStatus, error: rpcError } = await supabase.rpc('activate_product_promotion', {
         p_product_id: productId,
         p_days: days,
         p_transaction_id: transactionId,
-        p_plan_name: planName
+        p_plan_name: planName,
+        p_plan_price: planPrice
       })
 
       if (rpcError) {
         // Fallback si le RPC n'est pas déployé
         if (rpcError.message?.includes('not found') || rpcError.message?.includes('function')) {
-          return await _activateViaDirectUpdate(productId, days, transactionId, planName)
+          return await _activateViaDirectUpdate(productId, days, transactionId, planName, planPrice)
         }
         throw rpcError
       }

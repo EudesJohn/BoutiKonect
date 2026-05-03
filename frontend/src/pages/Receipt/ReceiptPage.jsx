@@ -62,7 +62,7 @@ export default function ReceiptPage() {
           productImage: item.images?.[0] || null,
           plan: {
             name: item.promotionPlanName || 'Promotion Vedette',
-            price: Number.isFinite(item.promotion_plan_price) ? item.promotion_plan_price : 0,
+            price: Number.isFinite(item.promotionPlanPrice) ? item.promotionPlanPrice : 0,
             days: item.promotion_plan_days || item.promotionDays || 0
           },
           seller: seller || { name: item.sellerName || 'Vendeur' },

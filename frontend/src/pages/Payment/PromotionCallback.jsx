@@ -46,7 +46,7 @@ export default function PromotionCallback() {
             console.log('Données de promotion validées:', { productId: promoData.productId, days: promoData.plan.days });
 
             const transactionId = searchParams.get('id') || searchParams.get('transaction_id');
-            const result = await activatePromotionInstant(promoData.productId, promoData.plan.days, transactionId, promoData.plan.name);
+            const result = await activatePromotionInstant(promoData.productId, promoData.plan.days, transactionId, promoData.plan.name, promoData.plan.price);
             console.log('Résultat activation immédiate:', result);
 
             // Confirmer au serveur sans rouvrir le popup

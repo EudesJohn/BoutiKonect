@@ -69,6 +69,7 @@ export function mapItemFromDB(item) {
     promotionEndDate: item.promotion_end_date,
     lastTransactionId: item.last_transaction_id,
     promotionPlanName: item.promotion_plan_name,
+    promotionPlanPrice: item.promotion_plan_price,
     latitude: item.latitude,
     longitude: item.longitude,
     createdAt: item.created_at,
