@@ -1,7 +1,7 @@
 import { useContext } from 'react'
 import { motion } from 'framer-motion'
 import { AppContext } from '../context/AppContextInstance'
-import { QuoteLeft, User, Star } from 'lucide-react'
+import { Quote, User, Star } from 'lucide-react'
 
 export default function Testimonials() {
   const { testimonials = [] } = useContext(AppContext)
@@ -48,7 +48,7 @@ export default function Testimonials() {
           viewport={{ once: true, amount: 0.1 }}
           className="section-title"
         >
-          <QuoteLeft size={24} className="mr-2" />
+          <Quote size={24} className="mr-2" />
           Ce que nos utilisateurs disent
         </motion.h2>
         <p className="section-subtitle text-center mb-8">
