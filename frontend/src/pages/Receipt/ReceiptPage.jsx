@@ -1,7 +1,8 @@
 import { useEffect, useState, useContext, useCallback } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Download, ArrowLeft, ShieldCheck, RefreshCw } from 'lucide-react';
+import { Download, ArrowLeft, ShieldCheck } from 'lucide-react';
+import html2pdf from 'html2pdf.js';
 import { AppContext } from '../../context/AppContextInstance';
 import './Receipt.css';
 
@@ -21,50 +22,13 @@ const formatDate = (dateStr) => {
   }).format(date);
 };
 
-// ID unique pour le script injecté — évite les doublons
-const HTML2PDF_SCRIPT_ID = 'html2pdf-cdn-script';
-
 export default function ReceiptPage() {
+  // --- Données et États ---
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { products, services, seller } = useContext(AppContext);
   const [data, setData] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  // scriptReady : true si html2pdf est chargé et prêt à l'usage
-  // scriptLoading : true pendant le téléchargement initial (désactive le bouton)
-  const [scriptReady, setScriptReady] = useState(!!window.html2pdf);
-  const [scriptLoading, setScriptLoading] = useState(!window.html2pdf);
-
-  // --- Injection html2pdf (séparée du chargement des données) ---
-  // Dépendances vides : s'exécute une seule fois au montage du composant.
-  useEffect(() => {
-    if (window.html2pdf || document.getElementById(HTML2PDF_SCRIPT_ID)) {
-      setScriptReady(true);
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.id = HTML2PDF_SCRIPT_ID;
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-    script.integrity = 'sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnA==';
-    script.crossOrigin = 'anonymous';
-    script.async = true;
-
-    script.onload = () => { setScriptReady(true); setScriptLoading(false); };
-    script.onerror = () => {
-      console.error('html2pdf CDN indisponible — fallback sur impression navigateur');
-      setScriptReady(false);
-      setScriptLoading(false);
-    };
-
-    document.body.appendChild(script);
-
-    // Nettoyage : retirer le script au démontage du composant
-    return () => {
-      const s = document.getElementById(HTML2PDF_SCRIPT_ID);
-      if (s) s.remove();
-    };
-  }, []);
 
   // --- Chargement des données de la quittance ---
   useEffect(() => {
@@ -126,55 +90,41 @@ export default function ReceiptPage() {
     }
   }, [searchParams, products, services, seller]);
 
-  // --- Téléchargement PDF ---
+  // --- Téléchargement PDF Direct ---
   const handleDownloadPDF = useCallback(() => {
-    if (!scriptReady || !window.html2pdf) {
-      window.print();
-      return;
-    }
+    if (!data) return;
 
     setIsGenerating(true);
     const element = document.getElementById('receipt-content-to-export');
+    
+    // Options optimisées pour une fidélité maximale "Photo"
     const opt = {
       margin: 0,
       filename: `Quittance_BoutiKonect_${data.transactionId || 'export'}.pdf`,
-      image: { type: 'jpeg', quality: 1.0 },
+      image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
-        scale: 2, 
-        useCORS: true, 
-        letterRendering: true, 
+        scale: 3, // Haute résolution
+        useCORS: true, // Pour les images externes (avatars, logos)
+        logging: false,
+        letterRendering: true,
         backgroundColor: '#ffffff',
-        scrollY: 0,
-        windowWidth: 794,
-        onclone: (clonedDoc) => {
-          // Masquer les éléments globaux du site dans le clone utilisé pour le PDF
-          const selectorsToHide = ['.navbar', '.footer', '.virtual-assistant', '.toasts-portal', '.pwa-install-prompt', '.receipt-nav'];
-          selectorsToHide.forEach(selector => {
-            const elements = clonedDoc.querySelectorAll(selector);
-            elements.forEach(el => el.style.display = 'none');
-          });
-          
-          // S'assurer que le conteneur de la quittance est bien visible et sans transformations
-          const receipt = clonedDoc.getElementById('receipt-content-to-export');
-          if (receipt) {
-            receipt.style.transform = 'none';
-            receipt.style.margin = '0';
-            receipt.style.boxShadow = 'none';
-            receipt.style.border = 'none';
-          }
-        }
+        windowWidth: 1200, // Largeur fixe pour éviter les media queries de mobile
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
-    window.html2pdf().from(element).set(opt).save()
-      .then(() => setIsGenerating(false))
-      .catch(err => {
-        console.error('PDF Error:', err);
+    // Exécution directe
+    html2pdf().from(element).set(opt).save()
+      .then(() => {
         setIsGenerating(false);
+      })
+      .catch(err => {
+        console.error('Erreur de génération PDF:', err);
+        setIsGenerating(false);
+        // Fallback ultime si erreur fatale
         window.print();
       });
-  }, [scriptReady, data]);
+  }, [data]);
 
   // --- État vide avec bouton de ré-essai ---
   if (!data) {
@@ -219,10 +169,9 @@ export default function ReceiptPage() {
             <button
               onClick={handleDownloadPDF}
               className={`btn btn-primary ${isGenerating ? 'loading' : ''}`}
-              disabled={isGenerating || scriptLoading}
-              title={scriptLoading ? 'Chargement du module PDF...' : ''}
+              disabled={isGenerating}
             >
-              {scriptLoading ? 'Chargement...' : isGenerating ? 'Génération...' : <><Download size={18} /> Télécharger PDF</>}
+              {isGenerating ? 'Génération...' : <><Download size={18} /> Télécharger la Quittance (PDF)</>}
             </button>
           </div>
         </div>

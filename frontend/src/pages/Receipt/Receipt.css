@@ -18,7 +18,7 @@
 }
 
 .receipt-modern {
-  background: #ffffff;
+  background: #ffffff !important;
   width: 210mm;
   height: 296mm; /* Slightly less than A4 to be safe */
   margin: 0 auto;
@@ -32,6 +32,8 @@
   border: 1px solid #e2e8f0;
   transform-origin: top center;
   overflow: hidden;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
 /* Responsivité sur écran : on réduit l'échelle si la fenêtre est petite */
