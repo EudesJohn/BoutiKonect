@@ -1,16 +1,23 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { createClient } from '@supabase/supabase-js';
 
 export const maxDuration = 60; // Autoriser jusqu'à 60 secondes d'exécution pour Gemini
 
+// Initialisation du client Supabase pour le cache
+const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
+
 /**
- * Endpoint Serverless pour l'assistant IA Gemini (Root v2.0)
+ * Endpoint Serverless pour l'assistant IA Gemini (Root v2.4 - Caching Enabled)
  */
 export default async function handler(request, response) {
-  // CORS Headers — restreint au domaine de production
+  // CORS Headers
   const allowedOrigins = [
     'https://bouti-konect.vercel.app', 
     'https://boutikonect.vercel.app',
-    'https://maboutiquebj-85bf3.web.app'
+    'https://maboutiquebj-85bf3.web.app',
+    'http://localhost:5173'
   ];
   const origin = request.headers.origin || request.headers.referer || '';
   const isAllowed = allowedOrigins.some(o => origin.startsWith(o));
@@ -27,7 +34,8 @@ export default async function handler(request, response) {
 
   if (request.method === 'GET') {
     return response.status(200).json({ 
-      status: 'BoutiKonect AI API is Active (v2.3)', 
+      status: 'BoutiKonect AI API is Active (v2.4)', 
+      cache_enabled: !!supabase,
       timestamp: new Date().toISOString()
     });
   }
@@ -37,129 +45,91 @@ export default async function handler(request, response) {
   }
 
   try {
-    // Robust parsing for various environments
     let body = request.body;
     if (typeof body === 'string') {
-      try {
-        body = JSON.parse(body);
-      } catch (e) {
-        console.error("[AI ERROR] Échec du parsing JSON manuel.");
-      }
+      try { body = JSON.parse(body); } catch (e) {}
     }
 
-    if (!body) {
-      console.error("[AI ERROR] Corps de la requête (body) manquant. Vérifiez le parsing JSON.");
-      return response.status(400).json({ error: 'Corps de la requête manquant' });
-    }
+    if (!body) return response.status(400).json({ error: 'Corps de la requête manquant' });
 
     const { prompt, context = {} } = body;
-    
-    // Forcer la fermeture de connexion pour éviter les NetworkErrors intermittents sur certains proxys
     response.setHeader('Connection', 'close');
     
     if (!prompt || typeof prompt !== 'string') {
       return response.status(400).json({ error: 'Le message est vide ou invalide' });
     }
 
+    // --- LOGIQUE DE CACHE ---
+    const normalizedPrompt = prompt.trim().toLowerCase().replace(/[?.,!]/g, '');
+    const queryHash = normalizedPrompt; // Utiliser le texte normalisé comme clé unique simple
+
+    if (supabase) {
+      try {
+        const { data: cachedData, error: cacheError } = await supabase
+          .from('ai_chat_cache')
+          .select('response, hit_count')
+          .eq('query_hash', queryHash)
+          .maybeSingle();
+
+        if (cachedData && !cacheError) {
+          console.log(`[AI CACHE] Hit pour: "${queryHash}"`);
+          // Incrémenter le compteur de hits en arrière-plan
+          supabase.from('ai_chat_cache')
+            .update({ hit_count: (cachedData.hit_count || 1) + 1, last_hit_at: new Date().toISOString() })
+            .eq('query_hash', queryHash)
+            .then();
+            
+          return response.status(200).json({ response: cachedData.response, cached: true });
+        }
+      } catch (err) {
+        console.warn("[AI CACHE] Erreur lors de la lecture du cache:", err.message);
+      }
+    }
+
     const apiKey = process.env.GEMINI_API_KEY;
-
-    // Sécurisation du contexte pour éviter les injections ou les erreurs de parse
-    const safeProducts = Array.isArray(context.products) ? context.products.slice(0, 10).map(p => ({ title: p.title, category: p.category, price: p.price })) : [];
-    const safeServices = Array.isArray(context.services) ? context.services.slice(0, 10).map(s => ({ title: s.title, category: s.category, price: s.price })) : [];
-
-    console.log(`[AI INFO] Requête reçue pour prompt: "${prompt.substring(0, 50)}..."`);
-    
     if (!apiKey) {
-      console.error("[AI ERROR] Clé API GEMINI_API_KEY manquante dans l'environnement.");
       return response.status(503).json({ error: "L'assistant est en maintenance (Configuration API manquante)." });
     }
 
+    // Sécurisation du contexte
+    const safeProducts = Array.isArray(context.products) ? context.products.slice(0, 10).map(p => ({ title: p.title, category: p.category, price: p.price })) : [];
+    const safeServices = Array.isArray(context.services) ? context.services.slice(0, 10).map(s => ({ title: s.title, category: s.category, price: s.price })) : [];
+
     const genAI = new GoogleGenerativeAI(apiKey);
-    let model;
-    try {
-      model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
-    } catch (e) {
-      model = genAI.getGenerativeModel({ model: "gemini-pro-latest" });
-    }
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const systemInstruction = `
-      Tu es l'assistant virtuel EXPERT de BoutiKonect.bj, la plateforme de référence pour le commerce et les services au Bénin.
-      Ton but est d'accompagner l'utilisateur dans TOUTES ses démarches sur le site, sans exception.
-      
-      ### CONTEXTE MARCHÉ (DYNAMIQUE)
-      - Produits récents : ${JSON.stringify(safeProducts)}
-      - Services récents : ${JSON.stringify(safeServices)}
-      
-      ### BASE DE CONNAISSANCE PLATEFORME (FAQ & RÈGLES)
-      1. CONCEPT : BoutiKonect est un marché magique pour tout le Bénin. On y trouve habits, voitures, et services (réparations, etc.).
-      2. PRIX : L'inscription et la publication simple sont GRATUITES. On ne paie que pour "booster" une annonce (être tout en haut comme une étoile).
-      3. VENDRE/PUBLIER : Cliquer sur "Vendre", prendre une photo, écrire un mot. C'est instantané.
-      4. PROMOTION (ZAP) : Pour être en "Une", cliquer sur l'éclair jaune sur ses produits. Options: court dodo, grand dodo ou une semaine.
-      5. COMPTE : Modifier son profil (ville, quartier, numéro) via l'icône de profil > "Modifier". Toujours cliquer sur "Enregistrer".
-      6. MOT DE PASSE : En cas d'oubli, cliquer sur "MDP" dans le profil ou sur la page de login pour recevoir un lien de réinitialisation par email.
-      7. ACHAT : Ajouter au panier, aller au panier (sac en haut), et payer via FedaPay (Mobile Money, Carte).
-      8. CONTACT : Utiliser le bouton WhatsApp vert pour parler directement au vendeur.
-      9. SÉCURITÉ : Un bouclier bleu sur un vendeur signifie qu'il est vérifié et sérieux. En cas de problème, cliquer sur le drapeau rouge pour signaler un abus.
-      10. SUPPORT : Contact direct via BoutiKonectbj229@gmail.com ou le numéro de support en bas de page.
-      
-      ### STYLE DE RÉPONSE
-      - 100% HUMAIN : Sois chaleureux, empathique et utilise un langage naturel et bienveillant.
-      - EMOJIS : Utilise des emojis pour rendre la lecture agréable (✅, 🚀, 💡, 👋, ✨).
-      - PRÉCISION : Si l'utilisateur demande un produit spécifique, regarde dans le contexte fourni. S'il n'y est pas, demande-lui de décrire ce qu'il cherche.
-      - PROACTIVITÉ : Toujours finir par une question pour aider davantage (ex: "Puis-je vous aider pour autre chose ?").
-      - LANGUE : Tu réponds en Français (Béninois/International).
+      Tu es l'assistant virtuel EXPERT de BoutiKonect.bj.
+      Produits récents : ${JSON.stringify(safeProducts)}
+      Services récents : ${JSON.stringify(safeServices)}
+      Règles : Inscription gratuite, Booster/Vedette payant, Paiement Mobile Money via FedaPay.
+      Style : Chaleureux, emojis, proactif, 100% humain.
     `;
 
     const fullPrompt = `${systemInstruction}\n\nUtilisateur: ${prompt}`;
     
-    // Appel à l'API Gemini avec le modèle de dernière génération
-    let result;
-    try {
-      result = await model.generateContent(fullPrompt);
-    } catch (e) {
-      console.warn("[AI INFO] gemini-flash-latest a échoué, tentative avec gemini-pro-latest...", e.message);
-      const fallbackModel = genAI.getGenerativeModel({ model: "gemini-pro-latest" });
-      result = await fallbackModel.generateContent(fullPrompt);
-    }
-    
+    const result = await model.generateContent(fullPrompt);
     const aiResponse = await result.response;
-    
-    console.log(`[AI INFO] Réponse reçue de Gemini`);
+    const text = aiResponse.text();
 
-    // Vérifier si la réponse a été bloquée par les filtres de sécurité ou est vide
-    if (!aiResponse || !aiResponse.candidates || aiResponse.candidates.length === 0) {
-       throw new Error("Gemini a renvoyé une réponse vide.");
+    if (!text) throw new Error("Réponse vide de l'IA");
+
+    // --- ENREGISTREMENT DANS LE CACHE ---
+    if (supabase && text && !text.startsWith('[DIAGNOSTIC]')) {
+      supabase.from('ai_chat_cache').insert([{
+        query_hash: queryHash,
+        question: prompt,
+        response: text
+      }]).then(({ error }) => {
+        if (error) console.warn("[AI CACHE] Erreur lors de l'enregistrement:", error.message);
+        else console.log("[AI CACHE] Nouvelle réponse mémorisée.");
+      });
     }
 
-    if (aiResponse.candidates[0].finishReason === 'SAFETY') {
-      return response.status(200).json({ response: "Désolé, je ne peux pas répondre à cette demande pour des raisons de sécurité. Veuillez poser une question sur les services de BoutiKonect." });
-    }
+    return response.status(200).json({ response: text, cached: false });
 
-    try {
-      const text = aiResponse.text();
-      if (!text) throw new Error("Texte de réponse vide");
-      return response.status(200).json({ response: text });
-    } catch (textError) {
-      console.error("[AI ERROR] Erreur lors de l'extraction du texte:", textError);
-      // Fallback: essayer d'extraire via les parts si text() échoue
-      const fallbackText = aiResponse.candidates[0]?.content?.parts?.[0]?.text;
-      if (fallbackText) {
-        return response.status(200).json({ response: fallbackText });
-      }
-      throw new Error("Impossible d'extraire le texte de la réponse Gemini.");
-    }
   } catch (error) {
     console.error("[AI CRITICAL ERROR]:", error);
-    let errorMessage = "Désolé, je rencontre une petite difficulté technique.";
-    
-    if (error.message.includes("API key")) {
-      errorMessage = "La clé API de l'assistant est invalide ou manquante.";
-    } else if (error.message.includes("safety")) {
-      errorMessage = "La réponse a été bloquée par les filtres de sécurité.";
-    } else if (error.message.includes("quota")) {
-      errorMessage = "L'assistant a atteint sa limite de messages pour l'instant.";
-    }
-
-    return response.status(500).json({ error: errorMessage, details: error.message });
+    return response.status(500).json({ error: "Erreur technique", details: error.message });
   }
 }
