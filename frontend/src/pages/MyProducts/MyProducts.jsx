@@ -128,15 +128,11 @@ export default function MyProducts() {
                                   })()}
                                 </span>
                                 <button 
-                                  className="btn btn-outline btn-small" 
-                                  style={{ marginTop: '5px', padding: '2px 8px', fontSize: '10px', color: '#ef4444', borderColor: '#ef4444' }}
-                                  onClick={() => {
-                                    if (window.confirm("Voulez-vous vraiment annuler la promotion de ce produit ? (Aucun remboursement possible)")) {
-                                      cancelPromotion(product.id);
-                                    }
-                                  }}
+                                  className="btn btn-highlight btn-small" 
+                                  style={{ marginTop: '5px', padding: '4px 8px', fontSize: '10px', width: '100%' }}
+                                  onClick={() => handlePromoteClick(product)}
                                 >
-                                  <XCircle size={10} /> Annuler
+                                  <Zap size={10} /> Prolonger
                                 </button>
                               </div>
                             ) : (

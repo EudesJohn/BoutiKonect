@@ -123,15 +123,11 @@ export default function MyServices() {
                                 })()}
                               </span>
                               <button 
-                                className="btn btn-outline btn-small" 
-                                style={{ marginTop: '5px', padding: '2px 8px', fontSize: '10px', color: '#ef4444', borderColor: '#ef4444' }}
-                                onClick={() => {
-                                  if (window.confirm("Voulez-vous vraiment annuler la promotion de ce service ? (Aucun remboursement possible)")) {
-                                    cancelPromotion(service.id);
-                                  }
-                                }}
+                                className="btn btn-highlight btn-small" 
+                                style={{ marginTop: '5px', padding: '4px 8px', fontSize: '10px', width: '100%' }}
+                                onClick={() => handlePromoteClick(service)}
                               >
-                                <XCircle size={10} /> Annuler
+                                <Zap size={10} /> Prolonger
                               </button>
                             </div>
                           ) : (
