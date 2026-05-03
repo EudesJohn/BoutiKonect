@@ -556,7 +556,7 @@ export function AppProvider({ children }) {
   const activatePromotionInstant = async (productId, days, transactionId = null, planName = null, planPrice = 0) => {
     try {
       await _getValidSession()
--
+
       const { data: rpcStatus, error: rpcError } = await supabase.rpc('activate_product_promotion', {
         p_product_id: productId,
         p_days: days,
