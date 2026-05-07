@@ -3,38 +3,28 @@
  */
 import { supabase } from '../supabase/client'
 
-export const ADMIN_EMAILS = [
-  'eudesjohn650@gmail.com',
-  'BoutiKonectbj229@gmail.com',
-  'maboutiquebj@gmail.com'
-]
+// ⛔ SÉCURITÉ : Les emails admin ne sont plus codés en dur dans le bundle JS.
+// La vérification admin repose UNIQUEMENT sur le champ `is_admin = true` dans la BDD.
+// Cela évite d'exposer les cibles aux hackers dans le code source public.
 
 /**
- * Vérifie si un email est dans la liste des administrateurs
- */
-export const isAdminEmail = (email) => {
-  if (!email) return false
-  const adminFromEnv = import.meta.env.VITE_ADMIN_EMAIL
-  return ADMIN_EMAILS.includes(email.toLowerCase()) || 
-         (adminFromEnv && email.toLowerCase() === adminFromEnv.toLowerCase())
-}
-
-/**
- * Vérifie si l'administration est configurée dans le système
- * Si un utilisateur est passé, vérifie s'il a les privilèges admin.
- * Sinon, vérifie simplement si un email admin est défini dans le .env.
+ * Vérifie si un utilisateur est admin — basé sur la BDD uniquement
  */
 export const isAdminConfigured = (user = null) => {
-  const adminEmailFromEnv = import.meta.env.VITE_ADMIN_EMAIL
-  
   if (!user) {
-    return !!adminEmailFromEnv
+    // ⛔ SÉCURITÉ : Ne plus exposer d'email admin via variable VITE_ (visible dans le bundle)
+    // La vérification admin repose UNIQUEMENT sur le champ `is_admin = true` dans la BDD.
+    return true; // L'admin est toujours configuré via la BDD
   }
-
-  return user.is_admin === true || 
-         user.role === 'admin' || 
-         isAdminEmail(user.email)
+  // La vérification se base UNIQUEMENT sur le flag de la BDD
+  return user.is_admin === true || user.role === 'admin'
 }
+
+/**
+ * @deprecated — Ne plus utiliser. Utiliser isAdminConfigured(user) à la place.
+ * Conservé pour compatibilité transitoire.
+ */
+export const isAdminEmail = (_email) => false
 
 /**
  * Login admin
@@ -46,7 +36,7 @@ export const loginAdmin = async (email, password) => {
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('*')
+      .select('id, email, name, is_admin, role')
       .eq('id', data.user.id)
       .single()
 
@@ -63,9 +53,14 @@ export const loginAdmin = async (email, password) => {
   }
 }
 
+/**
+ * @deprecated — Supprimé pour des raisons de sécurité.
+ * Ne jamais exposer les informations admin via le bundle JS public.
+ * Utiliser la BDD (is_admin) pour toutes les vérifications.
+ */
 export const getAdminInfo = () => {
-  return {
-    email: import.meta.env.VITE_ADMIN_EMAIL,
-    phone: import.meta.env.VITE_ADMIN_PHONE
-  }
+  return {} // Ne retourne rien — ne pas exposer d'emails admin
 }
+
+// Exporter ADMIN_EMAILS comme tableau vide pour compatibilité sans casser les imports existants
+export const ADMIN_EMAILS = []

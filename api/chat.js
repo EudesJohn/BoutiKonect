@@ -5,7 +5,10 @@ export const maxDuration = 60; // Autoriser jusqu'à 60 secondes d'exécution po
 
 // Initialisation du client Supabase pour le cache
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!supabaseKey) {
+  console.error('[SECURITY] SUPABASE_SERVICE_ROLE_KEY manquante — cache IA désactivé. Ne jamais utiliser ANON_KEY comme fallback.');
+}
 const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
 
 /**
@@ -130,6 +133,6 @@ export default async function handler(request, response) {
 
   } catch (error) {
     console.error("[AI CRITICAL ERROR]:", error);
-    return response.status(500).json({ error: "Erreur technique", details: error.message });
+    return response.status(500).json({ error: "Erreur technique, veuillez réessayer plus tard." });
   }
 }

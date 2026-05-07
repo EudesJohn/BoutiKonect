@@ -19,10 +19,9 @@ export default function Admin() {
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [isLoading, setIsLoading] = useState(true)
-  const [promotionPrices, setPromotionPrices] = useState(() => {
-    const saved = localStorage.getItem('admin_promotion_prices')
-    return saved ? JSON.parse(saved) : DEFAULT_PROMOTION_PRICES
-  })
+  // ⛔ SÉCURITÉ : Les prix ne sont plus lus depuis localStorage (modifiable par n'importe qui)
+  // Utiliser les prix par défaut du code — pour les modifier, implémenter une table Supabase
+  const [promotionPrices, setPromotionPrices] = useState(DEFAULT_PROMOTION_PRICES)
   const [editingPrice, setEditingPrice] = useState(null)
   const [priceForm, setPriceForm] = useState({ name: '', price: 0, days: 0 })
   const [priceSaveSuccess, setPriceSaveSuccess] = useState(false)
@@ -37,8 +36,8 @@ export default function Admin() {
     }
   }, [allUsers])
 
-  // Check if user is admin
-  const isAdminUser = isAdminConfigured(user) || isAdminConfigured(seller)
+  // ⛔ SÉCURITÉ : Vérification admin basée UNIQUEMENT sur is_admin de la BDD
+  const isAdminUser = (user?.is_admin === true) || (seller?.is_admin === true)
 
   if (isLoading) {
     return (
@@ -254,7 +253,8 @@ export default function Admin() {
     }
     
     setPromotionPrices(newPrices)
-    localStorage.setItem('admin_promotion_prices', JSON.stringify(newPrices))
+    // ⚠️ Note: Ces prix sont temporaires (session uniquement).
+    // Pour les persister, implémenter une table `promotion_prices` dans Supabase.
     setEditingPrice(null)
     setPriceSaveSuccess(true)
     setTimeout(() => setPriceSaveSuccess(false), 3000)

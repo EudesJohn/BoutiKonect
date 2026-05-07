@@ -808,6 +808,12 @@ export function AppProvider({ children }) {
   const deleteService = deleteProduct // Alias
 
   const deleteUser = async (userId) => {
+    // ⛔ SÉCURITÉ : Vérifier que l'appelant est admin avant toute suppression
+    const currentUser = seller || user;
+    if (!currentUser || !checkIsAdmin(currentUser)) {
+      showToast('Accès non autorisé', 'error');
+      return { success: false, error: 'Accès refusé : droits admin requis' };
+    }
     try {
       // Supprimer le profil (les produits/commandes sont en cascade dans Supabase)
       const { error } = await supabase.from('profiles').delete().eq('id', userId)
@@ -1052,7 +1058,9 @@ export function AppProvider({ children }) {
     deleteUser,
     messages: [], // Stub for now
     getCurrentLocation, formatPrice, parseDate, checkIsAdmin,
-    setCart, setFavorites, setSeller, setUser, setIsAppReady,
+    setCart, setFavorites,
+    // ⛔ NOTE SÉCURITÉ : setSeller, setUser, setIsAppReady sont volontairement exclus du contexte public
+    // pour empêcher toute auto-promotion admin via manipulation de l'état client.
     filteredProducts, recommendations,
     logoutUser: authLogoutUser,
     logoutSeller: authLogoutUser, // alias pour Navbar

@@ -1,61 +1,24 @@
-const { rateLimiter } = require('../utils/rateLimit');
 const { withLogging } = require('../utils/withLogging');
 
 export default async function handler(request, response) {
+  // ⛔ DÉSACTIVÉ EN PRODUCTION — Ce endpoint expose des informations système sensibles
+  // Il ne doit être accessible qu'en développement local
+  if (process.env.NODE_ENV !== 'development' && process.env.VERCEL_ENV !== 'development') {
+    return response.status(404).json({ error: 'Not found' });
+  }
+
   return withLogging(async (req, res) => {
-    if (!rateLimiter(req, res)) return; // response handled inside
-    // Existing logic follows
     const hasKey = !!process.env.GEMINI_API_KEY;
-    const keyPrefix = hasKey ? process.env.GEMINI_API_KEY.substring(0, 5) + "..." : "MISSING";
-
-    // Test import dynamic
-    let aiModuleLoaded = false;
-    try {
-      const { GoogleGenerativeAI } = await import("@google/generative-ai");
-      aiModuleLoaded = !!GoogleGenerativeAI;
-    } catch (e) {
-      aiModuleLoaded = "Error: " + e.message;
-    }
-
+    // En développement, on peut afficher le statut des clés (sans les valeurs)
     return res.status(200).json({
-      status: 'debug_info',
+      status: 'debug_info (dev only)',
       env: {
         GEMINI_API_KEY_PRESENT: hasKey,
-        GEMINI_API_KEY_PREFIX: keyPrefix,
         NODE_VERSION: process.version,
         VERCEL_REGION: process.env.VERCEL_REGION || 'local'
       },
-      dependencies: { google_generative_ai_loaded: aiModuleLoaded },
       timestamp: new Date().toISOString()
     });
   })(request, response);
-  try {
-    const hasKey = !!process.env.GEMINI_API_KEY;
-    const keyPrefix = hasKey ? process.env.GEMINI_API_KEY.substring(0, 5) + "..." : "MISSING";
-
-    // Test import dynamic
-    let aiModuleLoaded = false;
-    try {
-      const { GoogleGenerativeAI } = await import("@google/generative-ai");
-      aiModuleLoaded = !!GoogleGenerativeAI;
-    } catch (e) {
-      aiModuleLoaded = "Error: " + e.message;
-    }
-
-    return response.status(200).json({
-      status: 'debug_info',
-      env: {
-        GEMINI_API_KEY_PRESENT: hasKey,
-        GEMINI_API_KEY_PREFIX: keyPrefix,
-        NODE_VERSION: process.version,
-        VERCEL_REGION: process.env.VERCEL_REGION || 'local'
-      },
-      dependencies: {
-        google_generative_ai_loaded: aiModuleLoaded
-      },
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    return response.status(500).json({ error: error.message });
-  }
 }
+

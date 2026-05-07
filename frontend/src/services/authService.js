@@ -70,7 +70,9 @@ export const registerUser = async (userData) => {
  */
 export const loginUser = async (email, password, rememberMe = true) => {
   try {
-    console.log(`🔑 Tentative de connexion pour: ${email}`)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔑 Tentative de connexion...');
+    }
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,

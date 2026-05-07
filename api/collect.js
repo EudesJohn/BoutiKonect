@@ -31,19 +31,22 @@ module.exports = async (req, res) => {
     }
     // Existing logic follows
 
-    // 1. Sécurité (Token secret ou Cron auto)
+    // 1. Sécurité — Token secret OBLIGATOIRE (plus de bypass x-vercel-cron)
+    // ⛔ SÉCURITÉ : Ne jamais faire confiance aux headers HTTP contrôlables par le client.
+    // Le cron Vercel doit envoyer le CRON_SECRET en header Authorization comme tout appelant.
     const authHeader = req.headers.authorization;
-    const isCron = req.headers['x-vercel-cron'] === '1';
 
-    // Si on a un CRON_SECRET défini, on vérifie l'autorisation
-    if (cronSecret && !isCron) {
+    if (cronSecret) {
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return res.status(401).json({ error: 'Non autorisé' });
       }
-      const token = authHeader.slice(7); // Remove 'Bearer ' prefix
+      const token = authHeader.slice(7);
       if (!safeCompare(token, cronSecret)) {
         return res.status(401).json({ error: 'Non autorisé' });
       }
+    } else {
+      // Si CRON_SECRET n'est pas défini, bloquer toutes les requêtes (configuration incomplète)
+      return res.status(503).json({ error: 'Endpoint désactivé — CRON_SECRET manquant' });
     }
 
     if (!supabaseUrl || !supabaseKey) {

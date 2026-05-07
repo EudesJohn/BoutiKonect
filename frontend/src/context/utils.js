@@ -23,11 +23,14 @@ export function formatPrice(price) {
   }).format(price)
 }
 
+/**
+ * Vérifie si un profil est admin.
+ * ⛔ SÉCURITÉ : Repose UNIQUEMENT sur les champs BDD (is_admin / role).
+ * Plus de vérification par email côté client pour éviter l'exposition des cibles.
+ */
 export function checkIsAdmin(profile) {
   if (!profile) return false;
-  return profile.is_admin === true || 
-         profile.role === 'admin' || 
-         (profile.email && ADMIN_EMAILS.includes(profile.email.toLowerCase()));
+  return profile.is_admin === true || profile.role === 'admin';
 }
 
 export function parseDate(dateValue) {
