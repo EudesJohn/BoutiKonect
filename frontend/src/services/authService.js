@@ -248,6 +248,7 @@ const getErrorMessage = (message) => {
   if (msg.includes('password should be different')) return 'Désolé, vous ne pouvez pas utiliser le même mot de passe que l\'ancien. Veuillez en choisir un différent !'
   if (msg.includes('invalid format')) return 'Le format de l\'e-mail n\'est pas valide.'
   if (msg.includes('database error')) return 'Problème technique côté serveur. Nos équipes travaillent dessus.'
+  if (msg.includes('infinite recursion')) return 'Erreur de sécurité (Récursion détectée). Veuillez appliquer le script fix_recursion_final.sql dans Supabase.'
 
   return 'Mince ! Il y a eu un souci : ' + message
 }
