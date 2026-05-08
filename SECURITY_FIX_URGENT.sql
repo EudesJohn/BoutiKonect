@@ -8,8 +8,15 @@
 BEGIN;
 
 -- =====================================================================
--- ÉTAPE 0 : SUPPRIMER TOUTES LES ANCIENNES POLICIES PERMISSIVES
--- (issues des scripts security_fix_v3.sql, security_fix_v4.sql, update_final_v2.sql)
+-- ÉTAPE -2 : DÉSACTIVER TEMPORAIREMENT LE RLS POUR ÉVITER LA RÉCURSION
+-- =====================================================================
+-- On désactive la sécurité ligne par ligne pour cette session afin de 
+-- pouvoir nettoyer les politiques sans que la boucle infinie ne bloque le script.
+SET LOCAL row_security = off;
+ALTER TABLE public.profiles DISABLE ROW LEVEL SECURITY;
+
+-- =====================================================================
+-- ÉTAPE 0 : SUPPRIMER TOUTES LES ANCIENNES POLICIES (Cleanup)
 -- =====================================================================
 -- ÉTAPE 0.1 : SUPPRIMER LES POLITIQUES "SECURE" (pour permettre les exécutions multiples)
 -- =====================================================================
@@ -40,6 +47,57 @@ DROP POLICY IF EXISTS admin_notif_delete_admin_secure      ON public.admin_notif
 DROP POLICY IF EXISTS user_history_insert_own_secure       ON public.user_history;
 DROP POLICY IF EXISTS user_history_select_own_secure       ON public.user_history;
 DROP POLICY IF EXISTS user_history_select_admin_secure     ON public.user_history;
+
+-- =====================================================================
+-- ÉTAPE 0.2 : SUPPRIMER L'ANCIENNE FONCTION (Dépendances maintenant supprimées)
+-- =====================================================================
+DROP FUNCTION IF EXISTS public.is_admin();
+
+-- =====================================================================
+-- ÉTAPE -1 : SYNCHRONISATION DES DROITS ADMIN DANS LE JWT (SÉCURITÉ MAXIMALE)
+-- =====================================================================
+CREATE SCHEMA IF NOT EXISTS internal;
+-- Cette méthode évite la récursion infinie en stockant le statut admin 
+-- dans les app_metadata de l'utilisateur.
+
+CREATE OR REPLACE FUNCTION internal.sync_static_admin_status()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE auth.users
+  SET raw_app_meta_data = 
+    jsonb_set(
+      COALESCE(raw_app_meta_data, '{}'::jsonb),
+      '{is_admin}',
+      to_jsonb(NEW.is_admin)
+    )
+  WHERE id = NEW.id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = auth, public;
+
+-- Trigger pour maintenir la synchro
+DROP TRIGGER IF EXISTS trigger_sync_admin_status ON public.profiles;
+CREATE TRIGGER trigger_sync_admin_status
+AFTER INSERT OR UPDATE OF is_admin ON public.profiles
+FOR EACH ROW EXECUTE FUNCTION internal.sync_static_admin_status();
+
+-- Initialisation : Mettre à jour les utilisateurs existants
+UPDATE auth.users
+SET raw_app_meta_data = 
+  jsonb_set(
+    COALESCE(raw_app_meta_data, '{}'::jsonb),
+    '{is_admin}',
+    'true'::jsonb
+  )
+WHERE id IN (SELECT id FROM public.profiles WHERE is_admin = true);
+
+-- Fonction de vérification ultra-rapide (sans récursion)
+CREATE OR REPLACE FUNCTION internal.is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN (auth.jwt() -> 'app_metadata' ->> 'is_admin')::boolean = true;
+END;
+$$ LANGUAGE plpgsql STABLE SET search_path = '';
 
 -- =====================================================================
 -- === TABLE: profiles ===
@@ -108,7 +166,7 @@ DROP POLICY IF EXISTS ai_cache_insert_auth     ON public.ai_chat_cache;
 DROP POLICY IF EXISTS ai_cache_update_auth     ON public.ai_chat_cache;
 
 -- =====================================================================
--- ÉTAPE 1 : FORCER LE RLS SUR TOUTES LES TABLES
+-- ÉTAPE 1 : RÉ-ACTIVER LE RLS SUR TOUTES LES TABLES
 -- =====================================================================
 
 ALTER TABLE public.profiles           ENABLE ROW LEVEL SECURITY;
@@ -135,7 +193,7 @@ CREATE POLICY profiles_select_secure
   ON public.profiles FOR SELECT TO authenticated
   USING (
     auth.uid() = id
-    OR EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.is_admin = true)
+    OR internal.is_admin()
   );
 
 -- Mise à jour : Un utilisateur ne peut modifier QUE son propre profil
@@ -167,11 +225,11 @@ CREATE POLICY products_update_own_or_admin_secure
   ON public.products FOR UPDATE TO authenticated
   USING (
     auth.uid() = seller_id
-    OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true)
+    OR internal.is_admin()
   )
   WITH CHECK (
     auth.uid() = seller_id
-    OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true)
+    OR internal.is_admin()
   );
 
 -- Suppression : Propriétaire OU admin
@@ -179,7 +237,7 @@ CREATE POLICY products_delete_own_or_admin_secure
   ON public.products FOR DELETE TO authenticated
   USING (
     auth.uid() = seller_id
-    OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true)
+    OR internal.is_admin()
   );
 
 -- =====================================================================
@@ -189,7 +247,7 @@ CREATE POLICY products_delete_own_or_admin_secure
 -- Lecture admin : L'admin voit tout
 CREATE POLICY orders_select_admin_secure
   ON public.orders FOR SELECT TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true));
+  USING (internal.is_admin());
 
 -- Lecture acheteur : Un acheteur voit ses propres commandes
 CREATE POLICY orders_select_buyer_secure
@@ -215,7 +273,7 @@ CREATE POLICY orders_update_seller_secure
 -- Mise à jour admin
 CREATE POLICY orders_update_admin_secure
   ON public.orders FOR UPDATE TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true));
+  USING (internal.is_admin());
 
 -- =====================================================================
 -- ÉTAPE 5 : TABLE reviews — POLITIQUES SÉCURISÉES
@@ -236,7 +294,7 @@ CREATE POLICY reviews_delete_own_or_admin_secure
   ON public.reviews FOR DELETE TO authenticated
   USING (
     auth.uid() = reviewer_id
-    OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true)
+    OR internal.is_admin()
   );
 
 -- =====================================================================
@@ -246,7 +304,7 @@ CREATE POLICY reviews_delete_own_or_admin_secure
 -- Lecture : Admin seulement
 CREATE POLICY admin_notif_select_admin_secure
   ON public.admin_notifications FOR SELECT TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true));
+  USING (internal.is_admin());
 
 -- Insertion : Utilisateurs connectés peuvent signaler (reports, paiements)
 CREATE POLICY admin_notif_insert_auth_secure
@@ -256,12 +314,12 @@ CREATE POLICY admin_notif_insert_auth_secure
 -- Mise à jour : Admin seulement (marquer comme lu)
 CREATE POLICY admin_notif_update_admin_secure
   ON public.admin_notifications FOR UPDATE TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true));
+  USING (internal.is_admin());
 
 -- Suppression : Admin seulement
 CREATE POLICY admin_notif_delete_admin_secure
   ON public.admin_notifications FOR DELETE TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true));
+  USING (internal.is_admin());
 
 -- =====================================================================
 -- ÉTAPE 7 : TABLE user_history — POLITIQUES SÉCURISÉES
@@ -280,7 +338,7 @@ CREATE POLICY user_history_select_own_secure
 -- Lecture admin : Pour les analytics
 CREATE POLICY user_history_select_admin_secure
   ON public.user_history FOR SELECT TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true));
+  USING (internal.is_admin());
 
 -- =====================================================================
 -- ÉTAPE 8 : TABLE ai_chat_cache — POLITIQUES SÉCURISÉES
