@@ -182,34 +182,40 @@ export function AppProvider({ children }) {
       const controller = new AbortController();
       authControllerRef.current = controller;
 
-      try {
-        const { data: profile, error } = await supabase
-          .from('profiles').select('*').eq('id', session.user.id).single()
-          .abortSignal(controller.signal);
+      // Utilisation de setTimeout(..., 0) pour différer l'appel asynchrone à la base de données.
+      // Cela évite un deadlock (verrouillage infini) interne de Supabase Auth
+      // lors de la synchronisation de session au démarrage.
+      setTimeout(async () => {
+        try {
+          const { data: profile, error } = await supabase
+            .from('profiles').select('*').eq('id', session.user.id).single()
+            .abortSignal(controller.signal);
 
-        if (error) {
-          if (error.name === 'AbortError') return;
-          const cachedUser = await loadSecureUser();
-          if (cachedUser && cachedUser.id === session.user.id) {
-            if (cachedUser.is_seller) { setSeller(cachedUser); setUser(null); }
-            else { setUser(cachedUser); setSeller(null); }
+          if (error) {
+            if (error.name === 'AbortError') return;
+            const cachedUser = await loadSecureUser();
+            if (cachedUser && cachedUser.id === session.user.id) {
+              if (cachedUser.is_seller) { setSeller(cachedUser); setUser(null); }
+              else { setUser(cachedUser); setSeller(null); }
+            }
+          } else if (profile) {
+            const finalProfile = await handleSellerAutoRepair(profile, session.user.id);
+            setUser(finalProfile);
+            if (finalProfile.is_seller) { setSeller(finalProfile); }
+            else { setSeller(null); }
+            saveSecureUser(finalProfile);
+            saveSecureSeller(finalProfile.is_seller ? finalProfile : null);
           }
-        } else if (profile) {
-          const finalProfile = await handleSellerAutoRepair(profile, session.user.id);
-          setUser(finalProfile);
-          if (finalProfile.is_seller) { setSeller(finalProfile); }
-          else { setSeller(null); }
-          saveSecureUser(finalProfile);
-          saveSecureSeller(finalProfile.is_seller ? finalProfile : null);
+        } catch (err) {
+          if (err.name !== 'AbortError') console.error('Auth error:', err);
+        } finally {
+          if (authControllerRef.current === controller) {
+            setAuthLoading(false); isInitialized = true; clearTimeout(authTimeout);
+          }
         }
-      } catch (err) {
-        if (err.name !== 'AbortError') console.error('Auth error:', err);
-      } finally {
-        if (authControllerRef.current === controller) {
-          setAuthLoading(false); isInitialized = true; clearTimeout(authTimeout);
-        }
-      }
+      }, 0);
     });
+
 
     const loadOptimisticUser = async () => {
       try {
