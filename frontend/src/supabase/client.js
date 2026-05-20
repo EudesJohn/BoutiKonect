@@ -34,13 +34,4 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 })
 
-// Connection check (only if supabase is initialized)
-if (supabase) {
-  supabase.from('products').select('*', { count: 'exact', head: true })
-    .then(({ error, count }) => {
-      if (error) console.error('❌ Supabase Connection Error:', error.message);
-      else console.log('✅ Supabase Connected. Product count:', count);
-    })
-}
-
 export { supabase }
