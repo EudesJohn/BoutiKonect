@@ -36,6 +36,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 // Vérification de connexion
 if (supabase) {
+  console.log("🔌 Supabase: Démarrage du test de connexion...");
   supabase.from('products').select('*', { count: 'exact', head: true })
     .then(({ error, count }) => {
       if (error) {
@@ -46,5 +47,6 @@ if (supabase) {
     })
     .catch(err => console.error('❌ Supabase Network Error:', err));
 }
+
 
 export { supabase }

@@ -133,15 +133,24 @@ export const logoutUser = async () => {
   } finally {
     // Forcer la suppression du token Supabase du localStorage pour garantir la déconnexion
     // même si le serveur renvoie une erreur (ex: offline, session expirée, lock volé)
+    const keysToRemove = []
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i)
-      if (key && key.startsWith('sb-') && key.endsWith('-auth-token')) {
-        localStorage.removeItem(key)
+      if (key && (key === 'bk-auth-token' || (key.startsWith('sb-') && key.endsWith('-auth-token')))) {
+        keysToRemove.push(key)
       }
     }
+    // Nettoyage sessionStorage au cas où
+    try {
+      sessionStorage.removeItem('bk-auth-token')
+    } catch (e) {}
+
+    // Supprimer tous les tokens identifiés
+    keysToRemove.forEach(key => localStorage.removeItem(key))
     isLoggingOut = false
   }
 }
+
 
 /**
  * Envoi de l'email de réinitialisation
