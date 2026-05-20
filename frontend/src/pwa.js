@@ -2,8 +2,12 @@ import { registerSW } from 'virtual:pwa-register'
 
 const updateSW = registerSW({
   onNeedRefresh() {
-    // Auto-apply the update immediately instead of asking
-    updateSW(true)
+    // Si besoin, forcer la mise à jour (évite l'erreur de référence TDZ)
+    if (typeof updateSW === 'function') {
+      updateSW(true)
+    } else {
+      window.location.reload()
+    }
   },
   onOfflineReady() {
     console.log("L'application est prête à être utilisée hors-ligne.")
@@ -34,3 +38,15 @@ const updateSW = registerSW({
     }, 60000);
   }
 })
+
+// Détection de la mise à jour du Service Worker pour recharger automatiquement la page
+if ('serviceWorker' in navigator) {
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (refreshing) return;
+    refreshing = true;
+    console.log("🔄 Nouvelle version détectée, rechargement automatique de la page...");
+    window.location.reload();
+  });
+}
+
