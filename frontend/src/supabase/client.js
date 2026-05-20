@@ -34,4 +34,17 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 })
 
+// Vérification de connexion
+if (supabase) {
+  supabase.from('products').select('*', { count: 'exact', head: true })
+    .then(({ error, count }) => {
+      if (error) {
+        console.error('❌ Supabase Connection Error:', error.message);
+      } else {
+        console.log(`✅ Supabase Connected. Product count: ${count}`);
+      }
+    })
+    .catch(err => console.error('❌ Supabase Network Error:', err));
+}
+
 export { supabase }
