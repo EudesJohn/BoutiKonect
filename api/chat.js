@@ -99,7 +99,7 @@ export default async function handler(request, response) {
     const safeServices = Array.isArray(context.services) ? context.services.slice(0, 10).map(s => ({ title: s.title, category: s.category, price: s.price })) : [];
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
 
     const systemInstruction = `
       Tu es l'assistant virtuel EXPERT de BoutiKonect.bj.
@@ -132,7 +132,27 @@ export default async function handler(request, response) {
     return response.status(200).json({ response: text, cached: false });
 
   } catch (error) {
-    console.error("[AI CRITICAL ERROR]:", error);
-    return response.status(500).json({ error: "Erreur technique, veuillez réessayer plus tard." });
+    // Log the full error details for debugging in Vercel logs
+    console.error("[AI CRITICAL ERROR] Type:", error.constructor?.name);
+    console.error("[AI CRITICAL ERROR] Message:", error.message);
+    console.error("[AI CRITICAL ERROR] Status:", error.status || error.statusCode || 'N/A');
+    console.error("[AI CRITICAL ERROR] Stack:", error.stack);
+
+    // Expose specific error info to help diagnose production issues
+    let clientMessage = "Erreur technique, veuillez réessayer plus tard.";
+    if (error.message?.includes('API_KEY_INVALID') || error.message?.includes('API key not valid')) {
+      clientMessage = "Clé API Gemini invalide ou expirée. Vérifiez GEMINI_API_KEY dans les variables Vercel.";
+    } else if (error.message?.includes('QUOTA_EXCEEDED') || error.message?.includes('429')) {
+      clientMessage = "Quota API Gemini épuisé. Veuillez patienter ou vérifier votre plan Google AI.";
+    } else if (error.message?.includes('PERMISSION_DENIED') || error.status === 403) {
+      clientMessage = "Accès refusé à l'API Gemini. Vérifiez les permissions de votre clé API.";
+    } else if (error.message?.includes('not found') || error.message?.includes('404')) {
+      clientMessage = "Modèle IA introuvable. Le modèle gemini-2.0-flash-lite est peut-être indisponible dans votre région.";
+    }
+
+    return response.status(500).json({
+      error: clientMessage,
+      debug: process.env.NODE_ENV !== 'production' ? error.message : undefined
+    });
   }
 }
