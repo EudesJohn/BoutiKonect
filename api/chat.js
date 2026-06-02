@@ -89,17 +89,20 @@ export default async function handler(request, response) {
       }
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
+    const rawApiKey = process.env.GEMINI_API_KEY;
+    if (!rawApiKey) {
+      return response.status(503).json({ error: "L'assistant est en maintenance (Configuration API manquante)." });
+    }
+
+    // Support de la rotation de clés API Gemini (séparées par des virgules)
+    const apiKeys = rawApiKey.split(',').map(k => k.trim()).filter(Boolean);
+    if (apiKeys.length === 0) {
       return response.status(503).json({ error: "L'assistant est en maintenance (Configuration API manquante)." });
     }
 
     // Sécurisation du contexte
     const safeProducts = Array.isArray(context.products) ? context.products.slice(0, 10).map(p => ({ title: p.title, category: p.category, price: p.price })) : [];
     const safeServices = Array.isArray(context.services) ? context.services.slice(0, 10).map(s => ({ title: s.title, category: s.category, price: s.price })) : [];
-
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
 
     const systemInstruction = `
       Tu es l'assistant virtuel EXPERT de BoutiKonect.bj.
@@ -111,11 +114,37 @@ export default async function handler(request, response) {
 
     const fullPrompt = `${systemInstruction}\n\nUtilisateur: ${prompt}`;
     
-    const result = await model.generateContent(fullPrompt);
-    const aiResponse = await result.response;
-    const text = aiResponse.text();
+    let text = null;
+    let lastError = null;
 
-    if (!text) throw new Error("Réponse vide de l'IA");
+    // Essayer chaque clé en rotation en cas d'erreur de quota/limite
+    for (let i = 0; i < apiKeys.length; i++) {
+      const apiKey = apiKeys[i];
+      try {
+        console.log(`[AI Gemini] Tentative de génération avec la clé index ${i} (début : ${apiKey.substring(0, 10)})...`);
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
+        const result = await model.generateContent(fullPrompt);
+        const aiResponse = await result.response;
+        text = aiResponse.text();
+        if (text) {
+          console.log(`[AI Gemini] Succès avec la clé index ${i}.`);
+          break;
+        }
+      } catch (err) {
+        lastError = err;
+        console.warn(`[AI Gemini Warning] Échec de la clé index ${i} :`, err.message);
+        // Si c'est la seule clé, pas la peine de boucler
+        if (apiKeys.length === 1) break;
+      }
+    }
+
+    if (!text) {
+      if (lastError) {
+        throw lastError;
+      }
+      throw new Error("Réponse vide de l'IA");
+    }
 
     // --- ENREGISTREMENT DANS LE CACHE ---
     if (supabase && text && !text.startsWith('[DIAGNOSTIC]')) {
@@ -142,8 +171,8 @@ export default async function handler(request, response) {
     let clientMessage = "Erreur technique, veuillez réessayer plus tard.";
     if (error.message?.includes('API_KEY_INVALID') || error.message?.includes('API key not valid')) {
       clientMessage = "Clé API Gemini invalide ou expirée. Vérifiez GEMINI_API_KEY dans les variables Vercel.";
-    } else if (error.message?.includes('QUOTA_EXCEEDED') || error.message?.includes('429')) {
-      clientMessage = "Quota API Gemini épuisé. Veuillez patienter ou vérifier votre plan Google AI.";
+    } else if (error.message?.includes('QUOTA_EXCEEDED') || error.message?.includes('429') || error.message?.includes('quota')) {
+      clientMessage = "Quota API Gemini épuisé. Veuillez patienter ou ajouter des clés API alternatives séparées par des virgules dans GEMINI_API_KEY.";
     } else if (error.message?.includes('PERMISSION_DENIED') || error.status === 403) {
       clientMessage = "Accès refusé à l'API Gemini. Vérifiez les permissions de votre clé API.";
     } else if (error.message?.includes('not found') || error.message?.includes('404')) {
