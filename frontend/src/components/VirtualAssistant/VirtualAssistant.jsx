@@ -33,8 +33,8 @@ const VirtualAssistant = () => {
       const q = query.toLowerCase();
       
       // Local triggers for instant response (Greetings)
-      const greetings = ['bonjour', 'salut', 'coucou', 'bonsoir', 'hello', 'hey', 'hi', 'allo'];
-      if (greetings.some(g => q.includes(g))) {
+      const greetings = ['bonjour', 'salut', 'coucou', 'bonsoir', 'hello', 'hey', 'hi', 'allo', 'cc', 'slt', 'bjr', 'bsr', 'yo'];
+      if (greetings.some(g => q === g || q.startsWith(g + ' ') || q.endsWith(' ' + g) || q.includes(' ' + g + ' '))) {
         const hour = new Date().getHours();
         if (q.includes('bonsoir') || (hour >= 18 && q.includes('bonjour'))) {
           return "Bonsoir ! Comment puis-je vous aider sur BoutiKonect ce soir ?";
