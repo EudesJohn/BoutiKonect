@@ -810,6 +810,117 @@
   }
 }
 
+@media (max-width: 620px) {
+  /* Mobile: transform table into card layout with data-label */
+  .invoice-table thead {
+    display: none;
+  }
+
+  .invoice-table-wrapper {
+    overflow: visible;
+    border: none;
+    background: transparent;
+    margin: 0;
+  }
+
+  .invoice-table,
+  .invoice-table tbody,
+  .invoice-table tr,
+  .invoice-table td {
+    display: block;
+  }
+
+  .invoice-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .invoice-table tr {
+    background: rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    padding: 12px;
+    border: 1px solid var(--dark-border);
+  }
+
+  .invoice-table tr:hover {
+    background: rgba(0, 0, 0, 0.12);
+  }
+
+  .invoice-table td {
+    border: none;
+    padding: 4px 0;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    text-align: right;
+  }
+
+  .invoice-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--primary);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Product cell: stack product info vertically */
+  .td-product {
+    flex-direction: column;
+    align-items: stretch !important;
+    text-align: left !important;
+    padding-bottom: 8px !important;
+    border-bottom: 1px solid var(--dark-border) !important;
+    margin-bottom: 4px;
+  }
+
+  .td-product::before {
+    margin-bottom: 6px;
+  }
+
+  .product-info {
+    gap: 10px;
+  }
+
+  .product-thumb {
+    width: 40px;
+    height: 40px;
+  }
+
+  .product-title {
+    font-size: 0.9rem;
+  }
+
+  .product-seller {
+    font-size: 0.75rem;
+  }
+
+  .td-qty,
+  .td-price,
+  .td-total {
+    min-width: 0;
+    white-space: normal;
+  }
+
+  /* Right-align values on the value side */
+  .td-qty::after,
+  .td-price::after,
+  .td-total::after {
+    content: '';
+    flex: 1;
+  }
+
+  .invoice-totals {
+    max-width: 100%;
+    margin-left: 0;
+  }
+}
+
 @media (max-width: 480px) {
   .invoice-header {
     gap: var(--space-sm);
@@ -820,7 +931,7 @@
   }
 
   .invoice-meta h2 {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
   }
 
   .invoice-document {
@@ -828,27 +939,21 @@
     border-radius: var(--radius-lg);
   }
 
-  .invoice-table th,
-  .invoice-table td {
-    padding: var(--space-sm);
-    font-size: 0.8rem;
+  .invoice-table tr {
+    padding: 10px;
   }
 
   .product-thumb {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
   }
 
   .product-title {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
   }
 
   .product-seller {
     font-size: 0.7rem;
-  }
-
-  .td-qty {
-    text-align: center;
   }
 
   .total-row.grand-total {

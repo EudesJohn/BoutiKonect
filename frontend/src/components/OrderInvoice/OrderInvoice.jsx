@@ -276,7 +276,7 @@ export default function OrderInvoice({
                   {items && items.length > 0 ? (
                     items.map((item, idx) => (
                       <tr key={item.id || idx}>
-                        <td className="td-product">
+                        <td className="td-product" data-label="Produit">
                           <div className="product-info">
                             {item.images?.[0] && (
                               <img src={item.images[0]} alt={item.title} className="product-thumb" />
@@ -289,9 +289,9 @@ export default function OrderInvoice({
                             </div>
                           </div>
                         </td>
-                        <td className="td-qty">{item.quantity}</td>
-                        <td className="td-price">{formatPrice(item.price)}</td>
-                        <td className="td-total">{formatPrice(item.price * (item.quantity || 1))}</td>
+                        <td className="td-qty" data-label="Qté">{item.quantity}</td>
+                        <td className="td-price" data-label="Prix">{formatPrice(item.price)}</td>
+                        <td className="td-total" data-label="Total">{formatPrice(item.price * (item.quantity || 1))}</td>
                       </tr>
                     ))
                   ) : (
