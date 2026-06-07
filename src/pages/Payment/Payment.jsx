@@ -9,20 +9,21 @@ import './Payment.css'
 
 export default function Payment() {
   const navigate = useNavigate()
-  const { cart, getCartTotal, clearCart, createOrder, user, seller } = useContext(AppContext)
+  const { cart, getCartTotal, clearCart, createOrder, user, seller, products } = useContext(AppContext)
+  const currentUser = user || seller
 
   const [paymentMethod, setPaymentMethod] = useState('mobile_money')
   const [loading, setLoading] = useState(false)
   const [paymentSuccess, setPaymentSuccess] = useState(false)
   const [paymentError, setPaymentError] = useState(null)
   const [paymentInstructions, setPaymentInstructions] = useState(null)
-  const [phone, setPhone] = useState('')
+  // Pré-remplir le téléphone depuis le profil utilisateur
+  const [phone, setPhone] = useState(currentUser?.phone || '')
   const [showConfirmation, setShowConfirmation] = useState(false)
   // Stocke les données de la commande AVANT de vider le panier (évite facture vide)
   const [lastOrder, setLastOrder] = useState(null)
 
   const total = getCartTotal()
-  const currentUser = user || seller
 
   useEffect(() => {
     if (cart.length === 0 && !paymentSuccess) {
@@ -127,17 +128,26 @@ export default function Payment() {
 
     // 🔴 CRITIQUE : Sauvegarder les articles AVANT de vider le panier
     const orderItems = cart.map(item => ({ ...item }))
-    const orderTotal = total
     const orderDate = new Date()
 
     try {
       // Collecter et attendre toutes les promesses createOrder
-      const orderPromises = cart.map(item =>
-        createOrder({
+      const orderPromises = cart.map((item, idx) => {
+        // Utiliser le prix promotionnel s'il existe
+        const product = products.find(p => p.id === item.id)
+        const effectivePrice = product?.promotionPrice || item.price
+
+        // Mettre à jour le snapshot pour la facture
+        if (orderItems[idx]) {
+          orderItems[idx].price = effectivePrice
+          orderItems[idx].originalPrice = item.price
+        }
+
+        return createOrder({
           productId: item.id,
           productTitle: item.title,
           productImage: item.images?.[0],
-          price: item.price,
+          price: effectivePrice,
           quantity: item.quantity,
           sellerId: item.sellerId,
           buyerId: currentUser?.id,
@@ -147,16 +157,19 @@ export default function Payment() {
           paymentStatus: 'paid',
           paymentMethod: 'mobile_money'
         })
-      )
+      })
 
       await Promise.all(orderPromises)
+
+      // Calculer le total depuis le snapshot mis à jour (prix promo inclus)
+      const effectiveTotal = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
 
       // Stocker les données de la facture avant de vider le panier
       setLastOrder({
         items: orderItems,
         buyerName: currentUser?.name || 'Client',
         buyerPhone: phone || currentUser?.phone,
-        total: orderTotal,
+        total: effectiveTotal,
         date: orderDate,
         paymentMethod: 'Mobile Money (FedaPay)',
         paymentStatus: 'paid'

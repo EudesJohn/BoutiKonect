@@ -1,4 +1,4 @@
-import { useContext, useState, useMemo } from 'react'
+import { useContext, useState, useMemo, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { AppContext } from '../../context/AppContextInstance'
@@ -10,9 +10,12 @@ import './Cart.css'
 export default function Cart() {
   const navigate = useNavigate()
   const { cart, removeFromCart, updateCartQuantity, clearCart, getCartTotal, user, seller, createOrder, products } = useContext(AppContext)
+  const currentUser = user || seller
+
+  // Pré-remplir le formulaire avec les données de l'utilisateur connecté
   const [orderForm, setOrderForm] = useState({
-    name: '',
-    phone: '',
+    name: currentUser?.name || '',
+    phone: currentUser?.phone || '',
     address: ''
   })
   const [orderPlaced, setOrderPlaced] = useState(false)
@@ -94,7 +97,17 @@ export default function Cart() {
 
       // Create an order for each product in cart
       const results = []
-      for (const item of cart) {
+      for (const [idx, item] of cart.entries()) {
+        // Utiliser le prix promotionnel s'il existe
+        const product = products.find(p => p.id === item.id)
+        const effectivePrice = product?.promotionPrice || item.price
+
+        // Mettre à jour le snapshot avec le prix effectif
+        if (orderedItems[idx]) {
+          orderedItems[idx].price = effectivePrice
+          orderedItems[idx].originalPrice = item.price
+        }
+
         const order = {
           type: item.type || 'product',
           productId: item.id,
@@ -112,8 +125,8 @@ export default function Cart() {
           location: orderForm.address.trim(), // Support service field
           details: 'Commande depuis le panier',
           quantity: item.quantity,
-          price: item.price,
-          total: item.price * item.quantity
+          price: effectivePrice,
+          total: effectivePrice * item.quantity
         }
         console.log("Creating order for seller:", item.sellerId, "Product:", item.title);
         const result = await createOrder(order)

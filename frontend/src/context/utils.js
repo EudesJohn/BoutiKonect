@@ -70,6 +70,7 @@ export function mapItemFromDB(item) {
     priceType: item.price_type,
     isPromoted: item.is_promoted,
     promotionEndDate: item.promotion_end_date,
+    promotionPrice: item.promotion_price,
     lastTransactionId: item.last_transaction_id,
     promotionPlanName: item.promotion_plan_name,
     promotionPlanPrice: item.promotion_plan_price,

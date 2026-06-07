@@ -8,16 +8,17 @@ import './Payment.css'
 
 export default function Payment() {
   const navigate = useNavigate()
-  const { cart, getCartTotal, clearCart, createOrder, user, seller } = useContext(AppContext)
-  
+  const { cart, getCartTotal, clearCart, createOrder, user, seller, products } = useContext(AppContext)
+  const currentUser = user || seller
+
   const [paymentMethod, setPaymentMethod] = useState('fedapay')
   const [loading, setLoading] = useState(false)
   const [paymentSuccess, setPaymentSuccess] = useState(false)
   const [paymentError, setPaymentError] = useState(null)
-  const [phone, setPhone] = useState('')
+  // Pré-remplir le téléphone depuis le profil utilisateur
+  const [phone, setPhone] = useState(currentUser?.phone || '')
 
   const total = getCartTotal()
-  const currentUser = user || seller
 
   useEffect(() => {
     if (cart.length === 0 && !paymentSuccess) {
@@ -62,12 +63,16 @@ export default function Payment() {
       }
 
       // 2. Si le paiement est réussi, créer les commandes dans Supabase
-      const orderPromises = cart.map(item => 
-        createOrder({
+      const orderPromises = cart.map(item => {
+        // Utiliser le prix promotionnel s'il existe
+        const product = products.find(p => p.id === item.id)
+        const effectivePrice = product?.promotionPrice || item.price
+
+        return createOrder({
           productId: item.id,
           productTitle: item.title,
           productImage: item.images[0],
-          price: item.price,
+          price: effectivePrice,
           quantity: item.quantity,
           sellerId: item.sellerId,
           buyerId: currentUser?.id,
@@ -77,7 +82,7 @@ export default function Payment() {
           paymentStatus: 'paid',
           paymentMethod: 'fedapay'
         })
-      )
+      })
 
       const results = await Promise.all(orderPromises)
       const allSuccessful = results.every(res => res && res.success)
