@@ -37,8 +37,8 @@ export const openFedaPayOverlay = ({ amount, description, customer, callbackUrl 
       },
       customer: {
         email: customer.email,
-        lastname: customer.name || 'Client',
-        firstname: '',
+        firstname: customer.name?.split(' ')[0] || 'Client',
+        lastname: customer.name?.split(' ').slice(1).join(' ') || customer.name?.split(' ')[0] || 'BoutiKonect',
         phone_number: {
           number: customer.phone || '',
           country: 'BJ'

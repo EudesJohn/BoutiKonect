@@ -116,10 +116,11 @@ export const createPromotionCheckoutSession = async (product, plan, user) => {
       description: `Promotion: ${product.title} (${officialPlan.name})`
     };
 
+    const nameParts = (user.name || '').trim().split(' ')
     const customer = {
       email: user.email || 'client@example.com',
-      lastname: user.name?.split(' ').slice(1).join(' ') || 'Boutique',
-      firstname: user.name?.split(' ')[0] || 'Client',
+      firstname: nameParts[0] || user.name || 'Client',
+      lastname: nameParts.slice(1).join(' ') || nameParts[0] || 'BoutiKonect',
     };
 
     // Stocker les infos pour le callback

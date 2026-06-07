@@ -54,10 +54,12 @@ export default function Payment() {
 
       if (fedapayAvailable) {
         // Configuration FedaPay pour le panier
+        // Extraire prénom et nom depuis le profil utilisateur
+        const nameParts = (currentUser?.name || '').trim().split(' ')
         const customer = {
           email: currentUser?.email || 'client@example.com',
-          lastname: currentUser?.name?.split(' ').slice(1).join(' ') || 'Client',
-          firstname: currentUser?.name?.split(' ')[0] || '',
+          firstname: nameParts[0] || currentUser?.name || 'Client',
+          lastname: nameParts.slice(1).join(' ') || nameParts[0] || 'BoutiKonect',
           phone_number: {
             number: phone,
             country: 'bj'
