@@ -94,7 +94,9 @@ export default function Cart() {
       const orderPromises = cart.map((item, idx) => {
         // Chercher le prix promo dans les données actuelles du produit
         const product = products.find(p => p.id === item.id)
-        const effectivePrice = product?.promotionPrice || item.price
+        const effectivePrice = (product?.promotionPrice != null && product?.promotionPrice !== '')
+          ? Number(product.promotionPrice)
+          : Number(item.price) || 0
 
         // Mettre à jour le snapshot avec le prix effectif pour la facture
         if (orderedItems[idx]) {
@@ -157,7 +159,7 @@ export default function Cart() {
             buyerName={lastOrder?.buyerName || orderForm.name}
             buyerPhone={lastOrder?.buyerPhone || orderForm.phone}
             buyerAddress={lastOrder?.buyerAddress || orderForm.address}
-            total={lastOrder?.total || getCartTotal()}
+            total={lastOrder?.total ?? getCartTotal()}
             orderDate={lastOrder?.date || new Date()}
             paymentMethod={lastOrder?.paymentMethod || 'Paiement à la livraison'}
             paymentStatus={lastOrder?.paymentStatus || 'pending'}

@@ -135,9 +135,11 @@ export default function Payment() {
     try {
       // Collecter et attendre toutes les promesses createOrder
       const orderPromises = cart.map((item, idx) => {
-        // Utiliser le prix promotionnel s'il existe
+        // Utiliser le prix promotionnel s'il existe (vérif robuste — pas de || qui laisse passer string "0")
         const product = products.find(p => p.id === item.id)
-        const effectivePrice = product?.promotionPrice || item.price
+        const effectivePrice = (product?.promotionPrice != null && product?.promotionPrice !== '')
+          ? Number(product.promotionPrice)
+          : Number(item.price) || 0
 
         // Mettre à jour le snapshot pour la facture
         if (orderItems[idx]) {
@@ -196,7 +198,7 @@ export default function Payment() {
             items={lastOrder?.items || cart}
             buyerName={lastOrder?.buyerName || currentUser?.name || 'Client'}
             buyerPhone={lastOrder?.buyerPhone || phone || currentUser?.phone}
-            total={lastOrder?.total || total}
+            total={lastOrder?.total ?? total}
             orderDate={lastOrder?.date || new Date()}
             paymentMethod={lastOrder?.paymentMethod || 'Mobile Money (FedaPay)'}
             paymentStatus={lastOrder?.paymentStatus || 'paid'}

@@ -20,11 +20,13 @@ const generateOrderRef = (index = 0) => {
  * Format price in XOF
  */
 const formatPrice = (price) => {
+  const validPrice = Number(price)
+  if (isNaN(validPrice) || validPrice < 0) return '0 FCFA'
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
     currency: 'XOF',
     minimumFractionDigits: 0
-  }).format(price)
+  }).format(validPrice)
 }
 
 /**

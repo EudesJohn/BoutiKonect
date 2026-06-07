@@ -100,7 +100,9 @@ export default function Cart() {
       for (const [idx, item] of cart.entries()) {
         // Utiliser le prix promotionnel s'il existe
         const product = products.find(p => p.id === item.id)
-        const effectivePrice = product?.promotionPrice || item.price
+        const effectivePrice = (product?.promotionPrice != null && product?.promotionPrice !== '')
+          ? Number(product.promotionPrice)
+          : Number(item.price) || 0
 
         // Mettre à jour le snapshot avec le prix effectif
         if (orderedItems[idx]) {

@@ -66,7 +66,9 @@ export default function Payment() {
       const orderPromises = cart.map(item => {
         // Utiliser le prix promotionnel s'il existe
         const product = products.find(p => p.id === item.id)
-        const effectivePrice = product?.promotionPrice || item.price
+        const effectivePrice = (product?.promotionPrice != null && product?.promotionPrice !== '')
+          ? Number(product.promotionPrice)
+          : Number(item.price) || 0
 
         return createOrder({
           productId: item.id,
