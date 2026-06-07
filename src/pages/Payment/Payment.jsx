@@ -38,7 +38,7 @@ export default function Payment() {
 
     // Validation améliorée du téléphone
     const cleanedPhone = phone.replace(/[\s\-\.]/g, '')
-    const phoneRegex = /^(\+229)?[0-9]{8,10}$/
+    const phoneRegex = /^(\+229)?[0-9]{8}$/
     if (!phoneRegex.test(cleanedPhone)) {
       setPaymentError("Format de téléphone invalide. Utilisez +229XXXXXXXX ou 01XXXXXXXX.")
       return
@@ -130,38 +130,47 @@ export default function Payment() {
     const orderTotal = total
     const orderDate = new Date()
 
-    cart.forEach(item => {
-      createOrder({
-        productId: item.id,
-        productTitle: item.title,
-        productImage: item.images?.[0],
-        price: item.price,
-        quantity: item.quantity,
-        sellerId: item.sellerId,
-        buyerId: currentUser?.id,
-        buyerName: currentUser?.name,
+    try {
+      // Collecter et attendre toutes les promesses createOrder
+      const orderPromises = cart.map(item =>
+        createOrder({
+          productId: item.id,
+          productTitle: item.title,
+          productImage: item.images?.[0],
+          price: item.price,
+          quantity: item.quantity,
+          sellerId: item.sellerId,
+          buyerId: currentUser?.id,
+          buyerName: currentUser?.name,
+          buyerPhone: phone || currentUser?.phone,
+          paymentId: 'PAY' + Date.now() + Math.random().toString(36).slice(2, 6),
+          paymentStatus: 'paid',
+          paymentMethod: 'mobile_money'
+        })
+      )
+
+      await Promise.all(orderPromises)
+
+      // Stocker les données de la facture avant de vider le panier
+      setLastOrder({
+        items: orderItems,
+        buyerName: currentUser?.name || 'Client',
         buyerPhone: phone || currentUser?.phone,
-        paymentId: 'PAY' + Date.now() + Math.random().toString(36).slice(2, 6),
-        paymentStatus: 'paid',
-        paymentMethod: 'mobile_money'
+        total: orderTotal,
+        date: orderDate,
+        paymentMethod: 'Mobile Money (FedaPay)',
+        paymentStatus: 'paid'
       })
-    })
 
-    // Stocker les données de la facture avant de vider le panier
-    setLastOrder({
-      items: orderItems,
-      buyerName: currentUser?.name || 'Client',
-      buyerPhone: phone || currentUser?.phone,
-      total: orderTotal,
-      date: orderDate,
-      paymentMethod: 'Mobile Money (FedaPay)',
-      paymentStatus: 'paid'
-    })
-
-    clearCart()
-    setPaymentSuccess(true)
-    setShowConfirmation(false)
-    setLoading(false)
+      clearCart()
+      setPaymentSuccess(true)
+      setShowConfirmation(false)
+    } catch (err) {
+      console.error('Erreur lors de la création de la commande:', err)
+      setPaymentError('La commande n\'a pas pu être enregistrée. Veuillez réessayer.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (paymentSuccess) {
@@ -199,6 +208,11 @@ export default function Payment() {
               <h2>Confirmation du paiement</h2>
               <p className="amount">{formatPrice(total)}</p>
             </div>
+            {paymentError && (
+              <motion.div className="payment-error" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+                <X size={20} /><span>{paymentError}</span>
+              </motion.div>
+            )}
             <div className="payment-instructions">
               <h3>Instructions Mobile Money</h3>
               <pre>{paymentInstructions}</pre>

@@ -2,6 +2,7 @@ import { useContext, useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { AppContext } from '../../context/AppContext'
+import { formatPrice } from '../../services/paymentService'
 import { ShoppingCart, Trash2, Minus, Plus, ArrowLeft, MapPin, AlertTriangle, Loader } from 'lucide-react'
 import { validateName, validatePhone, validateAddress } from '../../utils/validation'
 import OrderInvoice from '../../components/OrderInvoice/OrderInvoice'
@@ -19,16 +20,7 @@ export default function Cart() {
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
-  const [stockErrors, setStockErrors] = useState([])
   const [lastOrder, setLastOrder] = useState(null)
-
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'XOF',
-      minimumFractionDigits: 0
-    }).format(price)
-  }
 
   // Validate order form
   const validateOrderForm = () => {
@@ -53,13 +45,13 @@ export default function Cart() {
     return Object.keys(newErrors).length === 0
   }
 
-  // Check stock availability for all items
-  const checkStockAvailability = useMemo(() => {
+  // Vérifier le stock disponible pour tous les articles — valeur dérivée pure
+  const stockErrors = useMemo(() => {
     const errors = []
     cart.forEach(item => {
       const product = products.find(p => p.id === item.id)
       const availableStock = product?.stock || 0
-      
+
       if (availableStock < item.quantity) {
         errors.push({
           productId: item.id,
@@ -69,8 +61,7 @@ export default function Cart() {
         })
       }
     })
-    setStockErrors(errors)
-    return errors.length === 0
+    return errors
   }, [cart, products])
 
   const handleOrder = async (e) => {
@@ -85,7 +76,7 @@ export default function Cart() {
     }
 
     // Check stock availability
-    if (!checkStockAvailability) {
+    if (stockErrors.length > 0) {
       return
     }
 
@@ -120,13 +111,16 @@ export default function Cart() {
 
       await Promise.all(orderPromises)
 
+      // Calculer le total depuis le snapshot (pas depuis le panier qui peut changer pendant l'async)
+      const orderTotal = orderedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+
       // Store order data for invoice display
       setLastOrder({
         items: orderedItems,
         buyerName: orderForm.name.trim(),
         buyerPhone: orderForm.phone.trim(),
         buyerAddress: orderForm.address.trim(),
-        total: getCartTotal(),
+        total: orderTotal,
         date: orderTimestamp,
         paymentMethod: 'Paiement à la livraison',
         paymentStatus: 'pending'

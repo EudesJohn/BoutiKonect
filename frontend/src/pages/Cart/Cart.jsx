@@ -1,7 +1,8 @@
-import { useContext, useState, useMemo, useCallback } from 'react'
+import { useContext, useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { AppContext } from '../../context/AppContextInstance'
+import { formatPrice } from '../../services/paymentService'
 import { ShoppingCart, Trash2, Minus, Plus, ArrowLeft, MapPin, CircleCheck as CheckCircle, TriangleAlert as AlertTriangle, Package } from 'lucide-react'
 import { validateName, validatePhone, validateAddress } from '../../utils/validation'
 import './Cart.css'
@@ -17,15 +18,6 @@ export default function Cart() {
   const [orderPlaced, setOrderPlaced] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState({})
-  const [stockErrors, setStockErrors] = useState([])
-
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'XOF',
-      minimumFractionDigits: 0
-    }).format(price)
-  }
 
   // Validate order form
   const validateOrderForm = () => {
@@ -50,16 +42,16 @@ export default function Cart() {
     return Object.keys(newErrors).length === 0
   }
 
-  // Check stock availability for all items
-  const checkStockAvailability = useCallback(() => {
+  // Verifier le stock disponible pour tous les articles -- valeur derivee pure
+  const stockErrors = useMemo(() => {
     const errors = []
     cart.forEach(item => {
       const product = products.find(p => p.id === item.id)
       // Skip stock verification for services
       if (product?.type === 'service') return;
-      
+
       const availableStock = product?.stock || 0
-      
+
       if (availableStock < item.quantity) {
         errors.push({
           productId: item.id,
@@ -69,8 +61,7 @@ export default function Cart() {
         })
       }
     })
-    setStockErrors(errors)
-    return errors.length === 0
+    return errors
   }, [cart, products])
 
   const handleOrder = async (e) => {
@@ -81,8 +72,8 @@ export default function Cart() {
       return
     }
     
-    // Check stock availability
-    if (!checkStockAvailability()) {
+    // Check stock availability (already derived in useMemo)
+    if (stockErrors.length > 0) {
       return
     }
     
@@ -98,6 +89,9 @@ export default function Cart() {
     }
 
     try {
+      // Capturer un snapshot du panier avant les operations async
+      const orderedItems = cart.map(item => ({ ...item }))
+
       // Create an order for each product in cart
       const results = []
       for (const item of cart) {

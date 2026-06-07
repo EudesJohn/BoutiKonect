@@ -31,6 +31,14 @@ export default function Payment() {
       return
     }
 
+    // Validation du téléphone (8 chiffres pour le Bénin)
+    const cleanedPhone = phone.replace(/[\s\-\.]/g, '')
+    const phoneRegex = /^(\+229)?[0-9]{8}$/
+    if (!phoneRegex.test(cleanedPhone)) {
+      setPaymentError("Format de téléphone invalide. Utilisez +229XXXXXXXX ou 01XXXXXXXX.")
+      return
+    }
+
     setLoading(true)
     setPaymentError(null)
 
