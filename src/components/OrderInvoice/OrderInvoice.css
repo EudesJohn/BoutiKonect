@@ -741,8 +741,9 @@
 
   .invoice-header {
     flex-direction: column;
-    align-items: center;
     text-align: center;
+    width: 100%;
+    max-width: 100%;
   }
 
   .invoice-meta {
@@ -760,10 +761,9 @@
   }
 
   .invoice-table-wrapper {
-    margin: 0 calc(-1 * var(--space-md));
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
+    margin: 0;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--dark-border);
   }
 
   .product-thumb {
@@ -777,12 +777,23 @@
 
   .invoice-totals {
     max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .grand-total .total-amount {
+    font-size: 1.15rem;
   }
 
   .invoice-payment {
     flex-direction: column;
-    align-items: flex-start;
+    width: 100%;
     gap: var(--space-sm);
+  }
+
+  .payment-row {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .actions-primary {
@@ -821,6 +832,7 @@
     border: none;
     background: transparent;
     margin: 0;
+    padding: 0;
   }
 
   .invoice-table,
@@ -834,13 +846,16 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+    width: 100%;
   }
 
   .invoice-table tr {
     background: rgba(0, 0, 0, 0.08);
     border-radius: 10px;
-    padding: 12px;
+    padding: 14px;
     border: 1px solid var(--dark-border);
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .invoice-table tr:hover {
@@ -849,13 +864,12 @@
 
   .invoice-table td {
     border: none;
-    padding: 4px 0;
+    padding: 5px 0;
     font-size: 0.9rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    text-align: right;
   }
 
   .invoice-table td::before {
@@ -865,35 +879,36 @@
     text-transform: uppercase;
     letter-spacing: 0.3px;
     color: var(--primary);
-    white-space: nowrap;
     flex-shrink: 0;
   }
 
-  /* Product cell: stack product info vertically */
+  /* Product cell: full-width, stacked layout */
   .td-product {
     flex-direction: column;
     align-items: stretch !important;
-    text-align: left !important;
     padding-bottom: 8px !important;
     border-bottom: 1px solid var(--dark-border) !important;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
+    width: 100%;
   }
 
   .td-product::before {
     margin-bottom: 6px;
   }
 
-  .product-info {
+  .td-product .product-info {
     gap: 10px;
+    width: 100%;
   }
 
-  .product-thumb {
-    width: 40px;
-    height: 40px;
+  .td-product .product-info img {
+    width: 44px;
+    height: 44px;
   }
 
   .product-title {
     font-size: 0.9rem;
+    font-weight: 500;
   }
 
   .product-seller {
@@ -907,61 +922,28 @@
     white-space: normal;
   }
 
-  /* Right-align values on the value side */
-  .td-qty::after,
-  .td-price::after,
-  .td-total::after {
-    content: '';
-    flex: 1;
+  /* Value part takes remaining space, right-aligned */
+  .td-qty > *:last-child,
+  .td-price > *:last-child,
+  .td-total > *:last-child {
+    margin-left: auto;
   }
 
   .invoice-totals {
     max-width: 100%;
     margin-left: 0;
+    margin-right: 0;
   }
 }
 
 @media (max-width: 480px) {
-  .invoice-header {
-    gap: var(--space-sm);
+  .invoice-page {
+    padding: 0;
   }
 
-  .brand-name {
-    font-size: 1.2rem;
-  }
-
-  .invoice-meta h2 {
-    font-size: 1.1rem;
-  }
-
-  .invoice-document {
-    padding: var(--space-sm);
+  .invoice-success-banner {
+    padding: var(--space-lg) var(--space-md);
     border-radius: var(--radius-lg);
-  }
-
-  .invoice-table tr {
-    padding: 10px;
-  }
-
-  .product-thumb {
-    width: 32px;
-    height: 32px;
-  }
-
-  .product-title {
-    font-size: 0.85rem;
-  }
-
-  .product-seller {
-    font-size: 0.7rem;
-  }
-
-  .total-row.grand-total {
-    font-size: 1rem;
-  }
-
-  .grand-total .total-amount {
-    font-size: 1.1rem;
   }
 
   .invoice-success-banner h1 {
@@ -973,10 +955,56 @@
     height: 56px;
   }
 
-  /* Mobile-optimized payment section */
-  .payment-row {
-    flex-wrap: wrap;
-    width: 100%;
-    justify-content: space-between;
+  .banner-icon svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  .invoice-document {
+    padding: var(--space-sm);
+    border-radius: var(--radius-lg);
+  }
+
+  .invoice-header {
+    gap: var(--space-sm);
+  }
+
+  .brand-name {
+    font-size: 1.1rem;
+  }
+
+  .invoice-meta h2 {
+    font-size: 1rem;
+    letter-spacing: 1px;
+  }
+
+  .invoice-table tr {
+    padding: 10px;
+  }
+
+  .product-thumb {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .product-title {
+    font-size: 0.85rem;
+  }
+
+  .product-seller {
+    font-size: 0.7rem;
+  }
+
+  .invoice-table td {
+    padding: 4px 0;
+    font-size: 0.85rem;
+  }
+
+  .total-row.grand-total {
+    font-size: 1rem;
+  }
+
+  .grand-total .total-amount {
+    font-size: 1.1rem;
   }
 }
