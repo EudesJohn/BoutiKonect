@@ -1,15 +1,16 @@
 import { useState, useContext, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { AppContext } from '../../context/AppContext'
 import { initFedaPay, formatPrice } from '../../services/paymentService'
 import { CreditCard, Smartphone, CheckCircle, X, ArrowLeft, Loader, Wallet, Clock } from 'lucide-react'
+import OrderInvoice from '../../components/OrderInvoice/OrderInvoice'
 import './Payment.css'
 
 export default function Payment() {
   const navigate = useNavigate()
   const { cart, getCartTotal, clearCart, createOrder, user, seller } = useContext(AppContext)
-  
+
   const [paymentMethod, setPaymentMethod] = useState('mobile_money')
   const [loading, setLoading] = useState(false)
   const [paymentSuccess, setPaymentSuccess] = useState(false)
@@ -17,6 +18,8 @@ export default function Payment() {
   const [paymentInstructions, setPaymentInstructions] = useState(null)
   const [phone, setPhone] = useState('')
   const [showConfirmation, setShowConfirmation] = useState(false)
+  // Stocke les données de la commande AVANT de vider le panier (évite facture vide)
+  const [lastOrder, setLastOrder] = useState(null)
 
   const total = getCartTotal()
   const currentUser = user || seller
@@ -33,53 +36,84 @@ export default function Payment() {
       return
     }
 
+    // Validation améliorée du téléphone
+    const cleanedPhone = phone.replace(/[\s\-\.]/g, '')
+    const phoneRegex = /^(\+229)?[0-9]{8,10}$/
+    if (!phoneRegex.test(cleanedPhone)) {
+      setPaymentError("Format de téléphone invalide. Utilisez +229XXXXXXXX ou 01XXXXXXXX.")
+      return
+    }
+
     setLoading(true)
     setPaymentError(null)
 
     try {
-      // Configuration FedaPay pour le panier
-      const customer = {
-        email: currentUser?.email || 'client@example.com',
-        lastname: currentUser?.name?.split(' ').slice(1).join(' ') || 'Client',
-        firstname: currentUser?.name?.split(' ')[0] || '',
-        phone_number: {
-          number: phone,
-          country: 'bj'
+      // Vérifier si FedaPay est disponible
+      const fedapayAvailable = typeof window.FedaPay !== 'undefined'
+
+      if (fedapayAvailable) {
+        // Configuration FedaPay pour le panier
+        const customer = {
+          email: currentUser?.email || 'client@example.com',
+          lastname: currentUser?.name?.split(' ').slice(1).join(' ') || 'Client',
+          firstname: currentUser?.name?.split(' ')[0] || '',
+          phone_number: {
+            number: phone,
+            country: 'bj'
+          }
         }
+
+        const transaction = {
+          amount: total,
+          description: `Achat BoutiKonect.bj - ${cart.length} article(s)`
+        }
+
+        // Initialiser FedaPay
+        const initResult = initFedaPay({
+          transaction,
+          customer,
+          callback_url: window.location.origin + '/payment-callback',
+          cancel_url: window.location.href
+        });
+
+        if (!initResult.success) {
+          // Si FedaPay échoue → fallback confirmation manuelle
+          console.warn('FedaPay indisponible, fallback confirmation manuelle:', initResult.error)
+          setPaymentInstructions(
+            `💳 Paiement Mobile Money\n\n` +
+            `Montant : ${formatPrice(total)}\n` +
+            `Téléphone : ${phone}\n\n` +
+            `Sur votre téléphone, ouvrez votre application Mobile Money (Moov ou MTN)\n` +
+            `et effectuez le transfert vers le numéro ci-dessus.\n\n` +
+            `📱 Moov : *144*4#\n` +
+            `📱 MTN : *156*3#\n\n` +
+            `Une fois le paiement effectué, cliquez sur "Confirmer" ci-dessous.`
+          )
+          setLoading(false)
+          setShowConfirmation(true)
+          return
+        }
+
+        // Stockage temporaire des infos de commande pour le callback
+        sessionStorage.setItem('pending_order', JSON.stringify({
+          cart: cart.map(item => ({ ...item })),
+          phone,
+          total,
+          buyerId: currentUser?.id,
+          buyerName: currentUser?.name
+        }))
+      } else {
+        // FedaPay non chargé → fallback confirmation manuelle
+        setPaymentInstructions(
+          `💳 Paiement à la livraison\n\n` +
+          `Montant : ${formatPrice(total)}\n` +
+          `Téléphone : ${phone}\n\n` +
+          `Vous pouvez payer à la livraison en espèces ou via Mobile Money.\n\n` +
+          `Cliquez sur "Confirmer" pour finaliser votre commande.`
+        )
+        setLoading(false)
+        setShowConfirmation(true)
       }
-
-      const transaction = {
-        amount: total,
-        description: `Achat BoutiKonect.bj - ${cart.length} article(s)`
-      }
-
-      // Initialiser FedaPay
-      const initResult = initFedaPay({
-        transaction,
-        customer,
-        callback_url: window.location.origin + '/payment-callback', // A gérer plus tard si besoin, ou on simule la validation ici après fermeture
-        cancel_url: window.location.href
-      });
-
-      if (!initResult.success) {
-        throw new Error(initResult.error || "Erreur d'initialisation de FedaPay")
-      }
-
-      // Puisque FedaPay recharge la page au callback_url, l'expérience idéale serait d'utiliser
-      // les Webhooks côté serveur. Pour le moment, sans backend, on simule la confirmation
-      // après un délai si l'utilisateur ne quitte pas la page (démo only).
-      // Idéalement, la commande devrait être créée DANS le callback.
-      
-      // Stockage temporaire des infos de commande pour le callback
-      sessionStorage.setItem('pending_order', JSON.stringify({
-        cart,
-        phone,
-        total,
-        buyerId: currentUser?.id,
-        buyerName: currentUser?.name
-      }))
-
-      // setLoading(false) est géré quand FedaPay prend le relais.
     } catch (error) {
       setPaymentError(error.message || 'Une erreur est survenue')
       setLoading(false)
@@ -88,24 +122,40 @@ export default function Payment() {
 
   const handleConfirmMobilePayment = async () => {
     setLoading(true)
-    
+
     await new Promise(resolve => setTimeout(resolve, 2000))
-    
+
+    // 🔴 CRITIQUE : Sauvegarder les articles AVANT de vider le panier
+    const orderItems = cart.map(item => ({ ...item }))
+    const orderTotal = total
+    const orderDate = new Date()
+
     cart.forEach(item => {
       createOrder({
         productId: item.id,
         productTitle: item.title,
-        productImage: item.images[0],
+        productImage: item.images?.[0],
         price: item.price,
         quantity: item.quantity,
         sellerId: item.sellerId,
         buyerId: currentUser?.id,
         buyerName: currentUser?.name,
         buyerPhone: phone || currentUser?.phone,
-        paymentId: 'PAY' + Date.now(),
+        paymentId: 'PAY' + Date.now() + Math.random().toString(36).slice(2, 6),
         paymentStatus: 'paid',
         paymentMethod: 'mobile_money'
       })
+    })
+
+    // Stocker les données de la facture avant de vider le panier
+    setLastOrder({
+      items: orderItems,
+      buyerName: currentUser?.name || 'Client',
+      buyerPhone: phone || currentUser?.phone,
+      total: orderTotal,
+      date: orderDate,
+      paymentMethod: 'Mobile Money (FedaPay)',
+      paymentStatus: 'paid'
     })
 
     clearCart()
@@ -118,21 +168,15 @@ export default function Payment() {
     return (
       <div className="payment-page">
         <div className="container">
-          <motion.div 
-            className="payment-success"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-          >
-            <div className="success-icon">
-              <CheckCircle size={64} />
-            </div>
-            <h1>Paiement reussi!</h1>
-            <p>Merci pour votre achat.</p>
-            <div className="success-actions">
-              <Link to="/" className="btn btn-primary">Retour a l'accueil</Link>
-              <Link to="/products" className="btn btn-outline">Continuer vos achats</Link>
-            </div>
-          </motion.div>
+          <OrderInvoice
+            items={lastOrder?.items || cart}
+            buyerName={lastOrder?.buyerName || currentUser?.name || 'Client'}
+            buyerPhone={lastOrder?.buyerPhone || phone || currentUser?.phone}
+            total={lastOrder?.total || total}
+            orderDate={lastOrder?.date || new Date()}
+            paymentMethod={lastOrder?.paymentMethod || 'Mobile Money (FedaPay)'}
+            paymentStatus={lastOrder?.paymentStatus || 'paid'}
+          />
         </div>
       </div>
     )
@@ -218,8 +262,9 @@ export default function Payment() {
               </label>
             </div>
             <div className="phone-input">
-              <label className="form-label"><Smartphone size={18} /> Telephone</label>
-              <input type="tel" className="form-input" placeholder="+229 01 40 57 13 73" value={phone} onChange={(e) => setPhone(e.target.value)} />
+              <label className="form-label"><Smartphone size={18} /> Téléphone Mobile Money</label>
+              <input type="tel" className="form-input" placeholder="+229 XX XX XX XX" value={phone} onChange={(e) => setPhone(e.target.value)} />
+              <p className="help-text">Numéro MTN ou Moov pour recevoir la demande de paiement</p>
             </div>
             <button className="btn btn-primary btn-large pay-btn" onClick={handlePayment} disabled={loading || !phone}>
               {loading ? <><Loader size={20} className="spin" /> Traitement...</> : <><Wallet size={20} /> Payer {formatPrice(total)}</>}

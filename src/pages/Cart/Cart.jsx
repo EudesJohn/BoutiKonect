@@ -2,8 +2,9 @@ import { useContext, useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { AppContext } from '../../context/AppContext'
-import { ShoppingCart, Trash2, Minus, Plus, ArrowLeft, MapPin, CheckCircle, AlertTriangle, Package } from 'lucide-react'
+import { ShoppingCart, Trash2, Minus, Plus, ArrowLeft, MapPin, AlertTriangle, Loader } from 'lucide-react'
 import { validateName, validatePhone, validateAddress } from '../../utils/validation'
+import OrderInvoice from '../../components/OrderInvoice/OrderInvoice'
 import './Cart.css'
 
 export default function Cart() {
@@ -16,7 +17,10 @@ export default function Cart() {
   })
   const [orderPlaced, setOrderPlaced] = useState(false)
   const [errors, setErrors] = useState({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState(null)
   const [stockErrors, setStockErrors] = useState([])
+  const [lastOrder, setLastOrder] = useState(null)
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -69,69 +73,89 @@ export default function Cart() {
     return errors.length === 0
   }, [cart, products])
 
-  const handleOrder = (e) => {
+  const handleOrder = async (e) => {
     e.preventDefault()
-    
+
+    // Éviter les doubles soumissions
+    if (isSubmitting) return
+
     // Validate form data
     if (!validateOrderForm()) {
       return
     }
-    
+
     // Check stock availability
     if (!checkStockAvailability) {
       return
     }
-    
-    const currentUser = user || seller
-    
-    // Create an order for each product in cart
-    cart.forEach(item => {
-      const order = {
-        productId: item.id,
-        productTitle: item.title,
-        productImage: item.images[0],
-        sellerId: item.sellerId,
-        sellerName: item.sellerName,
-        sellerCity: item.sellerCity,
-        sellerNeighborhood: item.sellerNeighborhood,
-        buyerId: currentUser?.id,
+
+    setIsSubmitting(true)
+    setSubmitError(null)
+
+    try {
+      const currentUser = user || seller
+      const orderedItems = cart.map(item => ({ ...item }))
+      const orderTimestamp = new Date().toISOString()
+
+      // Create an order for each product in cart
+      const orderPromises = cart.map(item => {
+        const order = {
+          productId: item.id,
+          productTitle: item.title,
+          productImage: item.images?.[0],
+          sellerId: item.sellerId,
+          sellerName: item.sellerName,
+          sellerCity: item.sellerCity,
+          sellerNeighborhood: item.sellerNeighborhood,
+          buyerId: currentUser?.id,
+          buyerName: orderForm.name.trim(),
+          buyerPhone: orderForm.phone.trim(),
+          buyerAddress: orderForm.address.trim(),
+          quantity: item.quantity,
+          price: item.price,
+          total: item.price * item.quantity
+        }
+        return createOrder(order)
+      })
+
+      await Promise.all(orderPromises)
+
+      // Store order data for invoice display
+      setLastOrder({
+        items: orderedItems,
         buyerName: orderForm.name.trim(),
         buyerPhone: orderForm.phone.trim(),
         buyerAddress: orderForm.address.trim(),
-        quantity: item.quantity,
-        price: item.price,
-        total: item.price * item.quantity
-      }
-      createOrder(order)
-    })
-    
-    setOrderPlaced(true)
-    clearCart()
+        total: getCartTotal(),
+        date: orderTimestamp,
+        paymentMethod: 'Paiement à la livraison',
+        paymentStatus: 'pending'
+      })
+
+      setOrderPlaced(true)
+      clearCart()
+    } catch (err) {
+      console.error('Erreur lors de la commande:', err)
+      setSubmitError('Une erreur est survenue lors de la création de la commande. Veuillez réessayer.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (orderPlaced) {
     return (
       <div className="cart-page">
         <div className="container">
-          <motion.div 
-            className="order-success"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-          >
-            <div className="success-icon">
-              <CheckCircle size={60} />
-            </div>
-            <h2>Commande confirmée!</h2>
-            <p>Merci pour votre achat. Le vendeur vous contactera bientôt sur WhatsApp.</p>
-            <div className="success-actions">
-              <Link to="/" className="btn btn-primary">
-                Retour à l'accueil
-              </Link>
-              <Link to="/products" className="btn btn-outline">
-                Continuer vos achats
-              </Link>
-            </div>
-          </motion.div>
+          <OrderInvoice
+            items={lastOrder?.items || cart}
+            buyerName={lastOrder?.buyerName || orderForm.name}
+            buyerPhone={lastOrder?.buyerPhone || orderForm.phone}
+            buyerAddress={lastOrder?.buyerAddress || orderForm.address}
+            total={lastOrder?.total || getCartTotal()}
+            orderDate={lastOrder?.date || new Date()}
+            paymentMethod={lastOrder?.paymentMethod || 'Paiement à la livraison'}
+            paymentStatus={lastOrder?.paymentStatus || 'pending'}
+          />
         </div>
       </div>
     )
@@ -266,7 +290,19 @@ export default function Cart() {
 
             <form className="order-form" onSubmit={handleOrder}>
               <h3>Informations de livraison</h3>
-              
+
+              {/* Submit Error */}
+              {submitError && (
+                <motion.div
+                  className="error-alert"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <AlertTriangle size={20} />
+                  <span>{submitError}</span>
+                </motion.div>
+              )}
+
               {/* Stock Errors */}
               {stockErrors.length > 0 && (
                 <motion.div 
@@ -327,8 +363,14 @@ export default function Cart() {
                 {errors.address && <span className="error-text">{errors.address}</span>}
               </div>
 
-              <button type="submit" className="btn btn-primary btn-large" disabled={stockErrors.length > 0}>
-                {stockErrors.length > 0 ? 'Stock insuffisant' : 'Passer la commande'}
+              <button type="submit" className="btn btn-primary btn-large" disabled={stockErrors.length > 0 || isSubmitting}>
+                {isSubmitting ? (
+                  <><Loader size={20} className="spin" /> Commande en cours...</>
+                ) : stockErrors.length > 0 ? (
+                  'Stock insuffisant'
+                ) : (
+                  'Passer la commande'
+                )}
               </button>
             </form>
           </aside>
