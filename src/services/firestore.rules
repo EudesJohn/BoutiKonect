@@ -1,0 +1,148 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =================== FONCTIONS D'AIDE A LA SECURITE ===================
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        (
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('isAdmin', false) == true ||
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('email', '') == 'BoutiKonectbj229@gmail.com'
+        );
+    }
+
+    function isSeller() {
+      return isSignedIn() && (
+        isAdmin() || (
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('isSeller', false) == true
+        )
+      );
+    }
+
+    // --- Fonctions de validation de données ---
+    function isString(value, min, max) {
+      return value is string && value.size() >= min && value.size() <= max;
+    }
+
+    function isNumber(value, min, max) {
+      return (value is int || value is float) && value >= min && value <= max;
+    }
+
+    function isBoolean(value) {
+      return value is bool;
+    }
+    
+    function isList(data) {
+      return data is list;
+    }
+
+    // =================== REGLES POUR LA COLLECTION 'users' ===================
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+
+      allow create: if isOwner(userId)
+                      && isString(request.resource.data.get('name', ''), 2, 100)
+                      && request.resource.data.email == request.auth.token.email
+                      && request.resource.data.get('isAdmin', false) == false
+                      && request.resource.data.get('createdAt', request.time) == request.time;
+
+      allow update: if isOwner(userId)
+                      && isString(request.resource.data.get('name', ''), 2, 100)
+                      && (!('avatar' in request.resource.data) || request.resource.data.avatar == null || isString(request.resource.data.avatar, 0, 1500000))
+                      // Champs immuables protégés
+                      && request.resource.data.get('uid', '') == resource.data.get('uid', '')
+                      && request.resource.data.get('createdAt', '') == resource.data.get('createdAt', '')
+                      && (isAdmin() || request.resource.data.get('isAdmin', false) == resource.data.get('isAdmin', false))
+                      && (isAdmin() || request.resource.data.get('role', 'user') == resource.data.get('role', 'user'))
+                      // Activation de vendeur autorisée
+                      && (request.resource.data.get('isSeller', false) == resource.data.get('isSeller', false) || request.resource.data.get('isSeller', false) == true);
+
+      allow delete: if isAdmin();
+    }
+
+    // =================== REGLES POUR LA COLLECTION 'products' ===================
+    match /products/{productId} {
+      allow read: if true;
+
+      allow create: if isSignedIn()
+                      && (isOwner(request.resource.data.get('sellerId', '')) || isAdmin())
+                      && isSeller()
+                      && isString(request.resource.data.title, 2, 200)
+                      && isString(request.resource.data.description, 5, 5000)
+                      && isNumber(request.resource.data.price, 0, 1000000000)
+                      && (request.resource.data.get('type', 'product') == 'service' || isNumber(request.resource.data.get('stock', 0), 0, 100000))
+                      && isList(request.resource.data.images) && request.resource.data.images.size() > 0
+                      && (!('isPromoted' in request.resource.data) || request.resource.data.get('isPromoted', false) == false);
+
+      allow update: if isSignedIn() && (
+                      (
+                        (isOwner(resource.data.sellerId) || isAdmin())
+                        && (isAdmin() || !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isPromoted', 'promotionStartDate', 'promotionEndDate', 'promotionDuration', 'promotionPrice']))
+                        && isString(request.resource.data.get('title', ''), 2, 200)
+                        && isString(request.resource.data.get('description', ''), 5, 5000)
+                        && isNumber(request.resource.data.get('price', 0), 0, 1000000000)
+                      )
+                      || 
+                      (
+                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock'])
+                        && request.resource.data.stock >= 0
+                        && resource.data.get('type', 'product') != 'service'
+                      )
+                    );
+
+      allow delete: if isSignedIn() && (isOwner(resource.data.sellerId) || isAdmin());
+    }
+
+    // =================== REGLES POUR LA COLLECTION 'orders' ===================
+    match /orders/{orderId} {
+      allow read: if isSignedIn() && (isOwner(resource.data.buyerId) || isOwner(resource.data.sellerId) || isAdmin());
+      allow create: if isSignedIn() && isOwner(request.resource.data.buyerId);
+      allow update: if isSignedIn() && (
+                      (isOwner(resource.data.sellerId) && request.resource.data.status in ['confirmed', 'completed', 'cancelled'])
+                      || (isOwner(resource.data.buyerId) && request.resource.data.status == 'cancelled' && resource.data.status == 'pending')
+                    )
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isOwner(request.resource.data.reviewerId);
+      allow update, delete: if isSignedIn() && (isOwner(resource.data.reviewerId) || isAdmin());
+    }
+
+    match /reports/{reportId} {
+      allow create: if isSignedIn();
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /pending_promotions/{promoId} {
+      allow create: if isSignedIn() && isOwner(request.resource.data.userUid);
+      allow read, delete: if isAdmin() || (isSignedIn() && isOwner(resource.data.userUid));
+      allow update: if isAdmin();
+    }
+
+    match /analytics/{sellerId} {
+      allow read: if isSignedIn() && (isOwner(sellerId) || isAdmin());
+      allow write: if isSignedIn(); 
+      
+      match /productViews/{productId} {
+        allow read: if true;
+        allow write: if true;
+      }
+      match /dailyStats/{date} {
+        allow read, write: if isSignedIn() && (isOwner(sellerId) || isAdmin());
+      }
+    }
+  }
+}

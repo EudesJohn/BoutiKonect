@@ -46,3 +46,23 @@ Thumbs.db
 
 # Assistant
 .claude/
+.vercel
+
+# Temp / analysis files
+*.zip
+test*.txt
+test*.mjs
+TODO*
+ANALYSE*
+ANALYSIS*
+ANOMALIES*
+IMPLEMENTATION*
+MANUAL_FIXES*
+SPEC.md
+OFFRE_VENTE.md
+README_AFRI_TANA.md
+HELPCENTER*
+knowledgeBase.js
+collector_immobiliare.py
+SellerDashboard_fixed.jsx
+d

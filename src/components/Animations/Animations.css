@@ -1,0 +1,280 @@
+/* ================================================================
+ *  ANIMATIONS.CSS — Classes d'animation globales
+ *  BoutiKonect.bj — "Animations hors norme"
+ * ================================================================ */
+
+/* ================================================================
+ *  HOVER — Cartes avec effet 3D
+ * ================================================================ */
+
+/* Carte avec perspective 3D au survol */
+.card-3d {
+  perspective: 800px;
+}
+
+.card-3d-inner {
+  transition:
+    transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    box-shadow 0.4s ease;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.card-3d:hover .card-3d-inner {
+  transform: rotateY(var(--rotate-y, 0deg)) rotateX(var(--rotate-x, 0deg)) translateZ(10px);
+}
+
+/* Image zoom au survol */
+.img-zoom {
+  overflow: hidden;
+}
+
+.img-zoom img {
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.img-zoom:hover img {
+  transform: scale(1.08);
+}
+
+/* ================================================================
+ *  RÉVÉLATION AU SCROLL (classes de base JS)
+ * ================================================================ */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition:
+    opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-30px);
+  transition:
+    opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-left.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.reveal-right {
+  opacity: 0;
+  transform: translateX(30px);
+  transition:
+    opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-right.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.9);
+  transition:
+    opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-scale.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Stagger delays for reveal groups */
+.reveal-stagger > .reveal,
+.reveal-stagger > .reveal-left,
+.reveal-stagger > .reveal-right,
+.reveal-stagger > .reveal-scale {
+  transition-delay: calc(var(--stagger-index, 0) * 0.08s);
+}
+
+/* ================================================================
+ *  MICRO-INTERACTIONS
+ * ================================================================ */
+
+/* Like / Heart animation */
+.heart-animate {
+  animation: heartBeat 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.heart-burst {
+  position: relative;
+}
+
+.heart-burst::after {
+  content: '❤';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #FF1744;
+  animation: heartBurst 0.6s ease forwards;
+  pointer-events: none;
+}
+
+/* Shimmer text */
+.text-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--dark-text-primary) 0%,
+    var(--primary-light) 25%,
+    var(--gold) 50%,
+    var(--primary-light) 75%,
+    var(--dark-text-primary) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 3s linear infinite;
+}
+
+/* Pulsing dot */
+.dot-pulse {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* Counter badge animation */
+.counter-badge {
+  animation: badgeBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ================================================================
+ *  FOND AMBIANT — Gradients animés
+ * ================================================================ */
+.bg-aurora {
+  position: relative;
+  overflow: hidden;
+}
+
+.bg-aurora::before,
+.bg-aurora::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.bg-aurora::before {
+  width: 400px;
+  height: 400px;
+  background: rgba(var(--primary-rgb), 0.08);
+  top: -100px;
+  left: -100px;
+  animation: aurora 12s ease-in-out infinite;
+}
+
+.bg-aurora::after {
+  width: 300px;
+  height: 300px;
+  background: rgba(42, 127, 130, 0.06);
+  bottom: -80px;
+  right: -80px;
+  animation: aurora 15s ease-in-out infinite reverse;
+}
+
+/* ================================================================
+ *  BORDER GLOW ANIMÉ
+ * ================================================================ */
+.border-glow {
+  position: relative;
+  border: none !important;
+}
+
+.border-glow::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--border-angle, 0deg),
+    transparent 0%,
+    var(--primary) 25%,
+    var(--secondary) 50%,
+    var(--gold) 75%,
+    transparent 100%
+  );
+  z-index: -1;
+  animation: borderRotate 6s linear infinite;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  padding: 1px;
+}
+
+/* ================================================================
+ *  SKELETON CARD LOADING
+ * ================================================================ */
+.skeleton-card {
+  background: var(--dark-bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  border: 1px solid var(--dark-border);
+}
+
+.skeleton-card .skeleton {
+  margin-bottom: var(--space-sm);
+}
+
+/* ================================================================
+ *  NOTIFICATION ENTRANTE
+ * ================================================================ */
+.notification-enter {
+  animation: slideInRight 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.notification-exit {
+  animation: fadeIn 0.3s ease reverse forwards;
+}
+
+/* ================================================================
+ *  PRIX ANIMÉ (chiffres qui comptent)
+ * ================================================================ */
+.price-animate {
+  display: inline-block;
+  animation: fadeInScale 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ================================================================
+ *  RESPONSIVE
+ * ================================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal-left,
+  .reveal-right,
+  .reveal-scale {
+    opacity: 1;
+    transform: none;
+  }
+
+  .card-3d-inner {
+    transform: none !important;
+  }
+
+  .bg-aurora::before,
+  .bg-aurora::after {
+    animation: none !important;
+  }
+}

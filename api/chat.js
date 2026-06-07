@@ -1,7 +1,6 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from '@supabase/supabase-js';
 
-export const maxDuration = 60; // Autoriser jusqu'à 60 secondes d'exécution pour Gemini
+export const maxDuration = 60; // Autoriser jusqu'à 60 secondes d'exécution pour l'IA
 
 // Initialisation du client Supabase pour le cache
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -89,12 +88,13 @@ export default async function handler(request, response) {
       }
     }
 
+    // Récupération de la clé API (OpenRouter ou Gemini legacy)
     const rawApiKey = process.env.GEMINI_API_KEY;
     if (!rawApiKey) {
       return response.status(503).json({ error: "L'assistant est en maintenance (Configuration API manquante)." });
     }
 
-    // Support de la rotation de clés API Gemini (séparées par des virgules)
+    // Support de la rotation de clés (séparées par des virgules)
     const apiKeys = rawApiKey.split(',').map(k => k.trim()).filter(Boolean);
     if (apiKeys.length === 0) {
       return response.status(503).json({ error: "L'assistant est en maintenance (Configuration API manquante)." });
@@ -104,7 +104,7 @@ export default async function handler(request, response) {
     const safeProducts = Array.isArray(context.products) ? context.products.slice(0, 10).map(p => ({ title: p.title, category: p.category, price: p.price })) : [];
     const safeServices = Array.isArray(context.services) ? context.services.slice(0, 10).map(s => ({ title: s.title, category: s.category, price: s.price })) : [];
 
-    const systemInstruction = `
+    const systemContent = `
       Tu es l'assistant virtuel EXPERT de BoutiKonect.bj.
       Produits récents : ${JSON.stringify(safeProducts)}
       Services récents : ${JSON.stringify(safeServices)}
@@ -112,29 +112,67 @@ export default async function handler(request, response) {
       Style : Chaleureux, emojis, proactif, 100% humain.
     `;
 
-    const fullPrompt = `${systemInstruction}\n\nUtilisateur: ${prompt}`;
-    
+    // Détection automatique du type de clé (OpenRouter vs Google Gemini direct)
+    const isOpenRouterKey = (key) => key.startsWith('sk-or-v1-') || key.startsWith('sk-or-');
+    const isGeminiKey = (key) => key.startsWith('AIzaSy') || key.startsWith('AQ.');
+
     let text = null;
     let lastError = null;
 
-    // Essayer chaque clé en rotation en cas d'erreur de quota/limite
+    // Essayer chaque clé en rotation
     for (let i = 0; i < apiKeys.length; i++) {
       const apiKey = apiKeys[i];
       try {
-        console.log(`[AI Gemini] Tentative de génération avec la clé index ${i} (début : ${apiKey.substring(0, 10)})...`);
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
-        const result = await model.generateContent(fullPrompt);
-        const aiResponse = await result.response;
-        text = aiResponse.text();
-        if (text) {
-          console.log(`[AI Gemini] Succès avec la clé index ${i}.`);
-          break;
+        const keyPrefix = apiKey.substring(0, Math.min(12, apiKey.length));
+        console.log(`[AI] Tentative de génération avec clé ${i} (${keyPrefix}...)`);
+
+        if (isOpenRouterKey(apiKey)) {
+          // --- OpenRouter API ---
+          const orResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+              'Content-Type': 'application/json',
+              'HTTP-Referer': 'https://bouti-konect.vercel.app',
+              'X-Title': 'BoutiKonect'
+            },
+            body: JSON.stringify({
+              model: 'google/gemini-2.5-flash-lite',
+              messages: [
+                { role: 'system', content: systemContent },
+                { role: 'user', content: prompt }
+              ],
+              max_tokens: 1024
+            })
+          });
+
+          if (!orResponse.ok) {
+            const orError = await orResponse.text();
+            throw new Error(`OpenRouter ${orResponse.status}: ${orError}`);
+          }
+
+          const orData = await orResponse.json();
+          text = orData.choices?.[0]?.message?.content || null;
+          if (text) {
+            console.log(`[AI] Succès OpenRouter avec clé ${i}.`);
+            break;
+          }
+        } else {
+          // --- Gemini API directe (fallback pour clés AIzaSy / AQ.) ---
+          const { GoogleGenerativeAI } = await import("@google/generative-ai");
+          const genAI = new GoogleGenerativeAI(apiKey);
+          const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
+          const result = await model.generateContent(`${systemContent}\n\nUtilisateur: ${prompt}`);
+          const aiResponse = await result.response;
+          text = aiResponse.text();
+          if (text) {
+            console.log(`[AI] Succès Gemini direct avec clé ${i}.`);
+            break;
+          }
         }
       } catch (err) {
         lastError = err;
-        console.warn(`[AI Gemini Warning] Échec de la clé index ${i} :`, err.message);
-        // Si c'est la seule clé, pas la peine de boucler
+        console.warn(`[AI Warning] Échec clé ${i} :`, err.message);
         if (apiKeys.length === 1) break;
       }
     }
@@ -169,14 +207,14 @@ export default async function handler(request, response) {
 
     // Expose specific error info to help diagnose production issues
     let clientMessage = "Erreur technique, veuillez réessayer plus tard.";
-    if (error.message?.includes('API_KEY_INVALID') || error.message?.includes('API key not valid')) {
-      clientMessage = "Clé API Gemini invalide ou expirée. Vérifiez GEMINI_API_KEY dans les variables Vercel.";
-    } else if (error.message?.includes('QUOTA_EXCEEDED') || error.message?.includes('429') || error.message?.includes('quota')) {
-      clientMessage = "Quota API Gemini épuisé. Veuillez patienter ou ajouter des clés API alternatives séparées par des virgules dans GEMINI_API_KEY.";
-    } else if (error.message?.includes('PERMISSION_DENIED') || error.status === 403) {
-      clientMessage = "Accès refusé à l'API Gemini. Vérifiez les permissions de votre clé API.";
+    if (error.message?.includes('401') || error.message?.includes('403') || error.message?.includes('unauthorized') || error.message?.includes('forbidden')) {
+      clientMessage = "Clé API invalide ou expirée. Vérifiez la variable GEMINI_API_KEY dans les paramètres Vercel.";
+    } else if (error.message?.includes('429') || error.message?.includes('quota') || error.message?.includes('QUOTA_EXCEEDED') || error.message?.includes('RESOURCE_EXHAUSTED')) {
+      clientMessage = "Limite de l'API IA atteinte pour aujourd'hui. Veuillez patienter ou ajouter plusieurs clés API séparées par des virgules dans GEMINI_API_KEY.";
+    } else if (error.message?.includes('402') || error.message?.includes('insufficient_credits')) {
+      clientMessage = "Crédits IA insuffisants. Veuillez ajouter des fonds sur votre compte OpenRouter ou ajouter une clé API alternative.";
     } else if (error.message?.includes('not found') || error.message?.includes('404')) {
-      clientMessage = "Modèle IA introuvable. Le modèle gemini-2.0-flash-lite est peut-être indisponible dans votre région.";
+      clientMessage = "Modèle IA introuvable. Vérifiez la configuration du modèle.";
     }
 
     return response.status(500).json({
