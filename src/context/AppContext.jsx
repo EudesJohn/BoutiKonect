@@ -94,9 +94,9 @@ export const cities = [
 
 // Categories de produits
 export const categories = [
-  { id: 1, name: 'Electronique', icon: 'smartphone', color: '#C0614B' },
+  { id: 1, name: 'Electronique', icon: 'smartphone', color: '#D4735A' },
   { id: 2, name: 'Vêtements', icon: 'shirt', color: '#2A7F82' },
-  { id: 3, name: 'Alimentation', icon: 'apple', color: '#6B8F5E' },
+  { id: 3, name: 'Alimentation', icon: 'apple', color: '#4CAF50' },
   { id: 4, name: 'Maison', icon: 'home', color: '#D4A353' },
   { id: 5, name: 'Beaute', icon: 'sparkles', color: '#D98A6E' },
   { id: 6, name: 'Sports', icon: 'dumbbell', color: '#A34933' },
@@ -107,7 +107,7 @@ export const categories = [
 
 // Categories de services
 export const serviceCategories = [
-  { id: 1, name: 'Dépannage', icon: 'wrench', color: '#C0614B' },
+  { id: 1, name: 'Dépannage', icon: 'wrench', color: '#D4735A' },
   { id: 2, name: 'Ménage', icon: 'sparkles', color: '#2A7F82' },
   { id: 3, name: 'Beauté', icon: 'scissors', color: '#D98A6E' },
   { id: 4, name: 'Informatique', icon: 'laptop', color: '#45A6A9' },

@@ -592,11 +592,11 @@
   }
 
   .brand-accent {
-    color: #C0614B !important;
+    color: #D4735A !important;
   }
 
   .invoice-meta h2 {
-    color: #C0614B !important;
+    color: #D4735A !important;
   }
 
   .invoice-status {
@@ -611,8 +611,8 @@
   }
 
   .invoice-table th {
-    color: #C0614B !important;
-    border-bottom-color: #C0614B !important;
+    color: #D4735A !important;
+    border-bottom-color: #D4735A !important;
   }
 
   .invoice-table td {
@@ -620,7 +620,7 @@
   }
 
   .total-amount {
-    color: #C0614B !important;
+    color: #D4735A !important;
   }
 
   .invoice-buyer,
@@ -645,7 +645,7 @@
   }
 
   .footer-contact {
-    color: #C0614B !important;
+    color: #D4735A !important;
   }
 
   /* Ensure table doesn't break across pages */

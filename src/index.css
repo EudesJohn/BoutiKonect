@@ -1,15 +1,20 @@
 :root {
   /* ================================================================
-   *  BOUTIKONECT.BJ — PALETTE "CHALEUR HUMAINE"
+   *  BOUTIKONECT.BJ — PALETTE "CHALEUR HUMAINE" v2
    *  Warm, earthy, community-centered colours inspired by Benin.
    *  Terracotta earth · Savannah teal · Sunset gold
+   *
+   *  MISES À JOUR :
+   *  - Primary boosté (#D4735A) pour accessibilité WCAG AA sur fond sombre
+   *  - Vert succès (#4CAF50) pour signaux clairs de confirmation
+   *  - Fond légèrement plus clair (#1A1412) pour meilleure lisibilité
    * ================================================================ */
 
-  /* ========== PRIMAIRE — Terre cuite ========== */
-  --primary: #C0614B;
-  --primary-light: #D98A6E;
+  /* ========== PRIMAIRE — Terre cuite boostée ========== */
+  --primary: #D4735A;
+  --primary-light: #E89980;
   --primary-dark: #A34933;
-  --primary-rgb: 192, 97, 75;
+  --primary-rgb: 212, 115, 90;
 
   /* ========== SECONDAIRE — Teal de savane ========== */
   --secondary: #2A7F82;
@@ -29,8 +34,8 @@
   --border-strong: #B8A898;
 
   /* ========== NEUTRES — FONCÉ (Tons de terre chauds) ========== */
-  --dark-bg-primary: #120C0A;
-  --dark-bg-secondary: #1A1412;
+  --dark-bg-primary: #1A1412;
+  --dark-bg-secondary: #231D19;
   --dark-bg-card: #2D2420;
   --dark-bg-elevated: #3D322C;
   --dark-text-primary: #F5EDE3;
@@ -43,8 +48,8 @@
   --gold: #D4A353;
   --gold-light: #E0BC77;
   --gold-dark: #B8892F;
-  --success: #6B8F5E;
-  --success-light: #D1E8C9;
+  --success: #4CAF50;
+  --success-light: #81C784;
   --danger: #C1554A;
   --danger-light: #F0CAC5;
   --warning: #D4A04A;
@@ -53,7 +58,7 @@
 
   /* RGB components for rgba() usage */
   --gold-rgb: 212, 163, 83;
-  --success-rgb: 107, 143, 94;
+  --success-rgb: 76, 175, 80;
   --danger-rgb: 193, 85, 74;
   --warning-rgb: 212, 160, 74;
   --info-rgb: 74, 155, 163;
