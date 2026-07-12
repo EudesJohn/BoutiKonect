@@ -1,41 +1,63 @@
-import React from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Store } from 'lucide-react'
 import { cacheService } from '../../services/cacheService'
 import './SplashScreen.css'
 
 export default function SplashScreen({ dataLoading = {}, errors = {} }) {
-  const [showBypass, setShowBypass] = React.useState(false)
+  const [showBypass, setShowBypass] = useState(false)
+  const [phaseStart, setPhaseStart] = useState(Date.now())
 
-  React.useEffect(() => {
-    const timer = setTimeout(() => setShowBypass(true), 6000)
+  // Cacher le loader HTML dès que le SplashScreen React est monté
+  useEffect(() => {
+    window.hideAppLoader?.()
+  }, [])
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowBypass(true), 12000)
     return () => clearTimeout(timer)
   }, [])
 
+  // Réinitialiser le chrono à chaque changement de phase
+  useEffect(() => {
+    setPhaseStart(Date.now())
+  }, [dataLoading.products])
+
   const handleReset = async () => {
     try {
-      // Nettoyer le cache applicatif
       cacheService.clearAll();
-      
-      // Désenregistrer tous les Service Workers
       if ('serviceWorker' in navigator) {
         const registrations = await navigator.serviceWorker.getRegistrations();
         for (let registration of registrations) {
           await registration.unregister();
         }
       }
-      
-      // Recharger la page
       window.location.reload(true);
     } catch (e) {
       window.location.reload();
     }
   }
 
+  // === ÉTAPES DE CHARGEMENT RÉELLES ===
+  const steps = useMemo(() => [
+    { key: 'auth',    label: 'Connexion au serveur...',          done: !dataLoading.products },
+    { key: 'data',    label: 'Récupération des données...',      done: !dataLoading.products },
+    { key: 'final',   label: 'Finalisation...',                  done: true },
+  ], [dataLoading.products])
+
+  const currentStep = steps.findIndex(s => !s.done)
+  const progress = currentStep > 0
+    ? ((currentStep) / steps.length) * 100
+    : Math.min(95, (Date.now() - phaseStart) / 10000 * 30 + 5)
+
+  const statusText = currentStep >= 0 && currentStep < steps.length
+    ? steps[currentStep].label
+    : 'Chargement terminé'
+
   return (
     <div className="splash-screen">
       <div className="splash-content">
-        <motion.div 
+        <motion.div
           className="splash-logo"
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -46,58 +68,61 @@ export default function SplashScreen({ dataLoading = {}, errors = {} }) {
           </div>
           <h1>BoutiKonect<span>.bj</span></h1>
         </motion.div>
-        
+
+        {/* Barre de progression RÉELLE */}
         <div className="splash-loading-container">
-          <motion.div 
+          <motion.div
             className="splash-loader-bar"
-            initial={{ width: 0 }}
-            animate={{ width: "100%" }}
-            transition={{ duration: 3, ease: "easeInOut" }}
+            animate={{ width: `${Math.min(100, progress)}%` }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
           />
         </div>
-        
-        <motion.p 
+
+        {/* Texte de statut dynamique */}
+        <motion.p
           className="splash-status"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
+          key={statusText}
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
         >
-          Connexion sécurisée en cours...
+          {statusText}
         </motion.p>
 
-        {dataLoading.products && (
-          <div style={{
-            marginTop: '20px',
-            padding: '15px',
-            background: 'rgba(255, 23, 68, 0.1)',
-            border: '1px solid rgba(255, 23, 68, 0.2)',
-            borderRadius: '12px',
-            fontSize: '0.8rem',
-            color: '#ff80ab',
-            maxWidth: '300px'
-          }}>
-            <p style={{ margin: '0 0 10px 0' }}>🔍 Diagnostic de connexion :</p>
-            <p style={{ margin: '0', opacity: 0.8 }}>
-              {errors.products ? `Erreur: ${errors.products}` : "Tentative de connexion en cours..."}
-            </p>
-            {errors.products?.includes('fetch') && (
-              <p style={{ marginTop: '10px', fontSize: '0.75rem', color: '#fff' }}>
-                Note: Une erreur 'fetch' indique souvent un blocage réseau par votre opérateur ou un problème de DNS.
-              </p>
-            )}
+        {/* Étapes détaillées */}
+        <div className="splash-steps">
+          {steps.map((step, i) => {
+            const isActive = i === currentStep
+            const isDone = step.done || i < currentStep
+            return (
+              <div
+                key={step.key}
+                className={`splash-step ${isDone ? 'done' : ''} ${isActive ? 'active' : ''}`}
+              >
+                <span className="splash-step-icon">
+                  {isDone ? '✓' : isActive ? '○' : '○'}
+                </span>
+                <span className="splash-step-label">{step.label}</span>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Erreur */}
+        {errors.products && (
+          <div className="splash-error">
+            <p>⚠️ {errors.products}</p>
           </div>
         )}
 
+        {/* Boutons de contournement après délai */}
         {showBypass && (
-          <motion.div 
+          <motion.div
             className="splash-actions"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <button
-              className="splash-bypass-btn"
-              onClick={() => window.location.reload()}
-            >
+            <button className="splash-bypass-btn" onClick={() => window.location.reload()}>
               Réessayer
             </button>
             <button
@@ -110,7 +135,7 @@ export default function SplashScreen({ dataLoading = {}, errors = {} }) {
           </motion.div>
         )}
       </div>
-      
+
       <div className="splash-footer">
         <p>© 2026 BoutiKonect - Le Marché de Référence du Bénin</p>
       </div>
